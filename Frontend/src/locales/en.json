@@ -1,0 +1,523 @@
+{
+  "app": {
+    "name": "Mindly"
+  },
+  "nav": {
+    "mainMenu": "Main Menu",
+    "home": "Home",
+    "journals": "My Journals",
+    "productivity": "Productivity",
+    "insight": "My Insight",
+    "recentChats": "Recent Chats",
+    "noChats": "No chats yet",
+    "theme": "Theme",
+    "language": "Language",
+    "light": "Light",
+    "dark": "Dark",
+    "english": "English",
+    "indonesian": "Indonesian",
+    "basicPlan": "Basic Plan",
+    "settings": "Settings",
+    "logout": "Log Out"
+  },
+  "home": {
+    "hero": {
+      "welcome": "Welcome back, {{name}}!"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "newJournal": "New Journal",
+      "addTask": "Add Task",
+      "viewInsights": "View Insights",
+      "talkToAI": "Talk to AI"
+    },
+    "statsGrid": {
+      "tasksCompleted": "Tasks Completed",
+      "productivity": "Productivity"
+    },
+    "weeklyOverview": {
+      "title": "Weekly Overview",
+      "totalHours": "Total Hours",
+      "tasksDone": "Tasks Done",
+      "avgDay": "Avg / Day",
+      "noData": "No data for this week"
+    },
+    "dailyInspiration": {
+      "title": "Daily Inspiration"
+    },
+    "habitRelics": {
+      "title": "Habit Relics",
+      "subtitle": "Collect, upgrade, and master your relics",
+      "beAMaster": "Be a Master",
+      "noRelics": "No relics yet — tap + to forge a new one",
+      "noEquipped": "No relics equipped — open Change Relics to equip",
+      "changeRelics": "Change Relics",
+      "updateProgress": "Update Progress",
+      "loading": "Loading...",
+      "status": {
+        "noTarget": "No Target",
+        "onFire": "On Fire",
+        "achieved": "Achieved",
+        "almostDone": "Almost Done",
+        "inProgress": "In Progress"
+      }
+    },
+    "createGoal": {
+      "title": "Create Habit Relic",
+      "iconLabel": "Icon",
+      "titleLabel": "Title *",
+      "titlePlaceholder": "e.g., Workout, Read Books, Practice Coding",
+      "currentProgressLabel": "Current Progress",
+      "targetLabel": "Target *",
+      "targetPlaceholder": "e.g., 30",
+      "creating": "Creating...",
+      "create": "Create Goal",
+      "validation": {
+        "nameRequired": "Title is required",
+        "targetRequired": "Target must be greater than 0",
+        "cannotBeNegative": "Cannot be negative",
+        "createFailed": "Failed to create relic"
+      }
+    },
+    "editGoal": {
+      "title": "Edit Habit Relic",
+      "iconLabel": "Icon",
+      "titleLabel": "Title *",
+      "titlePlaceholder": "e.g., Workout, Read Books, Practice Coding",
+      "currentProgressLabel": "Current Progress",
+      "targetLabel": "Target *",
+      "targetPlaceholder": "e.g., 30",
+      "save": "Save",
+      "saving": "Saving...",
+      "deleting": "Deleting...",
+      "delete": "Delete",
+      "validation": {
+        "cannotBeNegative": "Cannot be negative",
+        "updateFailed": "Failed to update relic",
+        "deleteFailed": "Failed to delete relic"
+      }
+    },
+    "relicManager": {
+      "title": "Manage Relics",
+      "equipped": "Equipped",
+      "available": "Available",
+      "dragHint": "Drag relics to equip or unequip",
+      "emptyEquipped": "No relics equipped",
+      "emptyAvailable": "No available relics",
+      "saveOrder": "Save Order",
+      "changeRelicsTitle": "Change Relics",
+      "upgradeRelicsTitle": "Upgrade Relics",
+      "changeRelicsDesc": "Drag relics between inventory and equipped slots",
+      "upgradeRelicsDesc": "Strengthen your relics",
+      "equippedLoadout": "Equipped Loadout",
+      "relicInventory": "Relic Inventory",
+      "owned": "{{count}} owned",
+      "dropToUnequip": "Drop to unequip",
+      "dropHereToStore": "Drop here to store",
+      "emptySlot": "Empty Slot",
+      "dropHere": "Drop here",
+      "noRelicsInventory": "No relics in inventory yet"
+    },
+    "updateProgress": {
+      "title": "Update Progress",
+      "selectRelic": "Select a relic to update",
+      "currentProgress": "Current Progress",
+      "addProgress": "Add Progress",
+      "setProgress": "Set Progress",
+      "adjust": "Adjust",
+      "noRelicsFound": "No relics found",
+      "allRelics": "All Relics",
+      "total": "{{count}} total",
+      "pending": "{{count}} pending",
+      "actions": "Actions: {{title}}",
+      "selectRelicToModify": "Select a relic to modify",
+      "reset": "Reset",
+      "amount": "Amount",
+      "totalPreview": "→ {{count}} total",
+      "updating": "Updating...",
+      "update": "Update ({{count}} change)",
+      "update_plural": "Update ({{count}} changes)",
+      "selectRelicAndMakeChanges": "Select a relic and make changes",
+      "noRelicsYet": "No relics yet"
+    }
+  },
+  "journal": {
+    "loadingJournals": "Loading journals...",
+    "list": {
+      "title": "My Journals",
+      "addJournal": "Add Journal",
+      "search": "Search by title, content...",
+      "loading": "Loading...",
+      "showing": "Showing {{count}} journal(s)",
+      "noMatch": "No journals match your search",
+      "noFilter": "No {{filter}} journals yet",
+      "noJournals": "No journals yet",
+      "emptySearch": "Try a different search term",
+      "emptyPinned": "Journals you pin or favorite will appear here",
+      "emptyCTA": "Start writing your first journal entry",
+      "createFirst": "Create Your First Journal"
+    },
+    "detail": {
+      "back": "Back to My Journals",
+      "chatAboutIt": "Chat about it with Spill AI",
+      "edit": "Edit journal",
+      "delete": "Delete journal",
+      "pinned": "Pinned",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "favorited": "Favorited",
+      "favorite": "Favorite",
+      "unfavorite": "Unfavorite",
+      "stopSharing": "Stop sharing with Spill AI",
+      "allowSharing": "Allow sharing with Spill AI",
+      "saveHighlight": "Save Highlight",
+      "savedHighlights": "Saved Highlights ({{count}})",
+      "deleteDialog": "Delete Journal",
+      "deleteConfirm": "Are you sure you want to delete \"{{title}}\"? This cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel",
+      "highlights": "Highlights",
+      "loadingJournal": "Loading journal...",
+      "notFound": "Journal not found"
+    },
+    "form": {
+      "editTitle": "Edit Journal",
+      "newTitle": "New Journal",
+      "quickPrompts": "Quick Prompts",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Give your journal a title...",
+      "contentPlaceholder": "How was your day?",
+      "contentPlaceholderLong": "Write about your day...",
+      "emojisLabel": "Emojis for today",
+      "saving": "Saving...",
+      "update": "Update Journal",
+      "save": "Save Journal",
+      "validation": {
+        "titleRequired": "Title is required",
+        "contentRequired": "Content is required"
+      },
+      "prompts": {
+        "grateful": "What am I grateful for today?",
+        "learned": "What did I learn today?",
+        "challenge": "What challenged me today?",
+        "win": "What was my biggest win?",
+        "mood": "How am I feeling right now?",
+        "goal": "What's one thing I want to accomplish tomorrow?",
+        "people": "Who made a difference in my day?",
+        "surprise": "What surprised me today?",
+        "selfCare": "How did I practice self-care today?",
+        "focus": "What was I focused on today?",
+        "reflect": "What would I do differently?",
+        "wentWell": "💭 What went well today?",
+        "stressed": "😰 What stressed you?",
+        "learnedYou": "💡 What did you learn?",
+        "gratefulFor": "🎯 Grateful for?",
+        "improve": "🚀 Improve tomorrow?",
+        "mainFocus": "🧠 What was your main focus today?",
+        "distracted": "⛔ What distracted you the most?",
+        "priority": "📌 What is your #1 priority for tomorrow?",
+        "gaveEnergy": "🔥 What gave you energy today?",
+        "slowedDown": "📉 What slowed you down today?",
+        "unsure": "🤔 What decision are you still unsure about?"
+      }
+    },
+    "filter": {
+      "all": "All",
+      "pinned": "Pinned",
+      "favorites": "Favorites"
+    }
+  },
+  "productivity": {
+    "page": {
+      "title": "Today's Plan & Tasks",
+      "smartSuggestions": "Smart Suggestions",
+      "optimize": "Optimize My Plan →",
+      "todaysPlan": "Today's Plan",
+      "yourTasks": "Your Tasks",
+      "loading": "Loading...",
+      "noPlan": "No plan for today",
+      "noTasks": "No tasks",
+      "focus": "Focus",
+      "viewPlanAndTasks": "View Today's Plan and My Tasks",
+      "finishOn": "Finish on:"
+    },
+    "status": {
+      "todo": "To Do",
+      "inProgress": "In Progress",
+      "done": "Done"
+    },
+    "event": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "details": "Details",
+      "addActivity": "Add Activity",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "title": "Title",
+      "description": "Description",
+      "save": "Save",
+      "cancel": "Cancel",
+      "priorityLabel": "{{priority}} Priority",
+      "task": "Task",
+      "deadline": "Deadline",
+      "taskStart": "Task Start",
+      "start": "Start",
+      "endDeadline": "End (Deadline)",
+      "changeStatus": "Change status",
+      "deleteConfirm": "Delete this activity?",
+      "setTo": "Set to \"{{status}}\"",
+      "due": "Due",
+      "finishOn": "Finish on: {{date}}",
+      "start": "Start",
+      "deadline": "Deadline"
+    },
+    "eventForm": {
+      "newEvent": "New Event",
+      "editEvent": "Edit Event",
+      "titlePlaceholder": "Event title...",
+      "descriptionPlaceholder": "Add details...",
+      "allDay": "All Day",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "save": "Save Event",
+      "update": "Update Event",
+      "delete": "Delete Event",
+      "newActivity": "New Activity",
+      "editActivity": "Edit Activity",
+      "titleLabel": "Title",
+      "titlePlaceholderExample": "e.g. Deep Work Session",
+      "descriptionLabel": "Description",
+      "activityDateLabel": "Activity date",
+      "startLabel": "Start",
+      "endLabel": "End",
+      "startsLabel": "Starts",
+      "dueLabel": "Due",
+      "productivityLabel": "Productivity",
+      "statusLabel": "Status",
+      "priorityLabel": "Priority",
+      "colorLabel": "Color",
+      "datePlaceholder": "Date",
+      "timePlaceholder": "Time",
+      "dayToDayActivity": "Day-to-day Activity",
+      "taskWithDeadline": "Task with Deadline",
+      "deadlineMarker": "Deadline Marker",
+      "deadlineTask": "Deadline Task",
+      "standardActivity": "Standard Activity",
+      "updateButton": "Update",
+      "createActivityButton": "Create Activity",
+      "editWarning": "Editing a deadline marker. Shared field changes sync to the linked task.",
+      "priority_low": "Low",
+      "priority_medium": "Medium",
+      "priority_high": "High",
+      "priority_Low": "Low",
+      "priority_Medium": "Medium",
+      "priority_High": "High",
+      "level_unproductive": "Unproductive",
+      "level_neutral": "Neutral",
+      "level_productive": "Productive",
+      "level_Unproductive": "Unproductive",
+      "level_Neutral": "Neutral",
+      "level_Productive": "Productive",
+      "color_purple": "Purple",
+      "color_blue": "Blue",
+      "color_green": "Green",
+      "color_yellow": "Yellow",
+      "color_orange": "Orange",
+      "color_red": "Red",
+      "color_pink": "Pink",
+      "color_teal": "Teal",
+      "validation": {
+        "titleRequired": "Title is required",
+        "endAfterStart": "End time must be after start time",
+        "required": "Required",
+        "notAllowedForDeadline": "Not allowed for deadline tasks",
+        "mustBeAfterStart": "Must be after start"
+      }
+    },
+    "focusTimer": {
+      "title": "Focus Session",
+      "focus": "Focus",
+      "shortBreak": "Short Break",
+      "longBreak": "Long Break",
+      "start": "Start Focus Mode",
+      "stop": "STOP",
+      "sessionComplete": "Session Complete!",
+      "breakComplete": "Break Over!"
+    },
+    "suggestions": {
+      "morningTasks": "Move heavy tasks to morning hours when you're most alert",
+      "lighterSchedule": "Your {{day}} schedule is lighter — consider moving some tasks there"
+    },
+    "calendar": {
+      "previousWeek": "Previous week",
+      "nextWeek": "Next week",
+      "undo": "Undo",
+      "redo": "Redo"
+    }
+  },
+  "insight": {
+    "title": "Your Insights",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "performanceOverview": "Performance Overview",
+    "performanceDesc": "Study time, productivity, and focus trends",
+    "timeDistribution": "Time Distribution",
+    "timeDistributionDesc": "How you spent your time",
+    "aiPowered": "AI-Powered Insights",
+    "aiPoweredDesc": "Great progress! Productivity improved by <strong>8%</strong> and you've maintained a <strong>7-day streak</strong>. Your focus peaks between 9\u201311 AM. Consider scheduling lighter tasks on Fridays when focus naturally dips.",
+    "chart": {
+      "studyTime": "Study Time (hrs)",
+      "productivity": "Productivity (%)",
+      "focus": "Focus (%)"
+    },
+    "quickWins": "Quick Wins",
+    "stats": {
+      "productivityScore": "Productivity Score",
+      "totalStudyTime": "Total Study Time",
+      "focusSessions": "Focus Sessions",
+      "scoreUnit": "/100",
+      "completed": "completed",
+      "change": {
+        "productivity": "+8%",
+        "studyTime": "78% of goal",
+        "focusSessions": "7 day streak 🔥"
+      }
+    },
+    "insightTitles": {
+      "peakPerformance": "Peak Performance",
+      "smartBreaks": "Smart Breaks",
+      "eveningDip": "Evening Dip",
+      "sleepConsistency": "Sleep Consistency",
+      "breakScheduling": "Break Scheduling",
+      "peakHoursFocus": "Peak Hours Focus",
+      "reviewSessions": "Review Sessions"
+    },
+    "insightDescriptions": {
+      "peakPerformance": "Focus peaks 9\u201311 AM, 92% productivity",
+      "smartBreaks": "5-min breaks improve retention by 20%",
+      "eveningDip": "Evening sessions are 15% less productive"
+    },
+    "quickWinDescriptions": {
+      "sleepConsistency": "Maintain regular sleep schedule",
+      "breakScheduling": "10-min break every 50 minutes",
+      "peakHoursFocus": "Schedule tasks at 9\u201311 AM",
+      "reviewSessions": "Weekly reviews boost retention"
+    },
+    "impact": {
+      "high": "High Impact",
+      "medium": "Medium Impact"
+    }
+  },
+  "spill": {
+    "header": "Spill AI",
+    "emptyState": "Start a conversation with Spill AI",
+    "emptyStateSub": "Ask anything, share anything, or just start typing",
+    "thinking": "Thinking...",
+    "inputPlaceholder": "Spill your thoughts here...",
+    "inputPlaceholderJournal": "Add your thoughts (optional)...",
+    "journal": "Journal",
+    "errors": {
+      "response": "I'm having trouble forming a response right now. Please try again.",
+      "network": "Sorry, I couldn't reach my thoughts right now. Try again?",
+      "notConfigured": "AI service is not configured. Please check your settings.",
+      "invalidKey": "Invalid API key. Please check your configuration.",
+      "rateLimit": "I'm thinking too fast! Please slow down a bit.",
+      "timeout": "My thoughts are taking too long. Let me try again.",
+      "unknown": "Something went wrong. Please try again.",
+      "withDetails": "Something went wrong: {{details}}"
+    },
+    "system": {
+      "switched": "Switched to {{name}}"
+    },
+    "forwardJournal": {
+      "title": "Forward a Journal",
+      "empty": "No AI-enabled journals"
+    },
+    "personality": {
+      "empathic": "Empathic Listener",
+      "problemSolver": "Problem Solver",
+      "coach": "Motivational Coach"
+    }
+  },
+  "chat": {
+    "rename": "Rename",
+    "delete": "Delete",
+    "deleteDialog": "Delete Chat",
+    "deleteConfirm": "Are you sure you want to delete \"{{title}}\"? This cannot be undone."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "saving": "Saving...",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "search": "Search",
+    "noResults": "No results found",
+    "retry": "Retry",
+    "close": "Close",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "days": {
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat",
+      "sunday": "Sun",
+      "mondayFull": "Monday",
+      "tuesdayFull": "Tuesday",
+      "wednesdayFull": "Wednesday",
+      "thursdayFull": "Thursday",
+      "fridayFull": "Friday",
+      "saturdayFull": "Saturday",
+      "sundayFull": "Sunday"
+    },
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "monthsShort": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dec"
+    },
+    "searchEmojis": "Search emojis...",
+    "noEmojisFound": "No emojis found",
+    "errors": {
+      "renameChat": "Failed to rename chat",
+      "deleteChat": "Failed to delete chat",
+      "loadJournal": "Failed to load journals: {{error}}",
+      "loadJournalDetail": "Failed to load journal"
+    }
+  }
+}

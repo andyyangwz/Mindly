@@ -1,0 +1,523 @@
+{
+  "app": {
+    "name": "Mindly"
+  },
+  "nav": {
+    "mainMenu": "Menu Utama",
+    "home": "Beranda",
+    "journals": "Jurnal Saya",
+    "productivity": "Produktivitas",
+    "insight": "Analisa Saya",
+    "recentChats": "Obrolan Terbaru",
+    "noChats": "Belum ada obrolan",
+    "theme": "Tema",
+    "language": "Bahasa",
+    "light": "Terang",
+    "dark": "Gelap",
+    "english": "English",
+    "indonesian": "Indonesia",
+    "basicPlan": "Paket Dasar",
+    "settings": "Pengaturan",
+    "logout": "Keluar"
+  },
+  "home": {
+    "hero": {
+      "welcome": "Selamat datang kembali, {{name}}!"
+    },
+    "quickActions": {
+      "title": "Aksi Cepat",
+      "newJournal": "Jurnal Baru",
+      "addTask": "Tambah Tugas",
+      "viewInsights": "Lihat Wawasan",
+      "talkToAI": "Ngobrol dengan AI"
+    },
+    "statsGrid": {
+      "tasksCompleted": "Tugas Selesai",
+      "productivity": "Produktivitas"
+    },
+    "weeklyOverview": {
+      "title": "Ringkasan Mingguan",
+      "totalHours": "Total Jam",
+      "tasksDone": "Tugas Selesai",
+      "avgDay": "Rata-rata / Hari",
+      "noData": "Tidak ada data minggu ini"
+    },
+    "dailyInspiration": {
+      "title": "Inspirasi Harian"
+    },
+    "habitRelics": {
+      "title": "Pusaka Kebiasaan",
+      "subtitle": "Kumpulkan, tingkatkan, dan kuasai pusaka-mu",
+      "beAMaster": "Jadi Master",
+      "noRelics": "Belum ada pusaka — ketuk + untuk menempa yang baru",
+      "noEquipped": "Belum ada pusaka yang dipasang — buka Ganti Pusaka untuk memasang",
+      "changeRelics": "Ganti Pusaka",
+      "updateProgress": "Perbarui Progres",
+      "loading": "Memuat...",
+      "status": {
+        "noTarget": "Tanpa Target",
+        "onFire": "Luar Biasa",
+        "achieved": "Tercapai",
+        "almostDone": "Hampir Selesai",
+        "inProgress": "Dalam Progres"
+      }
+    },
+    "createGoal": {
+      "title": "Buat Pusaka Baru",
+      "iconLabel": "Ikon",
+      "titleLabel": "Judul *",
+      "titlePlaceholder": "Misal, Olahraga, Baca Buku, Latihan Coding",
+      "currentProgressLabel": "Progres Saat Ini",
+      "targetLabel": "Target *",
+      "targetPlaceholder": "Misal, 30",
+      "creating": "Membuat...",
+      "create": "Buat Target",
+      "validation": {
+        "nameRequired": "Judul wajib diisi",
+        "targetRequired": "Target harus lebih dari 0",
+        "cannotBeNegative": "Tidak boleh negatif",
+        "createFailed": "Gagal membuat pusaka"
+      }
+    },
+    "editGoal": {
+      "title": "Edit Pusaka",
+      "iconLabel": "Ikon",
+      "titleLabel": "Judul *",
+      "titlePlaceholder": "Misal, Olahraga, Baca Buku, Latihan Coding",
+      "currentProgressLabel": "Progres Saat Ini",
+      "targetLabel": "Target *",
+      "targetPlaceholder": "Misal, 30",
+      "save": "Simpan",
+      "saving": "Menyimpan...",
+      "deleting": "Menghapus...",
+      "delete": "Hapus",
+      "validation": {
+        "cannotBeNegative": "Tidak boleh negatif",
+        "updateFailed": "Gagal memperbarui pusaka",
+        "deleteFailed": "Gagal menghapus pusaka"
+      }
+    },
+    "relicManager": {
+      "title": "Kelola Pusaka",
+      "equipped": "Terpasang",
+      "available": "Tersedia",
+      "dragHint": "Seret pusaka untuk memasang atau melepas",
+      "emptyEquipped": "Tidak ada pusaka terpasang",
+      "emptyAvailable": "Tidak ada pusaka tersedia",
+      "saveOrder": "Simpan Urutan",
+      "changeRelicsTitle": "Ganti Pusaka",
+      "upgradeRelicsTitle": "Tingkatkan Pusaka",
+      "changeRelicsDesc": "Seret pusaka antara inventaris dan slot terpasang",
+      "upgradeRelicsDesc": "Perkuat pusaka-mu",
+      "equippedLoadout": "Perlengkapan Terpasang",
+      "relicInventory": "Inventaris Pusaka",
+      "owned": "{{count}} dimiliki",
+      "dropToUnequip": "Lepas untuk melepas",
+      "dropHereToStore": "Letakkan di sini untuk menyimpan",
+      "emptySlot": "Slot Kosong",
+      "dropHere": "Letakkan di sini",
+      "noRelicsInventory": "Belum ada pusaka di inventaris"
+    },
+    "updateProgress": {
+      "title": "Perbarui Progres",
+      "selectRelic": "Pilih pusaka untuk diperbarui",
+      "currentProgress": "Progres Saat Ini",
+      "addProgress": "Tambah Progres",
+      "setProgress": "Atur Progres",
+      "adjust": "Sesuaikan",
+      "noRelicsFound": "Tidak ada pusaka ditemukan",
+      "allRelics": "Semua Pusaka",
+      "total": "{{count}} total",
+      "pending": "{{count}} tertunda",
+      "actions": "Aksi: {{title}}",
+      "selectRelicToModify": "Pilih pusaka untuk dimodifikasi",
+      "reset": "Reset",
+      "amount": "Jumlah",
+      "totalPreview": "→ {{count}} total",
+      "updating": "Memperbarui...",
+      "update": "Perbarui ({{count}} perubahan)",
+      "update_plural": "Perbarui ({{count}} perubahan)",
+      "selectRelicAndMakeChanges": "Pilih pusaka dan lakukan perubahan",
+      "noRelicsYet": "Belum ada pusaka"
+    }
+  },
+  "journal": {
+    "loadingJournals": "Memuat jurnal...",
+    "list": {
+      "title": "Jurnal Saya",
+      "addJournal": "Tambah Jurnal",
+      "search": "Cari judul, isi...",
+      "loading": "Memuat...",
+      "showing": "Menampilkan {{count}} jurnal",
+      "noMatch": "Tidak ada jurnal yang cocok dengan pencarianmu",
+      "noFilter": "Belum ada jurnal {{filter}",
+      "noJournals": "Belum ada jurnal",
+      "emptySearch": "Coba kata kunci lain",
+      "emptyPinned": "Jurnal yang kamu pin atau favorit akan muncul di sini",
+      "emptyCTA": "Mulai tulis jurnal pertamamu",
+      "createFirst": "Buat Jurnal Pertama"
+    },
+    "detail": {
+      "back": "Kembali ke Jurnal Saya",
+      "chatAboutIt": "Obrolkan dengan Spill AI",
+      "edit": "Edit jurnal",
+      "delete": "Hapus jurnal",
+      "pinned": "Disematkan",
+      "pin": "Sematkan",
+      "unpin": "Lepas sematan",
+      "favorited": "Difavoritkan",
+      "favorite": "Favoritkan",
+      "unfavorite": "Hapus favorit",
+      "stopSharing": "Berhenti berbagi dengan Spill AI",
+      "allowSharing": "Izinkan berbagi dengan Spill AI",
+      "saveHighlight": "Simpan Sorotan",
+      "savedHighlights": "Sorotan Tersimpan ({{count}})",
+      "deleteDialog": "Hapus Jurnal",
+      "deleteConfirm": "Yakin ingin menghapus \"{{title}}\"? Tindakan ini tidak bisa dibatalkan.",
+      "confirm": "Hapus",
+      "cancel": "Batal",
+      "highlights": "Sorotan",
+      "loadingJournal": "Memuat jurnal...",
+      "notFound": "Jurnal tidak ditemukan"
+    },
+    "form": {
+      "editTitle": "Edit Jurnal",
+      "newTitle": "Jurnal Baru",
+      "quickPrompts": "Panduan Cepat",
+      "titleLabel": "Judul",
+      "titlePlaceholder": "Beri judul jurnalmu...",
+      "contentPlaceholder": "Apa kabarmu hari ini?",
+      "contentPlaceholderLong": "Ceritakan hari-harimu...",
+      "emojisLabel": "Emoji untuk hari ini",
+      "saving": "Menyimpan...",
+      "update": "Perbarui Jurnal",
+      "save": "Simpan Jurnal",
+      "validation": {
+        "titleRequired": "Judul wajib diisi",
+        "contentRequired": "Konten wajib diisi"
+      },
+      "prompts": {
+        "grateful": "Apa yang aku syukuri hari ini?",
+        "learned": "Apa yang aku pelajari hari ini?",
+        "challenge": "Apa tantanganku hari ini?",
+        "win": "Apa pencapaian terbesarku hari ini?",
+        "mood": "Bagaimana perasaanku saat ini?",
+        "goal": "Satu hal yang ingin aku capai besok?",
+        "people": "Siapa yang membuat hariku berarti?",
+        "surprise": "Apa yang mengejutkanku hari ini?",
+        "selfCare": "Bagaimana aku merawat diriku hari ini?",
+        "focus": "Apa yang menjadi fokusku hari ini?",
+        "reflect": "Apa yang akan aku lakukan berbeda?",
+        "wentWell": "💭 Apa yang berjalan lancar hari ini?",
+        "stressed": "😰 Apa yang membuatmu stres?",
+        "learnedYou": "💡 Apa yang kamu pelajari?",
+        "gratefulFor": "🎯 Bersyukur untuk?",
+        "improve": "🚀 Perbaiki besok?",
+        "mainFocus": "🧠 Apa fokus utamamu hari ini?",
+        "distracted": "⛔ Apa yang paling mengganggumu?",
+        "priority": "📌 Apa prioritas #1 untuk besok?",
+        "gaveEnergy": "🔥 Apa yang memberimu energi hari ini?",
+        "slowedDown": "📉 Apa yang memperlambatmu hari ini?",
+        "unsure": "🤔 Keputusan apa yang masih kamu ragukan?"
+      }
+    },
+    "filter": {
+      "all": "Semua",
+      "pinned": "Disematkan",
+      "favorites": "Favorit"
+    }
+  },
+  "productivity": {
+    "page": {
+      "title": "Rencana & Tugas Hari Ini",
+      "smartSuggestions": "Saran Cerdas",
+      "optimize": "Optimalkan Rencanaku →",
+      "todaysPlan": "Rencana Hari Ini",
+      "yourTasks": "Tugasmu",
+      "loading": "Memuat...",
+      "noPlan": "Belum ada rencana hari ini",
+      "noTasks": "Tidak ada tugas",
+      "focus": "Fokus",
+      "viewPlanAndTasks": "Lihat Rencana & Tugas Hari Ini",
+      "finishOn": "Selesai:"
+    },
+    "status": {
+      "todo": "Harus Dikerjakan",
+      "inProgress": "Sedang Dikerjakan",
+      "done": "Selesai"
+    },
+    "event": {
+      "edit": "Edit",
+      "delete": "Hapus",
+      "details": "Detail",
+      "addActivity": "Tambah Aktivitas",
+      "startTime": "Waktu Mulai",
+      "endTime": "Waktu Selesai",
+      "title": "Judul",
+      "description": "Deskripsi",
+      "save": "Simpan",
+      "cancel": "Batal",
+      "priorityLabel": "Prioritas {{priority}}",
+      "task": "Tugas",
+      "deadline": "Tenggat",
+      "taskStart": "Mulai Tugas",
+      "start": "Mulai",
+      "endDeadline": "Selesai (Tenggat)",
+      "changeStatus": "Ubah status",
+      "deleteConfirm": "Hapus aktivitas ini?",
+      "setTo": "Atur ke \"{{status}}\"",
+      "due": "Jatuh Tempo",
+      "finishOn": "Selesai: {{date}}",
+      "start": "Mulai",
+      "deadline": "Tenggat"
+    },
+    "eventForm": {
+      "newEvent": "Acara Baru",
+      "editEvent": "Edit Acara",
+      "titlePlaceholder": "Judul acara...",
+      "descriptionPlaceholder": "Tambahkan detail...",
+      "allDay": "Seharian",
+      "startDate": "Tanggal Mulai",
+      "endDate": "Tanggal Selesai",
+      "startTime": "Waktu Mulai",
+      "endTime": "Waktu Selesai",
+      "save": "Simpan Acara",
+      "update": "Perbarui Acara",
+      "delete": "Hapus Acara",
+      "newActivity": "Aktivitas Baru",
+      "editActivity": "Edit Aktivitas",
+      "titleLabel": "Judul",
+      "titlePlaceholderExample": "Misal Sesi Fokus",
+      "descriptionLabel": "Deskripsi",
+      "activityDateLabel": "Tanggal aktivitas",
+      "startLabel": "Mulai",
+      "endLabel": "Selesai",
+      "startsLabel": "Mulai",
+      "dueLabel": "Jatuh Tempo",
+      "productivityLabel": "Produktivitas",
+      "statusLabel": "Status",
+      "priorityLabel": "Prioritas",
+      "colorLabel": "Warna",
+      "datePlaceholder": "Tanggal",
+      "timePlaceholder": "Waktu",
+      "dayToDayActivity": "Aktivitas Harian",
+      "taskWithDeadline": "Tugas dengan Tenggat",
+      "deadlineMarker": "Penanda Tenggat",
+      "deadlineTask": "Tugas Tenggat",
+      "standardActivity": "Aktivitas Standar",
+      "updateButton": "Perbarui",
+      "createActivityButton": "Buat Aktivitas",
+      "editWarning": "Mengedit penanda tenggat. Perubahan akan tersinkron ke tugas terkait.",
+      "priority_low": "Rendah",
+      "priority_medium": "Sedang",
+      "priority_high": "Tinggi",
+      "priority_Low": "Rendah",
+      "priority_Medium": "Sedang",
+      "priority_High": "Tinggi",
+      "level_unproductive": "Tidak Produktif",
+      "level_neutral": "Netral",
+      "level_productive": "Produktif",
+      "level_Unproductive": "Tidak Produktif",
+      "level_Neutral": "Netral",
+      "level_Productive": "Produktif",
+      "color_purple": "Ungu",
+      "color_blue": "Biru",
+      "color_green": "Hijau",
+      "color_yellow": "Kuning",
+      "color_orange": "Jingga",
+      "color_red": "Merah",
+      "color_pink": "Merah Muda",
+      "color_teal": "Teal",
+      "validation": {
+        "titleRequired": "Judul wajib diisi",
+        "endAfterStart": "Waktu selesai harus setelah waktu mulai",
+        "required": "Wajib diisi",
+        "notAllowedForDeadline": "Tidak diizinkan untuk tugas tenggat",
+        "mustBeAfterStart": "Harus setelah waktu mulai"
+      }
+    },
+    "focusTimer": {
+      "title": "Sesi Fokus",
+      "focus": "Fokus",
+      "shortBreak": "Istirahat Sebentar",
+      "longBreak": "Istirahat Panjang",
+      "start": "Mulai Mode Fokus",
+      "stop": "BERHENTI",
+      "sessionComplete": "Sesi Selesai!",
+      "breakComplete": "Istirahat Selesai!"
+    },
+    "suggestions": {
+      "morningTasks": "Pindahkan tugas berat ke jam pagi saat kamu paling waspada",
+      "lighterSchedule": "Jadwal {{day}}mu lebih ringan — pertimbangkan pindahkan beberapa tugas ke sana"
+    },
+    "calendar": {
+      "previousWeek": "Minggu sebelumnya",
+      "nextWeek": "Minggu berikutnya",
+      "undo": "Urungkan",
+      "redo": "Ulangi"
+    }
+  },
+  "insight": {
+    "title": "Analisa Saya",
+    "weekly": "Mingguan",
+    "monthly": "Bulanan",
+    "performanceOverview": "Gambaran Performa",
+    "performanceDesc": "Tren waktu belajar, produktivitas, dan fokus",
+    "timeDistribution": "Distribusi Waktu",
+    "timeDistributionDesc": "Bagaimana kamu menghabiskan waktumu",
+    "aiPowered": "Wawasan Berbasis AI",
+    "aiPoweredDesc": "Kemajuan bagus! Produktivitas naik <strong>8%</strong> dan kamu mempertahankan <strong>7 hari streak</strong>. Fokus puncak antara jam 9\u201311. Pertimbangkan tugas ringan di hari Jumat saat fokus menurun.",
+    "chart": {
+      "studyTime": "Waktu Belajar (jam)",
+      "productivity": "Produktivitas (%)",
+      "focus": "Fokus (%)"
+    },
+    "quickWins": "Kemenangan Cepat",
+    "stats": {
+      "productivityScore": "Skor Produktivitas",
+      "totalStudyTime": "Total Waktu Belajar",
+      "focusSessions": "Sesi Fokus",
+      "scoreUnit": "/100",
+      "completed": "selesai",
+      "change": {
+        "productivity": "+8%",
+        "studyTime": "78% dari target",
+        "focusSessions": "7 hari streak 🔥"
+      }
+    },
+    "insightTitles": {
+      "peakPerformance": "Performa Puncak",
+      "smartBreaks": "Istirahat Cerdas",
+      "eveningDip": "Penurunan Malam",
+      "sleepConsistency": "Konsistensi Tidur",
+      "breakScheduling": "Jadwal Istirahat",
+      "peakHoursFocus": "Fokus Jam Puncak",
+      "reviewSessions": "Sesi Review"
+    },
+    "insightDescriptions": {
+      "peakPerformance": "Fokus puncak 9\u201311 AM, produktivitas 92%",
+      "smartBreaks": "Istirahat 5 menit meningkatkan retensi 20%",
+      "eveningDip": "Sesi malam 15% kurang produktif"
+    },
+    "quickWinDescriptions": {
+      "sleepConsistency": "Jaga jadwal tidur teratur",
+      "breakScheduling": "Istirahat 10 menit setiap 50 menit",
+      "peakHoursFocus": "Jadwalkan tugas di jam 9\u201311",
+      "reviewSessions": "Review mingguan tingkatkan retensi"
+    },
+    "impact": {
+      "high": "Dampak Tinggi",
+      "medium": "Dampak Sedang"
+    }
+  },
+  "spill": {
+    "header": "Spill AI",
+    "emptyState": "Mulai percakapan dengan Spill AI",
+    "emptyStateSub": "Tanya apa saja, cerita apa saja, atau mulailah mengetik",
+    "thinking": "Berpikir...",
+    "inputPlaceholder": "Curhat di sini...",
+    "inputPlaceholderJournal": "Tambahkan pemikiranmu (opsional)...",
+    "journal": "Jurnal",
+    "errors": {
+      "response": "Aku kesulitan merangkai jawaban saat ini. Coba lagi ya.",
+      "network": "Maaf, aku tidak bisa menjangkau pikiranku saat ini. Coba lagi?",
+      "notConfigured": "Layanan AI belum dikonfigurasi. Periksa pengaturanmu.",
+      "invalidKey": "Kunci API tidak valid. Periksa konfigurasi kamu.",
+      "rateLimit": "Aku berpikir terlalu cepat! Pelan-pelan sedikit ya.",
+      "timeout": "Pikiranku terlalu lama. Coba lagi.",
+      "unknown": "Ada yang tidak beres. Coba lagi.",
+      "withDetails": "Ada yang tidak beres: {{details}}"
+    },
+    "system": {
+      "switched": "Beralih ke {{name}}"
+    },
+    "forwardJournal": {
+      "title": "Teruskan Jurnal",
+      "empty": "Tidak ada jurnal dengan AI"
+    },
+    "personality": {
+      "empathic": "Pendengar Empatik",
+      "problemSolver": "Pemecah Masalah",
+      "coach": "Pelatih Motivasi"
+    }
+  },
+  "chat": {
+    "rename": "Ganti Nama",
+    "delete": "Hapus",
+    "deleteDialog": "Hapus Obrolan",
+    "deleteConfirm": "Yakin ingin menghapus \"{{title}}\"? Tindakan ini tidak bisa dibatalkan."
+  },
+  "common": {
+    "loading": "Memuat...",
+    "error": "Terjadi kesalahan",
+    "saving": "Menyimpan...",
+    "confirm": "Konfirmasi",
+    "cancel": "Batal",
+    "search": "Cari",
+    "noResults": "Tidak ada hasil",
+    "retry": "Coba Lagi",
+    "close": "Tutup",
+    "save": "Simpan",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "create": "Buat",
+    "back": "Kembali",
+    "next": "Lanjut",
+    "done": "Selesai",
+    "today": "Hari Ini",
+    "yesterday": "Kemarin",
+    "tomorrow": "Besok",
+    "days": {
+      "monday": "Sen",
+      "tuesday": "Sel",
+      "wednesday": "Rab",
+      "thursday": "Kam",
+      "friday": "Jum",
+      "saturday": "Sab",
+      "sunday": "Min",
+      "mondayFull": "Senin",
+      "tuesdayFull": "Selasa",
+      "wednesdayFull": "Rabu",
+      "thursdayFull": "Kamis",
+      "fridayFull": "Jumat",
+      "saturdayFull": "Sabtu",
+      "sundayFull": "Minggu"
+    },
+    "months": {
+      "january": "Januari",
+      "february": "Februari",
+      "march": "Maret",
+      "april": "April",
+      "may": "Mei",
+      "june": "Juni",
+      "july": "Juli",
+      "august": "Agustus",
+      "september": "September",
+      "october": "Oktober",
+      "november": "November",
+      "december": "Desember"
+    },
+    "monthsShort": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "Mei",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Agu",
+      "sep": "Sep",
+      "oct": "Okt",
+      "nov": "Nov",
+      "dec": "Des"
+    },
+    "searchEmojis": "Cari emoji...",
+    "noEmojisFound": "Tidak ada emoji ditemukan",
+    "errors": {
+      "renameChat": "Gagal mengganti nama obrolan",
+      "deleteChat": "Gagal menghapus obrolan",
+      "loadJournal": "Gagal memuat jurnal: {{error}}",
+      "loadJournalDetail": "Gagal memuat jurnal"
+    }
+  }
+}

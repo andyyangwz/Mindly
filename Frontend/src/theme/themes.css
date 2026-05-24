@@ -1,0 +1,67 @@
+:root {
+  --color-primary: #7C3AED;
+  --color-primary-text: #7C3AED;
+  --color-secondary: #A78BFA;
+  --color-accent: #C4B5FD;
+  --color-bg: #F5F3FF;
+  --color-dark: #1E1B4B;
+  --color-muted: #6B7280;
+  --color-border: #E5E7EB;
+  --color-card: #FFFFFF;
+  --color-hover: #F9FAFB;
+  --color-surface: #FFFFFF;
+  --color-input: #FFFFFF;
+  --color-input-placeholder: #9CA3AF;
+
+  --relic-bg: rgba(255,255,255,0.55);
+  --relic-card-bg: rgba(255,255,255,0.5);
+  --relic-border: rgba(45,43,61,0.08);
+  --relic-border-strong: rgba(124,92,252,0.15);
+  --relic-accent: #7C5CFC;
+  --relic-text-primary: rgba(45,43,61,0.85);
+  --relic-text-secondary: rgba(45,43,61,0.5);
+  --relic-text-muted: rgba(45,43,61,0.3);
+  --relic-text-label: rgba(45,43,61,0.4);
+  --relic-glow: rgba(124,92,252,0.12);
+  --relic-glow-strong: rgba(124,92,252,0.2);
+  --relic-progress-bg: rgba(45,43,61,0.06);
+  --relic-modal-bg: rgba(248,246,252,0.96);
+  --relic-modal-border: rgba(45,43,61,0.06);
+  --relic-overlay: rgba(255,255,255,0.5);
+  --relic-elevated-shadow: 0 8px 32px rgba(45,43,61,0.06);
+  --relic-complete: #10B981;
+}
+
+[data-theme="dark"] {
+  --color-primary: #7C3AED;
+  --color-primary-text: #B794F4;
+  --color-secondary: #A78BFA;
+  --color-accent: #C4B5FD;
+  --color-bg: #0B1121;
+  --color-dark: #F8FAFC;
+  --color-muted: #CBD5E1;
+  --color-border: #293548;
+  --color-card: #162032;
+  --color-hover: #293548;
+  --color-surface: #162032;
+  --color-input: #1E293B;
+  --color-input-placeholder: #64748B;
+
+  --relic-bg: rgba(255,255,255,0.02);
+  --relic-card-bg: rgba(255,255,255,0.03);
+  --relic-border: rgba(255,255,255,0.06);
+  --relic-border-strong: rgba(108,71,255,0.3);
+  --relic-accent: #6C47FF;
+  --relic-text-primary: rgba(232,230,240,0.85);
+  --relic-text-secondary: rgba(154,148,184,0.6);
+  --relic-text-muted: rgba(154,148,184,0.35);
+  --relic-text-label: rgba(154,148,184,0.5);
+  --relic-glow: rgba(108,71,255,0.2);
+  --relic-glow-strong: rgba(108,71,255,0.3);
+  --relic-progress-bg: rgba(255,255,255,0.04);
+  --relic-modal-bg: rgba(18,14,30,0.95);
+  --relic-modal-border: rgba(255,255,255,0.04);
+  --relic-overlay: rgba(0,0,0,0.6);
+  --relic-elevated-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  --relic-complete: #10B981;
+}

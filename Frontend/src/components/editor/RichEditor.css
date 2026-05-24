@@ -1,0 +1,304 @@
+/* ── Wrapper ── */
+.re-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  background: var(--re-bg, #ffffff);
+  border: 1px solid var(--re-border, #e5e7eb);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.01);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.re-wrapper:focus-within {
+  border-color: var(--re-accent, #8b5cf6);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--re-accent, #8b5cf6) 15%, transparent),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Toolbar ── */
+.re-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--re-border, #e5e7eb);
+  background: var(--re-toolbar-bg, #fafafa);
+  border-radius: 14px 14px 0 0;
+  flex-wrap: wrap;
+  user-select: none;
+}
+
+.re-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.re-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--re-border, #e5e7eb);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.re-toolbar-spacer {
+  flex: 1;
+  min-width: 8px;
+}
+
+.re-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--re-muted, #6b7280);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.re-toolbar-btn:hover {
+  background: var(--re-hover-bg, #f3f4f6);
+  color: var(--re-text, #111827);
+}
+
+.re-toolbar-btn.active {
+  background: color-mix(in srgb, var(--re-accent, #8b5cf6) 14%, transparent);
+  color: var(--re-accent, #8b5cf6);
+}
+
+.re-toolbar-btn:active {
+  transform: scale(0.92);
+}
+
+/* ── Editor Container ── */
+.re-editor-container {
+  padding: 8px 0;
+  min-height: 260px;
+}
+
+/* ── Editable Content ── */
+.re-editor-content {
+  outline: none;
+  padding: 8px 24px 24px;
+  min-height: 240px;
+  font-size: 15px;
+  line-height: 1.85;
+  color: var(--re-text, #111827);
+  font-family: inherit;
+  caret-color: var(--re-accent, #8b5cf6);
+}
+
+/* Placeholder */
+.re-editor-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--re-placeholder, #9ca3af);
+  pointer-events: none;
+  height: 0;
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* ── ProseMirror Content Styles ── */
+.re-editor-content .ProseMirror {
+  outline: none;
+}
+
+.re-editor-content h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--re-text, #111827);
+  margin: 1.4em 0 0.5em;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.re-editor-content h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--re-text, #111827);
+  margin: 1.2em 0 0.4em;
+  line-height: 1.4;
+}
+
+.re-editor-content p {
+  margin: 0 0 0.6em;
+}
+
+.re-editor-content ul,
+.re-editor-content ol {
+  margin: 0.4em 0;
+  padding-left: 1.6em;
+}
+
+.re-editor-content li {
+  margin-bottom: 0.25em;
+}
+
+.re-editor-content blockquote {
+  margin: 0.8em 0;
+  padding: 0.4em 1em 0.4em 1.2em;
+  border-left: 3px solid var(--re-accent, #8b5cf6);
+  color: var(--re-muted, #6b7280);
+  font-style: italic;
+  background: color-mix(in srgb, var(--re-accent, #8b5cf6) 6%, transparent);
+  border-radius: 0 8px 8px 0;
+}
+
+.re-editor-content strong {
+  font-weight: 700;
+}
+
+.re-editor-content em {
+  font-style: italic;
+}
+
+.re-editor-content u {
+  text-decoration: underline;
+}
+
+.re-editor-content s {
+  text-decoration: line-through;
+}
+
+.re-editor-content mark {
+  background: #fef08a;
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.re-editor-content a.re-link {
+  color: var(--re-accent, #8b5cf6);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.re-editor-content a.re-link:hover {
+  opacity: 0.8;
+}
+
+.re-editor-content pre {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 0.8em 0;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: auto;
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+}
+
+.re-editor-content code {
+  background: color-mix(in srgb, var(--re-accent, #8b5cf6) 10%, transparent);
+  color: var(--re-accent, #8b5cf6);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.9em;
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+}
+
+.re-editor-content pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+.re-editor-content hr {
+  border: none;
+  border-top: 1px solid var(--re-border, #e5e7eb);
+  margin: 1.5em 0;
+}
+
+.re-editor-content ul {
+  list-style-type: disc;
+}
+
+.re-editor-content ol {
+  list-style-type: decimal;
+}
+
+/* Selection styling */
+.re-editor-content ::selection {
+  background: color-mix(in srgb, var(--re-accent, #8b5cf6) 30%, transparent);
+}
+
+/* ── Status indicator ── */
+.re-status {
+  position: absolute;
+  bottom: 10px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--re-muted, #9ca3af);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.re-status.visible {
+  opacity: 1;
+}
+
+.re-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--re-accent, #8b5cf6);
+}
+
+/* ── Light mode (default) ── */
+:root {
+  --re-bg: #ffffff;
+  --re-toolbar-bg: #fafafa;
+  --re-border: #e5e7eb;
+  --re-text: #111827;
+  --re-muted: #6b7280;
+  --re-placeholder: #9ca3af;
+  --re-hover-bg: #f3f4f6;
+  --re-accent: #8b5cf6;
+}
+
+/* ── Dark mode ── */
+[data-theme="dark"] {
+  --re-bg: #1a1a2e;
+  --re-toolbar-bg: #1e1e32;
+  --re-border: #2d2d44;
+  --re-text: #e4e4ec;
+  --re-muted: #8888a0;
+  --re-placeholder: #555570;
+  --re-hover-bg: #252540;
+  --re-accent: #a78bfa;
+}
+
+[data-theme="dark"] .re-editor-content blockquote {
+  background: color-mix(in srgb, var(--re-accent, #a78bfa) 8%, transparent);
+}
+
+[data-theme="dark"] .re-editor-content mark {
+  background: #7c6a3a;
+}
+
+[data-theme="dark"] .re-editor-content pre {
+  background: #0f0f1a;
+}
+
+[data-theme="dark"] .re-editor-content ::selection {
+  background: color-mix(in srgb, var(--re-accent, #a78bfa) 35%, transparent);
+}

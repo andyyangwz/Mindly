@@ -1,0 +1,56 @@
+from sqlalchemy.dialects.postgresql import UUID
+from app.extensions import db
+from app.utils.productivity_constants import VALID_PRODUCTIVITY_LEVELS, VALID_STATUSES
+
+
+class ProductivityEvent(db.Model):
+    __tablename__ = "productivity_events"
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=db.func.gen_random_uuid())
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"), nullable=False, index=True)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, default="")
+    event_date = db.Column(db.Date, nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    color = db.Column(db.String(7), default="#7C3AED")
+    priority = db.Column(db.String(10), default="medium")
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+
+    productivity_level = db.Column(db.String(20), default="neutral")
+    has_deadline = db.Column(db.Boolean, default=False, nullable=False)
+    is_deadline_marker = db.Column(db.Boolean, default=False, nullable=False)
+    task_group_id = db.Column(UUID(as_uuid=True), nullable=True, index=True)
+    deadline_date = db.Column(db.Date, nullable=True)
+    deadline_time = db.Column(db.Time, nullable=True)
+    status = db.Column(db.String(20), default="To Do", nullable=False)
+    status_change_at = db.Column(db.DateTime, nullable=True)
+
+    VALID_LEVELS = set(VALID_PRODUCTIVITY_LEVELS.keys())
+    VALID_STATUSES = VALID_STATUSES
+
+    def to_dict(self, plan=False):
+        d = {
+            "id": str(self.id),
+            "user_id": str(self.user_id),
+            "title": self.title,
+            "description": self.description or "",
+            "event_date": self.event_date.isoformat() if self.event_date else None,
+            "end_time": self.end_time.strftime("%H:%M") if self.end_time else None,
+            "color": self.color,
+            "priority": self.priority,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "productivity_level": self.productivity_level,
+            "has_deadline": self.has_deadline,
+            "is_deadline_marker": self.is_deadline_marker,
+            "task_group_id": str(self.task_group_id) if self.task_group_id else None,
+            "deadline_date": self.deadline_date.isoformat() if self.deadline_date else None,
+            "deadline_time": self.deadline_time.strftime("%H:%M") if self.deadline_time else None,
+            "status": self.status,
+            "status_change_at": self.status_change_at.isoformat() if self.status_change_at else None,
+        }
+        if not (plan and self.has_deadline):
+            d["start_time"] = self.start_time.strftime("%H:%M") if self.start_time else None
+        return d
