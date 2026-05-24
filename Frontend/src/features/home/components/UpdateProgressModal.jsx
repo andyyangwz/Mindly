@@ -1,7 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { Trash2 } from "lucide-react";
 import { theme } from "../../../theme";
 import { resolveIcon } from "./IconPicker";
+import ConfirmDialog from "../../../components/ui/ConfirmDialog";
 import InfoButton from "../../../components/tutorial/InfoButton";
 
 const circ = 2 * Math.PI * 42;
@@ -15,13 +17,16 @@ function getStatus(t, current, target) {
   return { label: t("home.habitRelics.status.inProgress"), color: "var(--color-muted)", bg: "color-mix(in srgb, var(--color-muted) 12%, transparent)" };
 }
 
-export default function UpdateProgressModal({ open, onClose, relics, onUpdate }) {
+export default function UpdateProgressModal({ open, onClose, relics, onUpdate, onDeleted }) {
   const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState(null);
   const [pendingOps, setPendingOps] = useState({});
   const [inputValue, setInputValue] = useState("1");
   const [updating, setUpdating] = useState(false);
   const [chargeAnim, setChargeAnim] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     if (open) {
@@ -49,16 +54,12 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate })
 
   const selectRelic = (id) => {
     setSelectedId(id);
-    const op = pendingOps[id];
-    if (op) {
-      if (op.type === "add") {
-        setInputValue(String(op.value));
-      } else {
-        setInputValue("");
-      }
-    } else {
-      setInputValue("1");
-    }
+    setInputValue("1");
+    setPendingOps((prev) => ({
+      ...prev,
+      [id]: { type: "add", value: 1 },
+    }));
+    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   const handleReset = () => {
@@ -473,6 +474,27 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate })
                 }}>
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                     <button
+                      onClick={() => setDeleteConfirm(true)}
+                      disabled={!selected || updating}
+                      style={{
+                        padding: "9px 12px", borderRadius: 9,
+                        border: selected ? "1px solid rgba(239,68,68,0.25)" : "1px solid var(--color-border)",
+                        background: selected ? "rgba(239,68,68,0.06)" : "transparent",
+                        color: selected ? "#DC2626" : "var(--color-muted)",
+                        fontSize: 11, fontWeight: 600,
+                        cursor: selected && !updating ? "pointer" : "not-allowed",
+                        transition: "all 0.15s",
+                        whiteSpace: "nowrap",
+                        fontFamily: "inherit",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                      }}
+                    >
+                      <Trash2 size={12} />
+                      {t("home.updateProgress.delete")}
+                    </button>
+                    <button
                       onClick={handleReset}
                       disabled={!selected || updating}
                       style={{
@@ -495,6 +517,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate })
                         Add
                       </span>
                       <input
+                        ref={inputRef}
                         type="number"
                         value={inputValue}
                         onChange={handleInputChange}
@@ -582,6 +605,29 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate })
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={deleteConfirm}
+        title={t("home.updateProgress.deleteTitle")}
+        message={t("home.updateProgress.deleteMessage")}
+        confirmLabel={t("home.updateProgress.deleteConfirm")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={async () => {
+          if (!selectedId) return;
+          setDeleting(true);
+          try {
+            await onDeleted(selectedId);
+            setDeleteConfirm(false);
+            setSelectedId(null);
+          } catch {
+            setDeleting(false);
+            setDeleteConfirm(false);
+          }
+        }}
+        onCancel={() => setDeleteConfirm(false)}
+        loading={deleting}
+        variant="danger"
+      />
     </div>
   );
 }

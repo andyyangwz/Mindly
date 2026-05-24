@@ -138,7 +138,11 @@
       "update": "Update ({{count}} change)",
       "update_plural": "Update ({{count}} changes)",
       "selectRelicAndMakeChanges": "Select a relic and make changes",
-      "noRelicsYet": "No relics yet"
+      "noRelicsYet": "No relics yet",
+      "delete": "Delete",
+      "deleteTitle": "Delete Relic?",
+      "deleteMessage": "This relic will be permanently removed from your archive.",
+      "deleteConfirm": "Delete"
     }
   },
   "journal": {

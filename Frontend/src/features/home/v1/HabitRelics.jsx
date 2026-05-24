@@ -282,6 +282,7 @@ export default function HabitRelics() {
         onClose={() => setUpdateProgressOpen(false)}
         relics={relics}
         onUpdate={updateRelic}
+        onDeleted={deleteRelic}
       />
     </div>
   );

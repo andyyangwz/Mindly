@@ -138,7 +138,11 @@
       "update": "Perbarui ({{count}} perubahan)",
       "update_plural": "Perbarui ({{count}} perubahan)",
       "selectRelicAndMakeChanges": "Pilih pusaka dan lakukan perubahan",
-      "noRelicsYet": "Belum ada pusaka"
+      "noRelicsYet": "Belum ada pusaka",
+      "delete": "Hapus",
+      "deleteTitle": "Hapus Pusaka?",
+      "deleteMessage": "Pusaka ini akan dihapus secara permanen dari arsip Anda.",
+      "deleteConfirm": "Hapus"
     }
   },
   "journal": {
