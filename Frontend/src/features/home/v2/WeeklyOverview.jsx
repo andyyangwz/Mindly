@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next"
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import { theme } from "../../../theme"
+import InfoButton from "../../../components/tutorial/InfoButton"
 import { statsService } from "../services/statsService"
 
 function getMonday(d) {
@@ -22,25 +23,11 @@ function formatDate(d) {
 export default function WeeklyOverview() {
   const { t } = useTranslation()
 
-  const defaultWeekDays = [
-    { label: t("common.days.monday"), hours: 0, isPast: true, isToday: false, isFuture: false },
-    { label: t("common.days.tuesday"), hours: 0, isPast: true, isToday: false, isFuture: false },
-    { label: t("common.days.wednesday"), hours: 0, isPast: true, isToday: false, isFuture: false },
-    { label: t("common.days.thursday"), hours: 0, isPast: true, isToday: false, isFuture: false },
-    { label: t("common.days.friday"), hours: 0, isPast: true, isToday: false, isFuture: false },
-    { label: t("common.days.saturday"), hours: 0, isPast: true, isToday: false, isFuture: false },
-    { label: t("common.days.sunday"), hours: 0, isPast: true, isToday: false, isFuture: false },
-  ]
-
   const [weekStart, setWeekStart] = useState(() => formatDate(getMonday(new Date())))
   const [loading, setLoading] = useState(true)
-  const [data, setData] = useState({
-    weekDays: defaultWeekDays,
-    totalHours: 0,
-    tasksDone: 0,
-    avgHours: 0,
-    dateRange: "",
-  })
+  const [error, setError] = useState(false)
+  const [data, setData] = useState(null)
+  const fetchId = useRef(0)
 
   const goBack = useCallback(() => {
     setWeekStart((prev) => {
@@ -59,10 +46,12 @@ export default function WeeklyOverview() {
   }, [])
 
   useEffect(() => {
-    setLoading(true);
-    let cancelled = false;
+    const id = ++fetchId.current
+    setLoading(true)
+    setError(false)
+
     statsService.getWeeklyStats(weekStart).then((res) => {
-      if (cancelled) return;
+      if (id !== fetchId.current) return
       setData({
         weekDays: res.weekDays.map((d) => ({
           ...d,
@@ -72,16 +61,21 @@ export default function WeeklyOverview() {
         tasksDone: res.tasksDone,
         avgHours: res.avgHours,
         dateRange: res.dateRange,
-      });
-      if (!cancelled) setLoading(false);
+      })
+      setLoading(false)
     }).catch(() => {
-      if (!cancelled) setLoading(false);
-    });
-    return () => { cancelled = true; };
+      if (id !== fetchId.current) return
+      setError(true)
+      setLoading(false)
+    })
   }, [weekStart])
 
-  const { weekDays, totalHours, tasksDone, avgHours, dateRange } = data
-  const maxHours = Math.max(...weekDays.map(d => d.hours), 1)
+  const apiDays = data?.weekDays ?? null
+  const maxHours = apiDays ? Math.max(...apiDays.map(d => d.hours), 1) : 1
+  const displayDateRange = data?.dateRange ?? ""
+  const displayTotalHours = data?.totalHours ?? 0
+  const displayTasksDone = data?.tasksDone ?? 0
+  const displayAvgHours = data?.avgHours ?? 0
 
   return (
     <div style={{
@@ -90,73 +84,81 @@ export default function WeeklyOverview() {
       padding: "22px",
       boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
     }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      <div data-tutorial-target="weekly-insights" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Calendar size={16} color={theme.muted} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: theme.dark }}>{t("home.weeklyOverview.title")}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: theme.dark, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            {t("home.weeklyOverview.title")}
+            <InfoButton tutorialId="weekly-insights" />
+          </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <button onClick={goBack} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", padding: 2, color: theme.muted }}>
             <ChevronLeft size={14} />
           </button>
-          <span style={{ fontSize: 12, color: theme.muted, fontWeight: 500 }}>{dateRange}</span>
+          <span style={{ fontSize: 12, color: theme.muted, fontWeight: 500 }}>{displayDateRange}</span>
           <button onClick={goForward} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", padding: 2, color: theme.muted }}>
             <ChevronRight size={14} />
           </button>
         </div>
       </div>
 
+      {error && !loading && (
+        <div style={{ textAlign: "center", padding: "20px 0" }}>
+          <p style={{ fontSize: 12, color: theme.muted }}>Could not load weekly data. Try again later.</p>
+        </div>
+      )}
+
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 200, marginBottom: 16 }}>
-        {weekDays.map((d, i) => {
-          const barH = d.isFuture ? 4 : Math.max((d.hours / maxHours) * 160, 12)
-          const isActive = d.isToday
-          return (
-            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-              {loading ? (
+        {Array.from({ length: 7 }).map((_, i) => {
+          if (loading || !apiDays) {
+            return (
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
                 <div style={{
                   width: "100%",
                   maxWidth: 40,
-                  flex: 1,
+                  height: 40,
                   borderRadius: 6,
-                  background: `${theme.border}`,
+                  background: theme.border,
                   opacity: 0.3,
-                  minHeight: 12,
                 }} />
+              </div>
+            )
+          }
+          const day = apiDays[i]
+          const barH = day.isFuture ? 4 : Math.max((day.hours / maxHours) * 160, 12)
+          return (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+              <div style={{
+                width: "100%",
+                maxWidth: 40,
+                height: barH,
+                borderRadius: 6,
+                background: day.isToday
+                  ? theme.primary
+                  : day.isFuture
+                    ? theme.border
+                    : `color-mix(in srgb, ${theme.primary} 60%, transparent)`,
+                transition: "height 0.3s",
+                boxShadow: day.isToday ? `0 0 14px color-mix(in srgb, ${theme.primary} 66%, transparent)` : "none",
+              }} />
+              {day.isToday ? (
+                <div style={{
+                  padding: "4px 8px",
+                  borderRadius: 12,
+                  background: theme.primary,
+                  boxShadow: `0 0 10px color-mix(in srgb, ${theme.primary} 66%, transparent)`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <span style={{ fontSize: 10, color: "white", fontWeight: 600, whiteSpace: "nowrap" }}>{day.month} {day.dayOfMonth}</span>
+                </div>
               ) : (
-                <>
-                  <div style={{
-                    width: "100%",
-                    maxWidth: 40,
-                    height: barH,
-                    borderRadius: 6,
-                    background: isActive
-                      ? theme.primary
-                      : d.isFuture
-                        ? theme.border
-                        : `color-mix(in srgb, ${theme.primary} 60%, transparent)`,
-                    transition: "height 0.3s",
-                    boxShadow: isActive ? `0 0 14px color-mix(in srgb, ${theme.primary} 66%, transparent)` : "none",
-                  }} />
-                  {isActive ? (
-                    <div style={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: "50%",
-                      background: theme.primary,
-                      boxShadow: `0 0 10px color-mix(in srgb, ${theme.primary} 66%, transparent)`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}>
-                      <span style={{ fontSize: 11, color: "white", fontWeight: 600 }}>{d.dayOfMonth}</span>
-                    </div>
-                  ) : (
-                    <span style={{ fontSize: 11, color: theme.muted, fontWeight: 500 }}>{d.label}</span>
-                  )}
-                  {!d.isFuture && (
-                    <span style={{ fontSize: 10, color: theme.muted, marginTop: -4 }}>{d.hours}h</span>
-                  )}
-                </>
+                <span style={{ fontSize: 11, color: theme.muted, fontWeight: 500 }}>{day.label}</span>
+              )}
+              {!day.isFuture && (
+                <span style={{ fontSize: 10, color: theme.muted, marginTop: -4 }}>{day.hours}h</span>
               )}
             </div>
           )
@@ -170,15 +172,15 @@ export default function WeeklyOverview() {
         borderTop: `1px solid ${theme.border}`,
       }}>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: 16, fontWeight: 700, color: theme.primary, margin: 0 }}>{totalHours}h</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: theme.primary, margin: 0 }}>{displayTotalHours}h</p>
           <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0" }}>{t("home.weeklyOverview.totalHours")}</p>
         </div>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: 16, fontWeight: 700, color: "#3B82F6", margin: 0 }}>{tasksDone}</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: "#3B82F6", margin: 0 }}>{displayTasksDone}</p>
           <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0" }}>{t("home.weeklyOverview.tasksDone")}</p>
         </div>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: 16, fontWeight: 700, color: "#10B981", margin: 0 }}>{avgHours}h</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: "#10B981", margin: 0 }}>{displayAvgHours}h</p>
           <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0" }}>{t("home.weeklyOverview.avgDay")}</p>
         </div>
       </div>

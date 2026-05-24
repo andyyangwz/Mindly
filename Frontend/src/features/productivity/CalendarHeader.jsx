@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback, useRef, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { Plus, ChevronLeft, ChevronRight, Undo, Redo, Waves, Target, Mic } from "lucide-react"
 import { theme } from "../../theme"
+import InfoButton from "../../components/tutorial/InfoButton"
 import { isSameDay, toDateStr } from "./calendarConstants"
 
 function setMonthSafe(date, month) {
@@ -85,7 +86,7 @@ function MonthPicker({ currentMonth, onSelect, onClose }) {
   )
 }
 
-export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRedo, canUndo, canRedo, onAddActivity, onAddTask, onVoice }) {
+export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRedo, canUndo, canRedo, onAddActivity, onAddTask, onVoice, showTutorial = true }) {
   const { t } = useTranslation()
   const [showMonthPicker, setShowMonthPicker] = useState(false)
   const [showCreateMenu, setShowCreateMenu] = useState(false)
@@ -141,7 +142,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
   ]
 
   return (
-    <div style={{ padding: "16px 20px 0 20px" }}>
+    <div data-tutorial-target="productivity-calendar" style={{ padding: "16px 20px 0 20px" }}>
       <div
         style={{
           display: "flex",
@@ -241,6 +242,8 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
           >
             <ChevronRight size={15} />
           </button>
+
+          {showTutorial && <InfoButton tutorialId="productivity-calendar" />}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>

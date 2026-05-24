@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./theme/ThemeProvider";
+import { TutorialProvider } from "./components/tutorial/TutorialContext";
 import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LandingPage from "./features/landing/LandingPage";
@@ -12,6 +13,7 @@ import SpillAIPage from "./features/spill/SpillAIPage";
 
 export default function MindlyApp() {
   return (
+    <TutorialProvider>
     <ThemeProvider>
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -34,5 +36,6 @@ export default function MindlyApp() {
         </Route>
       </Routes>
     </ThemeProvider>
+    </TutorialProvider>
   );
 }

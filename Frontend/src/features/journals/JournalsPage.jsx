@@ -25,6 +25,8 @@ export default function JournalsPage() {
 
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
   const [editId, setEditId] = useState(null)
   const [form, setForm] = useState({
     title: "",
@@ -223,6 +225,10 @@ export default function JournalsPage() {
       loading={loading}
       filter={filter}
       onFilterChange={setFilter}
+      dateFrom={dateFrom}
+      dateTo={dateTo}
+      onDateFromChange={setDateFrom}
+      onDateToChange={setDateTo}
       onViewDetail={handleViewDetail}
       onStartCreate={handleStartCreate}
       toggleFavorite={handleToggleFavorite}

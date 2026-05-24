@@ -16,7 +16,7 @@ const OVERLAY_STYLES = {
 };
 
 const MODAL_STYLES = {
-  background: "var(--color-bg, #FFFFFF)",
+  background: "var(--color-card)",
   borderRadius: 18,
   padding: "24px",
   width: 440,
@@ -111,7 +111,7 @@ export default function EditHabitRelicModal({ relic, onClose, onUpdated, onDelet
     padding: "10px 14px",
     borderRadius: 10,
     border: "1px solid var(--color-border, #E5E7EB)",
-    background: "var(--color-bg, #F9FAFB)",
+    background: "var(--color-input)",
     color: "var(--color-dark, #1F2937)",
     fontSize: 14,
     outline: "none",

@@ -4,6 +4,7 @@ import { ArrowLeft, Mic, Square, ArrowRight, Sparkles, Wand2, Loader2, Type } fr
 import { theme } from "../../theme"
 import EmojiPicker from "../../components/ui/EmojiPicker"
 import RichEditor from "../../components/editor/RichEditor"
+import InfoButton from "../../components/tutorial/InfoButton"
 import { config } from "../../config"
 
 function stripHtml(html) {
@@ -428,6 +429,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack }) {
 
         {stripHtml(form.content).trim() && (
           <div
+            data-tutorial-target="writing-assistant"
             style={{
               marginBottom: 16,
               padding: "14px 16px",
@@ -444,9 +446,13 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack }) {
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
                 marginBottom: 10,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
               AI Writing Assistant
+              <InfoButton tutorialId="writing-assistant" />
             </div>
 
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -569,6 +575,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack }) {
         )}
 
         <div
+          data-tutorial-target="voice-journaling"
           style={{
             marginBottom: 20,
             padding: 16,
@@ -581,8 +588,9 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Mic size={14} color={voicePhase === "recording" ? theme.primary : theme.muted} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.05em", display: "inline-flex", alignItems: "center", gap: 6 }}>
                 Voice Recording
+                <InfoButton tutorialId="voice-journaling" />
               </span>
               {voicePhase !== "idle" && (
                 <span style={{ fontSize: 14, fontWeight: 500, fontVariantNumeric: "tabular-nums", color: theme.dark }}>
@@ -669,15 +677,19 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack }) {
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
             <label
               style={{
                 fontSize: 13,
                 fontWeight: 500,
                 color: theme.dark,
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
               }}
             >
               {t("journal.form.emojisLabel")}{filledCount > 0 && ` (${filledCount})`}
+              <InfoButton tutorialId="emoji-autofill" />
             </label>
             <button
               type="button"

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import { theme } from "../theme"
 import Sidebar from "./Sidebar"
+import SpotlightOverlay from "./tutorial/SpotlightOverlay"
 import { useChat } from "../hooks/useChat"
 
 export default function AppLayout() {
@@ -58,10 +59,11 @@ export default function AppLayout() {
         style={{
           flex: 1,
           overflowY: "auto",
-          background: isSpill ? "var(--color-card, white)" : theme.bg,
+          background: theme.bg,
         }}
       >
         <Outlet />
+        <SpotlightOverlay />
       </div>
     </div>
   )

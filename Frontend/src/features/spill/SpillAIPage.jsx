@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { Send, Loader2, MessageCircle, BookOpen } from "lucide-react"
 import { theme } from "../../theme"
+import InfoButton from "../../components/tutorial/InfoButton"
 import { useChat } from "../../hooks/useChat"
 import { spillAIService } from "../../services/spillAIService"
 import PersonalitySelector from "./PersonalitySelector"
@@ -217,15 +218,19 @@ export default function SpillAIPage() {
           padding: "8px 28px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          gap: 12,
+          background: "var(--color-card)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div data-tutorial-target="ai-personalities" style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <MessageCircle size={14} color={theme.muted} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: theme.muted, letterSpacing: "0.01em" }}>{t("spill.header")}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: theme.muted, letterSpacing: "0.01em" }}>
+            {t("spill.header")}
+          </span>
         </div>
 
         <PersonalitySelector personality={personality} onChange={handlePersonalityChange} />
+        <InfoButton tutorialId="ai-personalities" />
       </div>
 
       <div
@@ -233,7 +238,6 @@ export default function SpillAIPage() {
           flex: 1,
           overflowY: "auto",
           padding: "24px 80px",
-          background: "linear-gradient(180deg, var(--color-bg) 0%, var(--color-card) 100%)",
         }}
       >
         {localMessages.length === 0 && initialized && !loading && (
@@ -259,7 +263,7 @@ export default function SpillAIPage() {
               <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 20 }}>
                 <div style={{
                   maxWidth: 560, padding: "14px 18px", borderRadius: "20px 20px 20px 4px",
-                  background: "var(--color-bg)", color: theme.muted, fontSize: 14,
+                  background: "var(--color-card)", color: theme.muted, fontSize: 14,
                   display: "flex", alignItems: "center", gap: 8,
                 }}>
                   <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
@@ -276,8 +280,8 @@ export default function SpillAIPage() {
       <div
         style={{
           padding: "12px 80px 20px",
-          background: "var(--color-card, white)",
           borderTop: `1px solid ${theme.border}`,
+          background: "var(--color-card)",
         }}
       >
         <div style={{ maxWidth: 900, margin: "0 auto", position: "relative" }}>
@@ -301,7 +305,7 @@ export default function SpillAIPage() {
 
           <div
             style={{
-              background: "var(--color-card, white)",
+              background: "transparent",
               borderRadius: 16,
               border: `1px solid ${theme.border}`,
               padding: "8px 8px 8px 16px",
@@ -311,30 +315,33 @@ export default function SpillAIPage() {
               boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
             }}
           >
-            <button
-              onClick={() => setShowJournalPicker(o => !o)}
-              style={{
-                display: "flex", alignItems: "center", gap: 5,
-                padding: "6px 10px",
-                border: `1px solid ${showJournalPicker ? `color-mix(in srgb, ${theme.primary} 33%, transparent)` : theme.border}`,
-                borderRadius: 8,
-                background: showJournalPicker ? `color-mix(in srgb, ${theme.primary} 8%, transparent)` : "transparent",
-                cursor: "pointer", transition: "all 0.15s",
-                fontSize: 11, fontWeight: 500, color: theme.muted,
-                flexShrink: 0, marginBottom: 4,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = theme.primary
-                e.currentTarget.style.color = theme.primary
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = showJournalPicker ? `color-mix(in srgb, ${theme.primary} 33%, transparent)` : theme.border
-                e.currentTarget.style.color = theme.muted
-              }}
-            >
-              <BookOpen size={12} />
-              {t("spill.journal")}
-            </button>
+            <div data-tutorial-target="forward-journal" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <button
+                onClick={() => setShowJournalPicker(o => !o)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  padding: "6px 10px",
+                  border: `1px solid ${showJournalPicker ? `color-mix(in srgb, ${theme.primary} 33%, transparent)` : theme.border}`,
+                  borderRadius: 8,
+                  background: showJournalPicker ? `color-mix(in srgb, ${theme.primary} 8%, transparent)` : "transparent",
+                  cursor: "pointer", transition: "all 0.15s",
+                  fontSize: 11, fontWeight: 500, color: theme.muted,
+                  flexShrink: 0, marginBottom: 4,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = theme.primary
+                  e.currentTarget.style.color = theme.primary
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = showJournalPicker ? `color-mix(in srgb, ${theme.primary} 33%, transparent)` : theme.border
+                  e.currentTarget.style.color = theme.muted
+                }}
+              >
+                <BookOpen size={12} />
+                {t("spill.journal")}
+              </button>
+              <InfoButton tutorialId="forward-journal" />
+            </div>
 
             <textarea
               ref={textRef}
@@ -357,7 +364,7 @@ export default function SpillAIPage() {
                 boxShadow: "none",
                 fontSize: 14,
                 color: theme.dark,
-                background: "transparent",
+              background: "var(--color-card)",
                 minWidth: 0,
                 resize: "none",
                 fontFamily: "inherit",

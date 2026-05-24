@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { motion } from "framer-motion"
+import { X } from "lucide-react"
 import ScrollReveal from "../components/ScrollReveal"
 import CalendarGrid from "../../productivity/CalendarGrid"
 import CalendarHeader from "../../productivity/CalendarHeader"
@@ -180,6 +181,7 @@ const BASE_EVENTS = [
 export default function CalendarShowcase() {
   const [events, setEvents] = useState(BASE_EVENTS)
   const [dragOverrides, setDragOverrides] = useState({})
+  const [showSignup, setShowSignup] = useState(false)
 
   const handleDragUpdate = useCallback((eventId, newStart, newEnd) => {
     if (newStart === null) {
@@ -214,9 +216,7 @@ export default function CalendarShowcase() {
     )
   }, [])
 
-  const preventDefault = useCallback((e) => {
-    e?.preventDefault?.()
-  }, [])
+  const handleShowSignup = useCallback(() => setShowSignup(true), [])
 
   return (
     <section
@@ -291,34 +291,124 @@ export default function CalendarShowcase() {
                 border: "1px solid var(--color-border)",
                 boxShadow: "0 8px 32px var(--landing-shadow-md)",
                 overflow: "hidden",
+                filter: showSignup ? "blur(6px)" : "none",
+                transition: "filter 0.3s ease",
+                pointerEvents: showSignup ? "none" : "auto",
               }}
             >
               <CalendarHeader
                 currentDate={SHOWCASE_DATE}
-                onDateChange={preventDefault}
-                onUndo={preventDefault}
-                onRedo={preventDefault}
+                showTutorial={false}
+                onDateChange={() => {}}
+                onUndo={() => {}}
+                onRedo={() => {}}
                 canUndo={() => false}
                 canRedo={() => false}
-                onAddEvent={preventDefault}
+                onAddActivity={handleShowSignup}
+                onAddTask={handleShowSignup}
+                onVoice={handleShowSignup}
               />
               <CalendarGrid
                 activities={events}
                 currentDate={SHOWCASE_DATE}
-                onViewDetails={preventDefault}
-                onActivityContextMenu={preventDefault}
-                onEmptyContextMenu={preventDefault}
+                onViewDetails={() => {}}
+                onActivityContextMenu={() => {}}
+                onEmptyContextMenu={() => {}}
                 onActivityResize={handleResize}
                 onDragUpdate={handleDragUpdate}
                 onDragEnd={handleDragEnd}
-                onInlineCreate={preventDefault}
-                onInlineSave={preventDefault}
-                onInlineCancel={preventDefault}
+                onInlineCreate={() => {}}
+                onInlineSave={() => {}}
+                onInlineCancel={() => {}}
                 dragOverrides={dragOverrides}
               />
             </div>
           </motion.div>
         </ScrollReveal>
+
+        {showSignup && (
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 10,
+              background: "var(--color-card, white)",
+              borderRadius: 20,
+              border: "1px solid var(--color-border)",
+              boxShadow: "0 16px 48px var(--landing-shadow-lg)",
+              padding: "36px 32px 28px",
+              maxWidth: 380,
+              width: "90%",
+              textAlign: "center",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowSignup(false)}
+              style={{
+                position: "absolute", top: 12, right: 12,
+                width: 28, height: 28, borderRadius: "50%",
+                border: "none", background: "var(--color-input)",
+                cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center",
+                color: "var(--color-muted)",
+              }}
+            >
+              <X size={13} />
+            </button>
+
+            <h3
+              style={{
+                fontSize: 18, fontWeight: 600,
+                color: "var(--color-dark)",
+                margin: "0 0 8px",
+              }}
+            >
+              Unlock the Full Calendar
+            </h3>
+
+            <p
+              style={{
+                fontSize: 13, lineHeight: 1.6,
+                color: "var(--color-muted)",
+                margin: "0 0 24px",
+              }}
+            >
+              Sign up to create activities, set deadlines, and organize your week with AI-powered scheduling.
+            </p>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button
+                type="button"
+                onClick={() => setShowSignup(false)}
+                style={{
+                  padding: "10px 24px", borderRadius: 10,
+                  border: "1px solid var(--color-border)",
+                  background: "var(--color-card, white)",
+                  color: "var(--color-dark)",
+                  fontSize: 13, fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                Okay
+              </button>
+              <a
+                href="/signup"
+                style={{
+                  padding: "10px 24px", borderRadius: 10,
+                  border: "none",
+                  background: "var(--color-primary)",
+                  color: "white",
+                  fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  textDecoration: "none", display: "inline-block",
+                }}
+              >
+                Sign Up
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   )

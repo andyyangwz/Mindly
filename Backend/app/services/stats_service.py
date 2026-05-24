@@ -1,7 +1,6 @@
 from datetime import date, datetime, timedelta
 from collections import defaultdict
 from app.models.productivity import ProductivityEvent
-from app.utils.productivity_constants import VALID_PRODUCTIVITY_LEVELS
 
 
 DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -11,6 +10,7 @@ class StatsService:
     @staticmethod
     def get_home_stats(user_id):
         today = date.today()
+        week_start = today - timedelta(days=today.weekday())
 
         task_events = ProductivityEvent.query.filter(
             ProductivityEvent.user_id == user_id,
@@ -22,8 +22,8 @@ class StatsService:
         for ev in task_events:
             groups[ev.task_group_id].append(ev)
 
-        completed = 0
-        active = 0
+        y = 0
+        x = 0
 
         for events in groups.values():
             start = next((e for e in events if not e.is_deadline_marker), None)
@@ -31,39 +31,36 @@ class StatsService:
             if not start or not deadline:
                 continue
 
+            if start.event_date > today:
+                continue
+
             if start.status == "Done":
-                completed += 1
+                y += 1
 
-            is_active = (
-                start.status == "In Progress"
-                or (
-                    start.event_date < today
-                    and deadline.deadline_date
-                    and deadline.deadline_date > today
-                )
-            )
-            if is_active:
-                active += 1
+            if deadline.deadline_date and deadline.deadline_date >= today:
+                x += 1
 
-        today_events = ProductivityEvent.query.filter(
+        week_events = ProductivityEvent.query.filter(
             ProductivityEvent.user_id == user_id,
-            ProductivityEvent.event_date == today,
+            ProductivityEvent.event_date >= week_start,
+            ProductivityEvent.event_date <= today,
             ProductivityEvent.has_deadline == False,
+            ProductivityEvent.status == "Done",
         ).all()
 
         productive_minutes = 0
         unproductive_minutes = 0
 
-        for ev in today_events:
+        for ev in week_events:
             level = ev.productivity_level
-            if level not in (VALID_PRODUCTIVITY_LEVELS["productive"], VALID_PRODUCTIVITY_LEVELS["unproductive"]):
+            if level not in ("productive", "unproductive"):
                 continue
             start_mins = ev.start_time.hour * 60 + ev.start_time.minute
             end_mins = ev.end_time.hour * 60 + ev.end_time.minute
             duration = max(0, end_mins - start_mins)
-            if level == VALID_PRODUCTIVITY_LEVELS["productive"]:
+            if level == "productive":
                 productive_minutes += duration
-            elif level == VALID_PRODUCTIVITY_LEVELS["unproductive"]:
+            elif level == "unproductive":
                 unproductive_minutes += duration
 
         total_minutes = productive_minutes + unproductive_minutes
@@ -73,8 +70,8 @@ class StatsService:
             productivity_pct = round((productive_minutes / total_minutes) * 100)
 
         return {
-            "tasks_completed": str(completed),
-            "tasks_total": str(active),
+            "tasks_completed": str(y),
+            "tasks_total": str(x + y),
             "productivity_pct": productivity_pct,
         }
 
@@ -114,7 +111,8 @@ class StatsService:
         productive_events = ProductivityEvent.query.filter(
             ProductivityEvent.user_id == user_id,
             ProductivityEvent.has_deadline == False,
-            ProductivityEvent.productivity_level == VALID_PRODUCTIVITY_LEVELS["productive"],
+            ProductivityEvent.productivity_level == "productive",
+            ProductivityEvent.status == "Done",
             ProductivityEvent.event_date >= week_start,
             ProductivityEvent.event_date <= week_end,
         ).all()
@@ -135,11 +133,14 @@ class StatsService:
             minutes = minutes_by_day.get(day, 0)
             total_minutes += minutes
             total_tasks += tasks
+            month_names_short = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             week_days.append({
                 "label": DAY_LABELS[i],
                 "tasks": tasks,
                 "minutes": round(minutes),
                 "dayOfMonth": day.day,
+                "month": month_names_short[day.month - 1],
                 "isPast": day < today,
                 "isToday": day == today,
                 "isFuture": day > today,

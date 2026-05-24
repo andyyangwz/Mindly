@@ -314,9 +314,7 @@ export default function Sidebar({ sessions, onNewChat, onRenameChat, onDeleteCha
             width: "100%", display: "flex", alignItems: "center", gap: 10,
             padding: "10px 12px", borderRadius: 10, border: "none",
             cursor: "pointer",
-            background: showAccountMenu
-              ? "var(--color-hover, #F5F3FF)"
-              : "var(--color-hover, #F9FAFB)",
+            background: "transparent",
             transition: "all 0.15s",
           }}
         >

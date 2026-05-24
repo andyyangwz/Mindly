@@ -1,7 +1,7 @@
 import { memo, useCallback, useRef, useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import i18n from "../../i18n"
-import { formatTime, HOUR_HEIGHT } from "./calendarConstants"
+import { formatTime, HOUR_HEIGHT, PRODUCTIVITY_LEVEL_COLORS } from "./calendarConstants"
 import { getActivityStyles } from "./activityStyles"
 import { Portal } from "../../utils/portal"
 
@@ -15,6 +15,12 @@ const STATUS_META = {
   "Done": { color: "#10B981", bg: "#10B98114", border: "#10B98130" },
   "In Progress": { color: "#B45309", bg: "#B4530918", border: "#B4530940" },
   "To Do": { color: "#6B7280", bg: "#6B728010", border: "#6B728020" },
+}
+
+const LEVEL_META = {
+  productive: { color: "#10B981", bg: "#10B98114", border: "#10B98130" },
+  neutral: { color: "#6B7280", bg: "#6B728010", border: "#6B728020" },
+  unproductive: { color: "#EF4444", bg: "#EF444414", border: "#EF444430" },
 }
 
 const MIN_BLOCK_HEIGHT = 15
@@ -453,6 +459,25 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
                 {isDone && activity.isDeadlineMarker && activity.deadlineDate
                   ? `Finish on ${formatDeadlineDate(activity.deadlineDate)}`
                   : es.variantKey === "deadlineTask" ? "Start" : "Deadline"}
+              </span>
+            )}
+
+            {!activity.hasDeadline && activity.productivityLevel && LEVEL_META[activity.productivityLevel] && !isMini && (
+              <span
+                style={{
+                  fontSize: 8,
+                  fontWeight: 600,
+                  padding: "1px 6px",
+                  borderRadius: 3,
+                  background: LEVEL_META[activity.productivityLevel].bg,
+                  color: LEVEL_META[activity.productivityLevel].color,
+                  border: `1px solid ${LEVEL_META[activity.productivityLevel].border}`,
+                  lineHeight: 1.4,
+                  letterSpacing: "0.01em",
+                  flexShrink: 0,
+                }}
+              >
+                {t(`productivity.eventForm.level_${activity.productivityLevel}`)}
               </span>
             )}
           </span>

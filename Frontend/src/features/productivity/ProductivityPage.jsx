@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Clock3, Lightbulb, ChevronDown, Check } from "lucide-react";
 import { theme } from "../../theme";
+import InfoButton from "../../components/tutorial/InfoButton";
 import { productivityService } from "../../services/productivityService";
 import FocusTimer from "./FocusTimer";
 import ProductivityCalendar from "./ProductivityCalendar";
@@ -228,7 +229,10 @@ export default function ProductivityPage() {
           }}>
             <Lightbulb size={16} color={theme.primaryText} />
           </div>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: theme.dark }}>{t("productivity.page.smartSuggestions")}</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: theme.dark, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            {t("productivity.page.smartSuggestions")}
+            <InfoButton tutorialId="smart-suggestions" />
+          </h3>
         </div>
         {suggestions.map((s, i) => (
           <div key={i} style={{

@@ -8,6 +8,7 @@ import CreateHabitRelicModal from "../components/CreateHabitRelicModal";
 import EditHabitRelicModal from "../components/EditHabitRelicModal";
 import RelicManagerModal from "../components/RelicManagerModal";
 import UpdateProgressModal from "../components/UpdateProgressModal";
+import InfoButton from "../../../components/tutorial/InfoButton";
 
 const circ = 2 * Math.PI * 16;
 
@@ -43,6 +44,7 @@ export default function HabitRelics() {
 
   return (
     <div
+      data-tutorial-target="habit-relics"
       className="habit-relics-container"
       style={{
         background: "var(--color-card)",
@@ -69,7 +71,10 @@ export default function HabitRelics() {
               <Target size={15} color="white" />
             </div>
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 600, color: theme.dark, margin: 0 }}>{t("home.habitRelics.title")}</h2>
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: theme.dark, margin: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                {t("home.habitRelics.title")}
+                <InfoButton tutorialId="habit-relics" />
+              </h2>
               <p style={{ fontSize: 11, color: theme.muted, margin: "1px 0 0 0" }}>{t("home.habitRelics.subtitle")}</p>
             </div>
           </div>
