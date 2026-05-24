@@ -29,7 +29,7 @@ export function TutorialProvider({ children }) {
   const dismissedHints = useRef(loadSet(STORAGE_HINTS))
   const viewedTutorials = useRef(loadSet(STORAGE_VIEWED))
 
-  const openTutorial = useCallback((id) => {
+  const openTutorial = useCallback((id, config) => {
     const el = document.querySelector(`[data-tutorial-target="${id}"]`)
     if (!el) return
 
@@ -39,6 +39,11 @@ export function TutorialProvider({ children }) {
 
     viewedTutorials.current.add(id)
     saveSet(STORAGE_VIEWED, viewedTutorials.current)
+  }, [])
+
+  const updateSpotlightTarget = useCallback((targetId) => {
+    const el = document.querySelector(`[data-tutorial-target="${targetId}"]`)
+    if (el) setSpotlightRect(el.getBoundingClientRect())
   }, [])
 
   const closeTutorial = useCallback(() => {
@@ -104,6 +109,7 @@ export function TutorialProvider({ children }) {
         smartHint,
         openTutorial,
         closeTutorial,
+        updateSpotlightTarget,
         isHintDismissed,
         dismissHint,
         showHint,

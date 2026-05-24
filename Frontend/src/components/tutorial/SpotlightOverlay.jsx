@@ -38,7 +38,7 @@ function getCardPosition(rect, cardW, cardH) {
 }
 
 export default function SpotlightOverlay() {
-  const { tutorialId, spotlightRect, closeTutorial } = useTutorial()
+  const { tutorialId, spotlightRect, closeTutorial, updateSpotlightTarget } = useTutorial()
   const [step, setStep] = useState(0)
   const [visible, setVisible] = useState(false)
   const [closing, setClosing] = useState(false)
@@ -75,6 +75,11 @@ export default function SpotlightOverlay() {
     })
     return () => cancelAnimationFrame(raf)
   }, [visible, spotlightRect, step])
+
+  useEffect(() => {
+    if (!currentStep?.targetId) return
+    updateSpotlightTarget(currentStep.targetId)
+  }, [step, currentStep?.targetId])
 
   if (!tutorialId || !content || !spotlightRect) {
     if (visible) {

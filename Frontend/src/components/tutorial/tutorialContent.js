@@ -316,6 +316,84 @@ const TUTORIAL_CONTENT = {
       },
     ],
   },
+
+  // ─── RELIC MANAGER ─────────────────────────────
+
+  "relic-archive": {
+    title: "Change Relics",
+    tooltip: "Equip, unequip, and manage your habit relics",
+    description:
+      "The Change Relics modal lets you curate your equipped relics — choose which ones to wear into your day, and which to keep in your archive vault.",
+    steps: [
+      {
+        title: "What Is the Archive",
+        targetId: "relic-archive",
+        text: "The Archive is your vault of unequipped relics — all the habits you've created but aren't actively tracking right now. Scroll through them to find the relic you want to equip next.",
+      },
+      {
+        title: "Ordering the Archive",
+        targetId: "relic-archive",
+        text: "Use the Order buttons to sort your archive — by Name alphabetically, by Progress (highest completion first), or by Created date. Helps you find the right relic quickly.",
+      },
+      {
+        title: "Equipping a Relic",
+        targetId: "relic-manager-modal",
+        text: "Drag any relic from the Archive onto one of the three orbital slots on the right. Each slot represents a daily practice you're committing to. You can swap relics at any time by dragging a new one in or dragging an equipped relic back to the Archive.",
+      },
+    ],
+  },
+
+  // ─── WEEKLY OVERVIEW ─────────────────────────
+
+  "weekly-overview": {
+    title: "Weekly Overview",
+    tooltip: "See your performance for the week at a glance",
+    description:
+      "The Weekly Overview shows your productive hours, task completions, and daily trends for the current week.",
+    steps: [
+      {
+        title: "What Is the Weekly Overview?",
+        targetId: "weekly-overview",
+        text: "This is your weekly performance dashboard — it shows how much focused work you've done this week, how many tasks you completed, and how your productive time breaks down across each day. Use it to spot trends and stay on track.",
+      },
+      {
+        title: "Navigating Weeks",
+        targetId: "weekly-overview-nav",
+        text: "Use the left and right arrows next to the date range to view previous or future weeks. This lets you compare your performance across different weeks and see your progress over time.",
+      },
+      {
+        title: "Daily Bar Chart",
+        targetId: "weekly-overview-chart",
+        text: "Each bar represents one day of the week. The taller the bar, the more productive time you logged that day. Today's bar is highlighted with a special badge. Future days show as dimmed placeholders.",
+      },
+      {
+        title: "Weekly Stats Summary",
+        targetId: "weekly-overview-stats",
+        text: "Total Hours is the sum of all productive time tracked this week. Tasks Done counts how many tasks you completed. Average Day shows your average productive hours per day — a handy benchmark for consistency.",
+      },
+    ],
+  },
+
+  // ─── UPDATE PROGRESS ──────────────────────────
+
+  "update-progress": {
+    title: "Update Progress",
+    tooltip: "Channel progress into your equipped relics",
+    description:
+      "Select a relic from the roster, then add progress or reset it entirely. Changes are applied when you click 'Channel Energy'.",
+    steps: [
+      {
+        title: "Relic Roster",
+        targetId: "upgrade-roster",
+        text: "The roster lists all your relics — equipped ones first, then the rest. Click any relic to select it, then use the controls on the right to add progress or reset it. A pending-op badge marks relics with unsaved changes.",
+      },
+      {
+        title: "Controls & Committing",
+        targetId: "update-progress",
+        text: "With a relic selected, type a number in the input to add that many points to its progress. Use the Reset button to zero it out. Click 'Channel Energy' to commit all pending changes at once.",
+      },
+    ],
+  },
 }
 
 export default TUTORIAL_CONTENT

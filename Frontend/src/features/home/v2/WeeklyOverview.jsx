@@ -78,21 +78,21 @@ export default function WeeklyOverview() {
   const displayAvgHours = data?.avgHours ?? 0
 
   return (
-    <div style={{
+    <div data-tutorial-target="weekly-overview" style={{
       background: "var(--color-card)",
       borderRadius: 18,
       padding: "22px",
       boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
     }}>
-      <div data-tutorial-target="weekly-insights" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Calendar size={16} color={theme.muted} />
           <span style={{ fontSize: 14, fontWeight: 600, color: theme.dark, display: "inline-flex", alignItems: "center", gap: 6 }}>
             {t("home.weeklyOverview.title")}
-            <InfoButton tutorialId="weekly-insights" />
+            <InfoButton tutorialId="weekly-overview" />
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div data-tutorial-target="weekly-overview-nav" style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <button onClick={goBack} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", padding: 2, color: theme.muted }}>
             <ChevronLeft size={14} />
           </button>
@@ -109,7 +109,7 @@ export default function WeeklyOverview() {
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 200, marginBottom: 16 }}>
+      <div data-tutorial-target="weekly-overview-chart" style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 200, marginBottom: 16 }}>
         {Array.from({ length: 7 }).map((_, i) => {
           if (loading || !apiDays) {
             return (
@@ -165,7 +165,7 @@ export default function WeeklyOverview() {
         })}
       </div>
 
-      <div style={{
+      <div data-tutorial-target="weekly-overview-stats" style={{
         display: "flex",
         justifyContent: "space-around",
         paddingTop: 14,

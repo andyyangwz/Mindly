@@ -247,7 +247,6 @@ export default function HabitRelics() {
           <Settings size={13} />
           Manage
         </motion.button>
-
         <motion.button
           onClick={() => setModalOpen(true)}
           whileHover={{ scale: 1.05 }}

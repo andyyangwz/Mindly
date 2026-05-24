@@ -414,6 +414,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack }) {
             {t("journal.form.contentPlaceholder")}
           </label>
           <RichEditor
+            key={editId || "new"}
             value={form.content}
             onChange={(html) => {
               setErrors((e2) => ({ ...e2, content: null }))
