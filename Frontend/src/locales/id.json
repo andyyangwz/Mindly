@@ -16,6 +16,7 @@
     "dark": "Gelap",
     "english": "English",
     "indonesian": "Indonesia",
+    "newChat": "Obrolan Baru",
     "basicPlan": "Paket Dasar",
     "settings": "Pengaturan",
     "logout": "Keluar"
@@ -26,10 +27,10 @@
     },
     "quickActions": {
       "title": "Aksi Cepat",
-      "newJournal": "Jurnal Baru",
+      "addJournal": "Tambah Jurnal",
+      "addActivity": "Tambah Aktivitas",
       "addTask": "Tambah Tugas",
-      "viewInsights": "Lihat Wawasan",
-      "talkToAI": "Ngobrol dengan AI"
+      "spillAI": "Spill AI"
     },
     "statsGrid": {
       "tasksCompleted": "Tugas Selesai",
@@ -439,6 +440,9 @@
       "title": "Teruskan Jurnal",
       "empty": "Tidak ada jurnal dengan AI"
     },
+    "recording": "Merekam",
+    "stopRecording": "Berhenti",
+    "transcribing": "Transkripsi suara Anda...",
     "personality": {
       "empathic": "Pendengar Empatik",
       "problemSolver": "Pemecah Masalah",
@@ -522,6 +526,186 @@
       "deleteChat": "Gagal menghapus obrolan",
       "loadJournal": "Gagal memuat jurnal: {{error}}",
       "loadJournalDetail": "Gagal memuat jurnal"
+    }
+  },
+  "tutorials": {
+    "task-completed": {
+      "title": "Penyelesaian Tugas",
+      "tooltip": "Berapa banyak tugas yang kamu selesaikan hari ini",
+      "description": "Menampilkan tugas selesai vs total tugas aktif hari ini. Sebuah tugas dihitung 'selesai' jika statusnya diatur ke Selesai. Tugas aktif mencakup semuanya kecuali yang sudah selesai sebelum hari ini.",
+      "steps": [
+        { "title": "Apa yang Diukur", "text": "Pembilang adalah jumlah tugas yang kamu tandai Selesai hari ini. Penyebut adalah semua tugas aktifmu — tugas yang dibuat dikurangi yang sudah Selesai sebelum hari ini." },
+        { "title": "Cara Meningkatkan", "text": "Rencanakan jumlah tugas harian yang realistis. Pecah tugas besar menjadi lebih kecil untuk membangun momentum. Gunakan Kalender Produktivitas untuk menjadwalkan blok waktu fokus untuk setiap tugas." }
+      ]
+    },
+    "productivity-score": {
+      "title": "Skor Produktivitas",
+      "tooltip": "Rasio waktu produktif vs total waktu terlacak hari ini",
+      "description": "Skor produktivitas adalah persentase waktu terlacak hari ini yang kamu habiskan untuk aktivitas Produktif vs Tidak Produktif. Hanya aktivitas dengan tingkat produktivitas yang diperhitungkan.",
+      "steps": [
+        { "title": "Cara Menghitungnya", "text": "Skor = (menit produktif) ÷ (menit produktif + tidak produktif) × 100. Hanya aktivitas dengan tingkat produktivitas (Produktif atau Tidak Produktif) yang disertakan — aktivitas Netral dilewati." },
+        { "title": "Yang Dianggap Produktif", "text": "Saat membuat aktivitas, kamu bisa mengatur Tingkat Produktivitasnya. Aktivitas berlabel 'Produktif' menambah pembilang; yang 'Tidak Produktif' menambah penyebut. Persentase menunjukkan rasio waktu fokus berkualitas." },
+        { "title": "Perlu Diingat", "text": "Aktivitas netral (seperti makan siang, perjalanan, istirahat) tidak mempengaruhi skor. Tujuannya bukan 100% — hari yang seimbang dengan istirahat dan kerja fokus itu sehat dan berkelanjutan." }
+      ]
+    },
+    "habit-relics": {
+      "title": "Pusaka Kebiasaan",
+      "tooltip": "Pasang, lacak, dan kembangkan pusaka pertumbuhan pribadimu",
+      "description": "Lengkapi pusaka pertumbuhan bermakna yang mengingatkanmu siapa dirimu yang sedang berkembang. Setiap pusaka melacak kebiasaan harian yang kamu komitmenkan — perbarui progres dan lihat streak-mu bertambah.",
+      "steps": [
+        { "title": "Memasang Pusaka", "text": "Pilih pusaka yang sesuai dengan tujuanmu saat ini. Setiap slot mewakili praktik harian yang sedang kamu rawat." },
+        { "title": "Melacak Progres", "text": "Catat progresmu setiap hari. Penghitung streak membangun momentum dan memberi rasa konsistensi visual." },
+        { "title": "Inspirasi RPG", "text": "Anggap pusaka sebagai item yang dipasang karaktermu. Mereka membentuk siapa dirimu — satu kebiasaan harian pada satu waktu." }
+      ]
+    },
+    "weekly-insights": {
+      "title": "Wawasan Mingguan",
+      "tooltip": "Refleksi AI tentang pola produktivitas dan emosimu",
+      "description": "Wawasan Mingguan menganalisis pola produktivitas, tren emosional, dan refleksi jurnal untuk memberikan perspektif bermakna tentang minggumu.",
+      "steps": [
+        { "title": "Analisis Berbasis AI", "text": "AI meninjau aktivitas, tugas, dan entri jurnal yang selesai untuk mengidentifikasi pola yang mungkin kamu lewatkan." },
+        { "title": "Tren Produktivitas", "text": "Lihat bagaimana energimu mengalir sepanjang minggu — hari mana kamu paling produktif dan apa yang mengurasmu." },
+        { "title": "Panduan Refleksi", "text": "Setiap wawasan menyertakan panduan lembut untuk membantu kamu merefleksikan dan menyesuaikan pendekatan ke depan." }
+      ]
+    },
+    "home-dashboard": {
+      "title": "Dasbor Beranda",
+      "tooltip": "Pusat kendali pribadimu untuk pertumbuhan dan produktivitas",
+      "description": "Dasbor Beranda menyatukan inspirasi harian, aksi cepat, ringkasan mingguan, dan pusaka kebiasaan dalam satu ruang yang tenang dan terfokus.",
+      "steps": [
+        { "title": "Inspirasi Harian", "text": "Mulai setiap hari dengan panduan atau refleksi bermakna untuk menetapkan niatmu." },
+        { "title": "Aksi Cepat", "text": "Langsung ke jurnal, perencanaan produktivitas, atau percakapan AI reflektif dengan satu klik." }
+      ]
+    },
+    "writing-assistant": {
+      "title": "Asisten Penulisan AI",
+      "tooltip": "Haluskan, format, atau restruktur tulisan jurnalmu",
+      "description": "Tiga alat cerdas untuk menyempurnakan tulisan jurnal sambil mempertahankan suara dan format kaya editormu.",
+      "steps": [
+        { "title": "Haluskan — Pembersihan Ringan", "text": "Menghapus kata pengisi, gagap, dan noise ucapan secara lembut. Mempertahankan kata-kata persis dan kepribadianmu — hanya lebih bersih." },
+        { "title": "Format Otomatis — Struktur Kaya", "text": "Menganalisis kontenmu dan menerapkan format teks kaya: heading untuk pergeseran topik, daftar untuk pemikiran berurutan, dan spasi paragraf yang rapi." },
+        { "title": "Restruktur — Penyempurnaan Mendalam", "text": "Menulis ulang pemikiranmu dengan kejelasan dan aliran emosional yang lebih dalam. Mempertahankan niat dan suaramu sambil membuat tulisan lebih artikulatif." }
+      ]
+    },
+    "emoji-autofill": {
+      "title": "Isi Otomatis Emoji",
+      "tooltip": "Biarkan AI menyarankan emoji yang relevan secara emosional untuk jurnalmu",
+      "description": "Klik Isi Otomatis dan AI menganalisis seluruh jurnalmu — suasana hati, nada, topik — lalu menyarankan tiga emoji cerdas secara emosional untuk menangkap vibes secara visual.",
+      "steps": [
+        { "title": "Pemahaman Emosional", "text": "AI membaca melampaui kata kunci — ia memahami atmosfer emosional dan memilih emoji yang terasa terhubung, bukan acak." },
+        { "title": "Kamu yang Kendali", "text": "Isi Otomatis tidak pernah menimpa pilihanmu. Kamu bisa menghapus, mengganti, atau menyimpan saran sesuai keinginan." }
+      ]
+    },
+    "voice-journaling": {
+      "title": "Jurnal Suara",
+      "tooltip": "Rekam pikiranmu secara alami, lalu tingkatkan dengan AI",
+      "description": "Ucapkan jurnalmu alih-alih mengetik. Rekam, transkrip, lalu gunakan bilah alat AI untuk menghaluskan, memformat, atau merestruktur kata-kata yang diucapkan.",
+      "steps": [
+        { "title": "Rekam", "text": "Ketuk Rekam dan bicaralah secara alami — seperti berbicara dengan teman dekat." },
+        { "title": "Transkrip", "text": "Berhenti dan ketuk Transkrip. Ucapanmu menjadi teks, ditempatkan langsung di editor." },
+        { "title": "Tingkatkan", "text": "Gunakan Haluskan untuk membersihkan artefak ucapan, Format Otomatis untuk struktur, atau Restruktur untuk kejelasan lebih dalam." }
+      ]
+    },
+    "productivity-calendar": {
+      "title": "Kalender Produktivitas",
+      "tooltip": "Jadwalkan aktivitas, kelola tugas, dan atur minggumu",
+      "description": "Kalender mingguan visual di mana kamu bisa merencanakan aktivitas blok waktu, menetapkan tugas tenggat, dan menyesuaikan semuanya dengan seret dan lepas.",
+      "steps": [
+        { "title": "Tampilan Minggu & Navigasi", "text": "Kalender menampilkan satu hari dalam garis waktu vertikal 24 jam. Gunakan pemilih hari di bagian atas untuk melompat antar hari, panah kiri/kanan untuk bergerak minggu-per-minggu, atau klik nama bulan untuk memilih bulan mana pun." },
+        { "title": "Aktivitas vs Tugas — Apa Perbedaannya?", "text": "Aktivitas adalah acara blok waktu dengan waktu mulai dan selesai — seperti 'Gym 9–10'. Tugas memiliki tenggat — seperti 'Tugas kuliah due Jumat'. Tugas tidak bisa diubah ukurannya (durasi tetap 1 jam)." },
+        { "title": "Menambahkan Aktivitas", "text": "Klik tombol '+ Tambah' di kanan atas dan pilih 'Aktivitas', atau klik kanan slot waktu kosong. Kamu juga bisa klik dua kali tempat kosong di grid dan mengetik inline." },
+        { "title": "Menambahkan Tugas", "text": "Klik '+ Tambah' > 'Tugas'. Beri nama, tanggal/jam mulai, dan tanggal/jam tenggat. Penanda tenggat otomatis muncul di tanggal jatuh tempo." },
+        { "title": "Pindah & Ubah Ukuran Aktivitas", "text": "Klik dua kali dan tahan blok aktivitas, lalu seret ke atas/bawah untuk memindahkannya. Untuk mengubah ukuran, arahkan kursor ke tepi atas/bawah hingga gagang muncul." },
+        { "title": "Edit, Ubah Status, atau Hapus", "text": "Klik kanan blok mana pun dan pilih 'Lihat Detail' untuk info lengkap, edit, atau hapus. Dari menu klik kanan kamu juga bisa mengubah status dengan cepat." },
+        { "title": "Urungkan & Ulangi", "text": "Gunakan tombol urungkan (↩) dan ulangi (↪) untuk membalikkan atau menerapkan ulang tindakan apa pun — membuat, menghapus, memindahkan, mengubah ukuran, atau mengedit." },
+        { "title": "Jadwal Suara", "text": "Klik '+ Tambah' > 'Gunakan Suara'. Rekam rencanamu secara alami — AI mengisi formulir. Tinjau dan kirim." },
+        { "title": "Rencana Hari Ini & Sidebar Tugas", "text": "Di bawah kalender, 'Rencana Hari Ini' mendaftar aktivitas terjadwalmu. Tab 'Tugas' menampilkan semua tugas tenggat yang dikelompokkan berdasarkan status." }
+      ]
+    },
+    "smart-suggestions": {
+      "title": "Saran Cerdas",
+      "tooltip": "Rekomendasi berbasis AI untuk mengoptimalkan produktivitasmu",
+      "description": "Saran Cerdas menganalisis kalender, beban tugas, dan pola energimu untuk merekomendasikan penyesuaian bermakna untuk minggumu.",
+      "steps": [
+        { "title": "Rekomendasi Cerdas", "text": "AI mengidentifikasi peluang — seperti menjadwalkan ulang tugas energi rendah ke jam puncakmu." },
+        { "title": "Panduan Produktivitas", "text": "Dapatkan wawasan tentang pola produktivitasmu, seperti jam berapa kamu paling efektif." }
+      ]
+    },
+    "voice-scheduling": {
+      "title": "Jadwal Suara",
+      "tooltip": "Ucapkan rencanamu — AI mengisi formulir secara otomatis",
+      "description": "Gunakan suaramu untuk membuat aktivitas dan tugas. Bicaralah secara alami, AI mengisi formulir — kamu tinjau dan kirim.",
+      "steps": [
+        { "title": "Ucapkan Rencanamu", "text": "Katakan sesuatu seperti 'Gym besok jam 7' atau 'Tugas database due Jumat'. AI memahami tanggal, waktu, dan tipe." },
+        { "title": "Tinjau Sebelum Simpan", "text": "AI tidak pernah menulis ke kalendermu secara langsung. Kamu selalu meninjau formulir yang sudah diisi dan melakukan penyesuaian sebelum mengirimkan." }
+      ]
+    },
+    "right-click-calendar": {
+      "title": "Klik Kanan Kalender",
+      "tooltip": "Aksi cepat untuk perencanaan lebih cepat",
+      "description": "Klik kanan di mana saja di kalender untuk menambah aktivitas, membuat tugas, atau membuka jadwal suara — tanpa meninggalkan tampilanmu.",
+      "steps": [
+        { "title": "Menu Konteks", "text": "Klik kanan slot waktu atau tanggal untuk membuka menu konteks dengan opsi cepat untuk momen spesifik tersebut." },
+        { "title": "Tambah Cepat", "text": "Tambah aktivitas atau tugas langsung di waktu yang diklik — formulir terisi otomatis dengan tanggal dan waktu yang dipilih." }
+      ]
+    },
+    "ai-personalities": {
+      "title": "Kepribadian Spill AI",
+      "tooltip": "Pilih bagaimana pendamping AI-mu meresponsmu",
+      "description": "Beralih antara tiga kepribadian AI yang berbeda — masing-masing dirancang untuk jenis percakapan yang berbeda.",
+      "steps": [
+        { "title": "Pendengar Empatik", "text": "Kehadiran yang hangat dan pengertian. Terbaik saat kamu butuh didengar tanpa penghakiman." },
+        { "title": "Pemecah Masalah", "text": "Jelas, logis, dan berorientasi solusi. Membantu kamu mengurai situasi kompleks." },
+        { "title": "Pelatih Motivasi", "text": "Enerjik, mendorong, dan langsung. Sempurna saat kamu butuh dorongan maju." }
+      ]
+    },
+    "forward-journal": {
+      "title": "Teruskan Jurnal",
+      "tooltip": "Bawa entri jurnalmu ke percakapan AI reflektif",
+      "description": "Pilih entri jurnal sebelumnya dan teruskan ke percakapan Spill AI-mu. AI membaca entrimu dan menggunakannya sebagai konteks untuk diskusi reflektif yang lebih dalam.",
+      "steps": [
+        { "title": "Pilih Jurnal", "text": "Klik tombol Teruskan Jurnal dan pilih entri dari daftar jurnalmu." },
+        { "title": "Diskusi Reflektif", "text": "AI memahami konteks jurnalmu dan dapat membantu kamu mengeksplorasi, mengurai, atau merefleksikan apa yang kamu tulis." }
+      ]
+    },
+    "voice-input-spill": {
+      "title": "Input Suara",
+      "tooltip": "Ucapkan pikiranmu secara alami ke AI",
+      "description": "Gunakan input suara untuk menyampaikan pesanmu ke Spill AI alih-alih mengetik. Ucapanmu ditranskrip dan dikirim sebagai pesanmu.",
+      "steps": [
+        { "title": "Bicara Alami", "text": "Bicaralah seperti sedang mengobrol. AI akan menerima pesan transkripmu dan merespons." },
+        { "title": "Aliran Mulus", "text": "Lanjutkan percakapan secara alami — suara dan ketikan bekerja sama dengan mulus." }
+      ]
+    },
+    "relic-archive": {
+      "title": "Ganti Pusaka",
+      "tooltip": "Pasang, lepas, dan kelola pusaka kebiasaanmu",
+      "description": "Modal Ganti Pusaka memungkinkan kamu mengkurasi pusaka yang terpasang — pilih yang ingin kamu pakai hari ini, dan yang ingin disimpan di brankas arsip.",
+      "steps": [
+        { "title": "Apa Itu Arsip", "text": "Arsip adalah brankas pusaka yang tidak terpasang — semua kebiasaan yang sudah kamu buat tapi tidak sedang dilacak. Gulir untuk menemukan pusaka yang ingin dipasang.", "targetId": "relic-archive" },
+        { "title": "Mengurutkan Arsip", "text": "Gunakan tombol Urut untuk mengurutkan arsip — berdasarkan Nama, Progres, atau Tanggal Dibuat. Membantumu menemukan pusaka yang tepat dengan cepat.", "targetId": "relic-archive" },
+        { "title": "Memasang Pusaka", "text": "Seret pusaka dari Arsip ke salah satu slot orbital di kanan. Setiap slot mewakili praktik harian yang kamu komitmenkan.", "targetId": "relic-manager-modal" }
+      ]
+    },
+    "weekly-overview": {
+      "title": "Ringkasan Mingguan",
+      "tooltip": "Lihat performamu minggu ini sekilas",
+      "description": "Ringkasan Mingguan menampilkan jam produktif, penyelesaian tugas, dan tren harian untuk minggu ini.",
+      "steps": [
+        { "title": "Apa Itu Ringkasan Mingguan?", "text": "Dasbor performa mingguan — menunjukkan kerja fokus yang sudah kamu lakukan, tugas yang diselesaikan, dan bagaimana waktu produktifmu terbagi setiap hari.", "targetId": "weekly-overview" },
+        { "title": "Navigasi Minggu", "text": "Gunakan panah kiri dan kanan untuk melihat minggu sebelumnya atau berikutnya.", "targetId": "weekly-overview-nav" },
+        { "title": "Grafik Batang Harian", "text": "Setiap batang mewakili satu hari. Semakin tinggi batang, semakin banyak waktu produktif yang kamu catat. Batang hari ini disorot.", "targetId": "weekly-overview-chart" },
+        { "title": "Ringkasan Statistik Mingguan", "text": "Total Jam adalah jumlah semua waktu produktif minggu ini. Tugas Selesai menghitung berapa banyak tugas yang diselesaikan. Rata-rata/Hari menunjukkan jam produktif rata-rata per hari.", "targetId": "weekly-overview-stats" }
+      ]
+    },
+    "update-progress": {
+      "title": "Perbarui Progres",
+      "tooltip": "Salurkan progres ke pusaka yang terpasang",
+      "description": "Pilih pusaka dari daftar, lalu tambah progres atau reset sepenuhnya. Perubahan diterapkan saat kamu klik 'Salurkan Energi'.",
+      "steps": [
+        { "title": "Daftar Pusaka", "text": "Daftar menampilkan semua pusakamu — yang terpasang lebih dulu, lalu sisanya. Klik pusaka untuk memilihnya, lalu gunakan kontrol di kanan untuk menambah atau mereset progres.", "targetId": "upgrade-roster" },
+        { "title": "Kontrol & Komit", "text": "Dengan pusaka terpilih, ketik angka untuk menambah progres. Gunakan tombol Reset untuk mengosongkannya. Klik 'Salurkan Energi' untuk menerapkan semua perubahan.", "targetId": "update-progress" }
+      ]
     }
   }
 }

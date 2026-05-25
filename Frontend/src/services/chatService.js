@@ -10,6 +10,7 @@ function sessionToFrontend(s) {
     isFavorite: s.is_favorite,
     createdAt: s.created_at,
     updatedAt: s.updated_at,
+    lastMessageAt: s.last_message_at,
   }
 }
 
@@ -20,6 +21,7 @@ function messageToFrontend(m) {
     role: m.role,
     content: m.content,
     journalContext: m.journal_context || null,
+    personalityMode: m.personality_mode || null,
     createdAt: m.created_at,
   }
 }

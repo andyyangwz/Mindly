@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Send, Loader2, MessageCircle, BookOpen } from "lucide-react"
+import { Send, Loader2, MessageCircle, BookOpen, Mic, Square, X } from "lucide-react"
 import { theme } from "../../theme"
 import InfoButton from "../../components/tutorial/InfoButton"
 import { useChat } from "../../hooks/useChat"
@@ -9,8 +9,25 @@ import { spillAIService } from "../../services/spillAIService"
 import PersonalitySelector from "./PersonalitySelector"
 import ForwardJournalPopover from "./ForwardJournalPopover"
 import JournalPreviewCard from "./JournalPreviewCard"
+import WaveformAnimation from "../../components/ui/WaveformAnimation"
+import { getPersonalityAvatar } from "./personalityAvatars"
 
-function ChatBubble({ msg }) {
+const PERSONALITY_BUBBLE_STYLES = {
+  empathetic: {
+    borderLeft: `3px solid color-mix(in srgb, ${theme.primary} 30%, transparent)`,
+    boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+  },
+  problem_solver: {
+    borderLeft: `3px solid #14B8A6`,
+    boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+  },
+  motivational: {
+    borderLeft: `3px solid #FFC107`,
+    boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+  },
+}
+
+function ChatBubble({ msg, personality }) {
   if (msg.role === "system") {
     return (
       <div style={{ textAlign: "center", marginBottom: 20 }}>
@@ -26,29 +43,56 @@ function ChatBubble({ msg }) {
 
   const jc = msg.journalContext
 
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
-        marginBottom: 20,
-      }}
-    >
-      <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 8, alignItems: msg.role === "user" ? "flex-end" : "flex-start" }}>
-        {jc && (
-          <JournalPreviewCard title={jc.title} content={jc.content} compact />
-        )}
-
-        <div
-          style={{
+  if (msg.role === "user") {
+    return (
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
+        <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+          {jc && <JournalPreviewCard title={jc.title} content={jc.content} compact />}
+          <div style={{
             padding: "14px 18px",
-            borderRadius: msg.role === "user" ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
-            background: msg.role === "user" ? "linear-gradient(135deg, #5B3CC4, #4A2FA8)" : "var(--color-card)",
-            color: msg.role === "user" ? "white" : theme.dark,
+            borderRadius: "20px 20px 4px 20px",
+            background: "linear-gradient(135deg, #5B3CC4, #4A2FA8)",
+            color: "white",
             fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-line",
-            boxShadow: msg.role === "user" ? "0 4px 16px #5B3CC444" : "0 2px 8px rgba(0,0,0,0.06)",
+            boxShadow: "0 4px 16px #5B3CC444",
+          }}>
+            {msg.content}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const msgPersonality = msg.personalityMode || personality || "empathetic"
+  const avatarSrc = getPersonalityAvatar(msgPersonality)
+  const bubbleStyle = PERSONALITY_BUBBLE_STYLES[msgPersonality] || PERSONALITY_BUBBLE_STYLES.empathetic
+
+  return (
+    <div style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "flex-end" }}>
+      <div style={{ flexShrink: 0, alignSelf: "flex-start" }}>
+        <img
+          key={msgPersonality}
+          src={avatarSrc}
+          alt=""
+          style={{
+            width: 36, height: 36, borderRadius: "50%",
+            objectFit: "cover",
+            border: `2px solid color-mix(in srgb, ${theme.primary} 25%, transparent)`,
+            boxShadow: `0 0 0 2px var(--color-card), 0 4px 12px rgba(0,0,0,0.08)`,
+            animation: "mascotFadeIn 0.35s ease-out",
           }}
-        >
+        />
+      </div>
+      <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 8 }}>
+        {jc && <JournalPreviewCard title={jc.title} content={jc.content} compact />}
+        <div style={{
+          padding: "14px 18px",
+          borderRadius: "20px 20px 20px 4px",
+          background: "var(--color-card)",
+          color: theme.dark,
+          fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-line",
+          ...bubbleStyle,
+        }}>
           {msg.content}
         </div>
       </div>
@@ -70,6 +114,17 @@ export default function SpillAIPage() {
   const [showJournalPicker, setShowJournalPicker] = useState(false)
   const textRef = useRef(null)
 
+  /* ── Voice recording state ── */
+  const [recordingPhase, setRecordingPhase] = useState("idle")
+  const [recordingTimer, setRecordingTimer] = useState(0)
+  const [recordingError, setRecordingError] = useState(null)
+  const [analyser, setAnalyser] = useState(null)
+  const mediaRecorderRef = useRef(null)
+  const chunksRef = useRef([])
+  const streamRef = useRef(null)
+  const timerRef = useRef(null)
+  const audioContextRef = useRef(null)
+
   const autoResize = useCallback(() => {
     const el = textRef.current
     if (!el) return
@@ -80,6 +135,143 @@ export default function SpillAIPage() {
   useEffect(() => {
     autoResize()
   }, [input])
+
+  const cleanupRecording = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+    if (streamRef.current) { streamRef.current.getTracks().forEach((t) => t.stop()); streamRef.current = null }
+    if (audioContextRef.current) { audioContextRef.current.close(); audioContextRef.current = null }
+    mediaRecorderRef.current = null
+    chunksRef.current = []
+    setAnalyser(null)
+  }, [])
+
+  useEffect(() => {
+    if (recordingPhase === "idle") {
+      setRecordingTimer(0)
+      setRecordingError(null)
+      cleanupRecording()
+    }
+  }, [recordingPhase, cleanupRecording])
+
+  const startRecording = useCallback(async () => {
+    try {
+      setRecordingError(null)
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream
+
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "audio/webm"
+      const recorder = new MediaRecorder(stream, { mimeType })
+      mediaRecorderRef.current = recorder
+      chunksRef.current = []
+
+      const audioCtx = new AudioContext()
+      audioContextRef.current = audioCtx
+      const source = audioCtx.createMediaStreamSource(stream)
+      const analyserNode = audioCtx.createAnalyser()
+      analyserNode.fftSize = 256
+      source.connect(analyserNode)
+      setAnalyser(analyserNode)
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data)
+      }
+
+      recorder.start()
+      setRecordingPhase("recording")
+      setRecordingTimer(0)
+      timerRef.current = setInterval(() => {
+        setRecordingTimer((p) => p + 1)
+      }, 1000)
+    } catch (err) {
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        setRecordingError("Microphone access denied. Please allow microphone access in your browser settings.")
+      } else if (err.name === "NotFoundError") {
+        setRecordingError("No microphone found. Please connect a microphone.")
+      } else {
+        setRecordingError(err.message || "Failed to start recording")
+      }
+      setRecordingPhase("error")
+    }
+  }, [])
+
+  const stopRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current
+    if (!recorder || recorder.state !== "recording") return
+
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+
+    const handleStop = async () => {
+      setAnalyser(null)
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop())
+        streamRef.current = null
+      }
+
+      const blob = new Blob(chunksRef.current, { type: recorder.mimeType })
+      if (blob.size < 200) {
+        setRecordingError("Recording is too short. Please speak and try again.")
+        setRecordingPhase("error")
+        return
+      }
+      try {
+        const text = await spillAIService.transcribeAudio(blob)
+        if (text) {
+          setInput((prev) => {
+            const separator = prev.trim() ? " " : ""
+            return prev + separator + text
+          })
+          setTimeout(() => {
+            textRef.current?.focus()
+            autoResize()
+          }, 100)
+        }
+        setRecordingPhase("idle")
+      } catch (err) {
+        const msg = err.response?.error || err.message || "Transcription failed"
+        setRecordingError(msg)
+        setRecordingPhase("error")
+      }
+    }
+
+    recorder.addEventListener("stop", handleStop, { once: true })
+    recorder.stop()
+    setRecordingPhase("transcribing")
+  }, [autoResize])
+
+  const cancelRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current
+    if (recorder && recorder.state === "recording") {
+      const handleCancel = () => {
+        setAnalyser(null)
+        if (audioContextRef.current) {
+          audioContextRef.current.close()
+          audioContextRef.current = null
+        }
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((t) => t.stop())
+          streamRef.current = null
+        }
+      }
+      recorder.addEventListener("stop", handleCancel, { once: true })
+      recorder.stop()
+    }
+    cleanupRecording()
+    setRecordingPhase("idle")
+    setRecordingTimer(0)
+    setRecordingError(null)
+  }, [cleanupRecording])
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m}:${s.toString().padStart(2, "0")}`
+  }
 
   const { messages, loading, fetchMessages, fetchSession } = useChat()
 
@@ -181,7 +373,7 @@ export default function SpillAIPage() {
       }
 
       if (isNewChat) {
-        navigate(`/spill/${result.sessionId}`, { replace: true })
+        navigate(`/app/spill/${result.sessionId}`, { replace: true })
       } else {
         await fetchMessages(chatId)
       }
@@ -233,6 +425,7 @@ export default function SpillAIPage() {
         <InfoButton tutorialId="ai-personalities" />
       </div>
 
+      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } } @keyframes mascotFadeIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }`}</style>
       <div
         style={{
           flex: 1,
@@ -256,11 +449,24 @@ export default function SpillAIPage() {
         {localMessages.length > 0 && (
           <div style={{ maxWidth: 900, margin: "0 auto" }}>
             {localMessages.map((msg) => (
-              <ChatBubble key={msg.id} msg={msg} />
+              <ChatBubble key={msg.id} msg={msg} personality={personality} />
             ))}
 
             {sending && (
-              <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 20 }}>
+              <div style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "flex-end" }}>
+                <div style={{ flexShrink: 0 }}>
+                  <img
+                    key={personality}
+                    src={getPersonalityAvatar(personality)}
+                    alt=""
+                    style={{
+                      width: 36, height: 36, borderRadius: "50%",
+                      objectFit: "cover",
+                      border: `2px solid color-mix(in srgb, ${theme.primary} 25%, transparent)`,
+                      boxShadow: `0 0 0 2px var(--color-card), 0 4px 12px rgba(0,0,0,0.08)`,
+                    }}
+                  />
+                </div>
                 <div style={{
                   maxWidth: 560, padding: "14px 18px", borderRadius: "20px 20px 20px 4px",
                   background: "var(--color-card)", color: theme.muted, fontSize: 14,
@@ -340,64 +546,172 @@ export default function SpillAIPage() {
                 <BookOpen size={12} />
                 {t("spill.journal")}
               </button>
-              <InfoButton tutorialId="forward-journal" />
+              <InfoButton tutorialId="forward-journal" style={{ marginBottom: 4 }} />
             </div>
 
-            <textarea
-              ref={textRef}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value)
-                autoResize()
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  send()
-                }
-              }}
-              placeholder={forwardedJournal ? t("spill.inputPlaceholderJournal") : t("spill.inputPlaceholder")}
-              style={{
-                flex: 1,
-                border: "none",
-                outline: "none",
-                boxShadow: "none",
-                fontSize: 14,
-                color: theme.dark,
-              background: "var(--color-card)",
-                minWidth: 0,
-                resize: "none",
-                fontFamily: "inherit",
-                lineHeight: "22px",
-                padding: "2px 0 2px 12px",
-                overflow: "auto",
-                maxHeight: 120,
-                height: 27,
-              }}
-            />
+            {recordingPhase === "idle" ? (
+              <>
+                <textarea
+                  ref={textRef}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value)
+                    autoResize()
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault()
+                      send()
+                    }
+                  }}
+                  placeholder={forwardedJournal ? t("spill.inputPlaceholderJournal") : t("spill.inputPlaceholder")}
+                  style={{
+                    flex: 1,
+                    border: "none",
+                    outline: "none",
+                    boxShadow: "none",
+                    fontSize: 14,
+                    color: theme.dark,
+                    background: "var(--color-card)",
+                    minWidth: 0,
+                    resize: "none",
+                    fontFamily: "inherit",
+                    lineHeight: "22px",
+                    padding: "2px 0 2px 12px",
+                    overflow: "auto",
+                    maxHeight: 120,
+                    height: 27,
+                  }}
+                />
 
-            <button
-              onClick={send}
-              disabled={(!input.trim() && !forwardedJournal) || sending}
-              style={{
-                background: (input.trim() || forwardedJournal) && !sending
-                  ? "linear-gradient(135deg, #5B3CC4, #4A2FA8)"
-                  : theme.bg,
-                border: "none",
-                borderRadius: "50%",
-                width: 36, height: 36,
-                cursor: (input.trim() || forwardedJournal) && !sending ? "pointer" : "default",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "all 0.15s",
-                flexShrink: 0,
-              }}
-            >
-              {sending ? (
-                <Loader2 size={15} color={theme.muted} style={{ animation: "spin 1s linear infinite" }} />
-              ) : (
-                <Send size={15} color={(input.trim() || forwardedJournal) ? "white" : theme.muted} />
-              )}
-            </button>
+                <div style={{ display: "flex", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
+                  <button
+                    onClick={send}
+                    disabled={(!input.trim() && !forwardedJournal) || sending}
+                    style={{
+                      background: (input.trim() || forwardedJournal) && !sending
+                        ? "linear-gradient(135deg, #5B3CC4, #4A2FA8)"
+                        : theme.bg,
+                      border: "none",
+                      borderRadius: "50%",
+                      width: 36, height: 36,
+                      cursor: (input.trim() || forwardedJournal) && !sending ? "pointer" : "default",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      transition: "all 0.15s",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {sending ? (
+                      <Loader2 size={15} color={theme.muted} style={{ animation: "spin 1s linear infinite" }} />
+                    ) : (
+                      <Send size={15} color={(input.trim() || forwardedJournal) ? "white" : theme.muted} />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={startRecording}
+                    disabled={sending}
+                    style={{
+                      background: "transparent",
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: "50%",
+                      width: 36, height: 36,
+                      cursor: sending ? "default" : "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      transition: "all 0.15s",
+                      flexShrink: 0,
+                      color: theme.muted,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.muted }}
+                  >
+                    <Mic size={15} />
+                  </button>
+                </div>
+              </>
+            ) : recordingPhase === "recording" ? (
+              <div style={{
+                flex: 1, display: "flex", flexDirection: "column", gap: 8,
+                padding: "4px 0",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <WaveformAnimation analyser={analyser} width={200} height={44} barCount={24} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                    <span style={{
+                      width: 8, height: 8, borderRadius: "50%",
+                      background: "#DC2626",
+                      animation: "pulse 1.2s ease-in-out infinite",
+                    }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: theme.muted, fontVariantNumeric: "tabular-nums" }}>
+                      {formatTime(recordingTimer)}
+                    </span>
+                    <span style={{ fontSize: 11, color: theme.muted, fontWeight: 500 }}>
+                      {t("spill.recording")}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                  <button
+                    onClick={cancelRecording}
+                    style={{
+                      padding: "6px 12px", borderRadius: 8,
+                      border: `1px solid ${theme.border}`,
+                      background: "transparent",
+                      color: theme.muted, fontSize: 11, fontWeight: 600,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}
+                  >
+                    {t("common.cancel")}
+                  </button>
+                  <button
+                    onClick={stopRecording}
+                    style={{
+                      padding: "6px 12px", borderRadius: 8,
+                      border: "none",
+                      background: "#DC2626",
+                      color: "#fff", fontSize: 11, fontWeight: 600,
+                      cursor: "pointer", fontFamily: "inherit",
+                      display: "flex", alignItems: "center", gap: 5,
+                    }}
+                  >
+                    <Square size={10} fill="currentColor" />
+                    {t("spill.stopRecording")}
+                  </button>
+                </div>
+              </div>
+            ) : recordingPhase === "transcribing" ? (
+              <div style={{
+                flex: 1, display: "flex", alignItems: "center", gap: 10,
+                padding: "8px 12px",
+              }}>
+                <Loader2 size={16} color={theme.primary} style={{ animation: "spin 1s linear infinite" }} />
+                <span style={{ fontSize: 13, color: theme.muted, fontWeight: 500 }}>
+                  {t("spill.transcribing")}
+                </span>
+              </div>
+            ) : (
+              <div style={{
+                flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "8px 12px",
+              }}>
+                <span style={{ fontSize: 12, color: "#DC2626", fontWeight: 500 }}>
+                  {recordingError}
+                </span>
+                <button
+                  onClick={() => setRecordingPhase("idle")}
+                  style={{
+                    padding: "4px 10px", borderRadius: 6,
+                    border: "none", background: "transparent",
+                    color: theme.muted, fontSize: 11, fontWeight: 600,
+                    cursor: "pointer", fontFamily: "inherit",
+                    display: "flex", alignItems: "center", gap: 4,
+                  }}
+                >
+                  <X size={12} />
+                  {t("common.close")}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

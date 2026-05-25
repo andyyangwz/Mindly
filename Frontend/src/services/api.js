@@ -23,11 +23,14 @@ async function handleResponse(response) {
 
 async function request(endpoint, options = {}) {
   const url = `${config.API_BASE_URL}${endpoint}`;
+  const isFormData = options.body instanceof FormData;
   const headers = {
-    "Content-Type": "application/json",
     ...getAuthHeaders(),
     ...options.headers,
   };
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
 
   const response = await fetch(url, { ...options, headers });
   return handleResponse(response);
@@ -36,8 +39,12 @@ async function request(endpoint, options = {}) {
 export const api = {
   get: (url) => request(url),
 
-  post: (url, data) =>
-    request(url, { method: "POST", body: JSON.stringify(data) }),
+  post: (url, data, options) =>
+    request(url, {
+      method: "POST",
+      body: data instanceof FormData ? data : JSON.stringify(data),
+      ...options,
+    }),
 
   put: (url, data) =>
     request(url, { method: "PUT", body: JSON.stringify(data) }),

@@ -50,4 +50,11 @@ export const spillAIService = {
       description: data.description,
     }
   },
+
+  async transcribeAudio(audioBlob) {
+    const formData = new FormData()
+    formData.append("audio", audioBlob, "recording.webm")
+    const data = await api.post("/spill-ai/transcribe", formData)
+    return data.text
+  },
 }

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { Sparkles, PenSquare, Calendar, BarChart3, MessageCircle } from "lucide-react"
+import { Sparkles, PenSquare, Calendar, CheckSquare, MessageCircle } from "lucide-react"
 import { theme } from "../../../theme"
 
 export default function QuickActions() {
@@ -8,10 +8,10 @@ export default function QuickActions() {
   const navigate = useNavigate()
 
   const actions = [
-    { label: t("home.quickActions.newJournal"), icon: PenSquare, color: "#8B5CF6", to: "/app/journals/new" },
-    { label: t("home.quickActions.addTask"), icon: Calendar, color: "#3B82F6", to: "/app/productivity?action=create" },
-    { label: t("home.quickActions.viewInsights"), icon: BarChart3, color: "#10B981", to: "/app/insight" },
-    { label: t("home.quickActions.talkToAI"), icon: MessageCircle, color: "#8B5CF6", to: "/app/spill" },
+    { label: t("home.quickActions.addJournal"), icon: PenSquare, color: "#8B5CF6", to: "/app/journals/new" },
+    { label: t("home.quickActions.addActivity"), icon: Calendar, color: "#3B82F6", to: "/app/productivity?action=createActivity" },
+    { label: t("home.quickActions.addTask"), icon: CheckSquare, color: "#10B981", to: "/app/productivity?action=createTask" },
+    { label: t("home.quickActions.spillAI"), icon: MessageCircle, color: "#8B5CF6", to: "/app/spill" },
   ]
 
   return (

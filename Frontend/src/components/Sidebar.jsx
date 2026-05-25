@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Brain, Home, PenLine, Calendar, BarChart3, Plus,
-  MessageSquare, Sun, Moon, Languages, LogOut,
+  MessageSquare, MessageCircle, Sun, Moon, Languages, LogOut,
 } from "lucide-react";
 import { theme } from "../theme";
 import { useTheme } from "../theme/ThemeProvider";
@@ -10,13 +10,14 @@ import { useAuth } from "../context/AuthContext";
 import ChatListItem from "../features/chats/ChatListItem";
 import { useTranslation } from "react-i18next";
 
-const ICONS = { Home, PenLine, Calendar, BarChart3 };
+const ICONS = { Home, PenLine, Calendar, BarChart3, MessageCircle };
 
 const NAV_ITEMS = [
   { icon: "Home", id: "home" },
   { icon: "PenLine", id: "journals" },
   { icon: "Calendar", id: "productivity" },
   { icon: "BarChart3", id: "insight" },
+  { icon: "MessageCircle", id: "new-chat" },
 ];
 
 function ThemeSwitcher({ currentTheme, onSelect }) {
@@ -206,7 +207,7 @@ export default function Sidebar({ sessions, onNewChat, onRenameChat, onDeleteCha
           return (
             <button
               key={item.id}
-              onClick={() => navigate(`/app/${item.id}`)}
+              onClick={() => navigate(item.id === "new-chat" ? "/app/spill" : `/app/${item.id}`)}
               style={{
                 width: "100%", display: "flex", alignItems: "center", gap: 10,
                 padding: "10px 12px", borderRadius: 8, border: "none",

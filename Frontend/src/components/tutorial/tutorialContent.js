@@ -396,4 +396,32 @@ const TUTORIAL_CONTENT = {
   },
 }
 
+export function getLocalizedTutorialContent(t, id) {
+  const fallback = TUTORIAL_CONTENT[id]
+  if (!fallback) return null
+
+  const baseKey = `tutorials.${id}`
+
+  const title = t(`${baseKey}.title`, { defaultValue: fallback.title })
+  const tooltip = t(`${baseKey}.tooltip`, { defaultValue: fallback.tooltip })
+  const description = t(`${baseKey}.description`, {
+    defaultValue: fallback.description,
+  })
+
+  // If i18n returned the key itself, no translation exists → use fallback entirely
+  if (title === `${baseKey}.title`) return fallback
+
+  const localized = { title, tooltip, description }
+
+  if (fallback.steps) {
+    localized.steps = fallback.steps.map((step, i) => ({
+      title: t(`${baseKey}.steps.${i}.title`, { defaultValue: step.title }),
+      text: t(`${baseKey}.steps.${i}.text`, { defaultValue: step.text }),
+      targetId: step.targetId,
+    }))
+  }
+
+  return localized
+}
+
 export default TUTORIAL_CONTENT

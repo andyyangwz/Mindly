@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Info } from "lucide-react"
 import { useTutorial } from "./TutorialContext"
 import TUTORIAL_CONTENT from "./tutorialContent"
@@ -8,8 +8,21 @@ export default function InfoButton({ tutorialId, size = 14, style: customStyle }
   const { openTutorial, isHintDismissed, dismissHint } = useTutorial()
   const [showTooltip, setShowTooltip] = useState(false)
   const [tooltipPhase, setTooltipPhase] = useState("hidden")
+  const [tooltipTop, setTooltipTop] = useState(0)
   const btnRef = useRef(null)
+  const tooltipRef = useRef(null)
   const content = TUTORIAL_CONTENT[tutorialId]
+
+  const updateTooltipPosition = useCallback(() => {
+    if (!btnRef.current || !tooltipRef.current) return
+    const btnRect = btnRef.current.getBoundingClientRect()
+    const ttHeight = tooltipRef.current.offsetHeight
+    if (btnRect.top - ttHeight - 8 < 4) {
+      setTooltipTop(btnRect.bottom + 8)
+    } else {
+      setTooltipTop(btnRect.top - ttHeight - 8)
+    }
+  }, [])
 
   if (!content) return null
 
@@ -18,13 +31,16 @@ export default function InfoButton({ tutorialId, size = 14, style: customStyle }
   useEffect(() => {
     if (showTooltip) {
       setTooltipPhase("entering")
-      requestAnimationFrame(() => setTooltipPhase("visible"))
+      requestAnimationFrame(() => {
+        setTooltipPhase("visible")
+        updateTooltipPosition()
+      })
     } else {
       setTooltipPhase("leaving")
       const t = setTimeout(() => setTooltipPhase("hidden"), 200)
       return () => clearTimeout(t)
     }
-  }, [showTooltip])
+  }, [showTooltip, updateTooltipPosition])
 
   return (
     <>
@@ -80,6 +96,7 @@ export default function InfoButton({ tutorialId, size = 14, style: customStyle }
 
       {tooltipPhase !== "hidden" && (
         <div
+          ref={tooltipRef}
           style={{
             position: "fixed",
             zIndex: 99999,
@@ -99,9 +116,7 @@ export default function InfoButton({ tutorialId, size = 14, style: customStyle }
                 ? "translateY(0)"
                 : "translateY(4px)",
             transition: "opacity 0.2s, transform 0.2s",
-            top: btnRef.current
-              ? btnRef.current.getBoundingClientRect().bottom + 8
-              : 0,
+            top: tooltipTop,
             left: btnRef.current
               ? Math.max(
                   8,

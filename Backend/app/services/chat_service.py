@@ -8,7 +8,7 @@ class ChatService:
         return (
             ChatSession.query
             .filter_by(user_id=user_id)
-            .order_by(ChatSession.updated_at.desc())
+            .order_by(ChatSession.last_message_at.desc().nullslast())
             .all()
         )
 
@@ -54,7 +54,7 @@ class ChatService:
         )
 
     @staticmethod
-    def create_message(session_id, user_id, role, content):
+    def create_message(session_id, user_id, role, content, personality_mode=None):
         session = ChatSession.query.filter_by(id=session_id, user_id=user_id).first()
         if not session:
             return None
@@ -62,9 +62,11 @@ class ChatService:
             session_id=session_id,
             role=role,
             content=content.strip(),
+            personality_mode=personality_mode,
         )
         db.session.add(message)
         session.updated_at = db.func.now()
+        session.last_message_at = db.func.now()
         db.session.commit()
         return message
 

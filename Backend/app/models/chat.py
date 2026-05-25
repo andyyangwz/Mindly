@@ -14,6 +14,7 @@ class ChatSession(db.Model):
     is_favorite = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    last_message_at = db.Column(db.DateTime, nullable=True)
 
     messages = db.relationship(
         "ChatMessage",
@@ -34,6 +35,7 @@ class ChatSession(db.Model):
             "is_favorite": self.is_favorite,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "last_message_at": self.last_message_at.isoformat() if self.last_message_at else None,
         }
 
 
@@ -50,6 +52,7 @@ class ChatMessage(db.Model):
     role = db.Column(db.String(20), nullable=False)
     content = db.Column(db.Text, nullable=False)
     journal_context = db.Column(JSON, nullable=True)
+    personality_mode = db.Column(db.String(30), nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     def to_dict(self):
@@ -59,5 +62,6 @@ class ChatMessage(db.Model):
             "role": self.role,
             "content": self.content,
             "journal_context": self.journal_context,
+            "personality_mode": self.personality_mode,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }

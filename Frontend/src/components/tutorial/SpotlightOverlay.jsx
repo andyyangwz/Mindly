@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from "react"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
+import { motion } from "framer-motion"
+import { useTranslation } from "react-i18next"
 import { useTutorial } from "./TutorialContext"
-import TUTORIAL_CONTENT from "./tutorialContent"
+import TUTORIAL_CONTENT, { getLocalizedTutorialContent } from "./tutorialContent"
+import { getTutorialMascot } from "./tutorialMascotMapping"
 import { theme } from "../../theme"
 
 function getCardPosition(rect, cardW, cardH) {
@@ -46,7 +49,10 @@ export default function SpotlightOverlay() {
   const [positioned, setPositioned] = useState(false)
   const cardRef = useRef(null)
 
-  const content = tutorialId ? TUTORIAL_CONTENT[tutorialId] : null
+  const { t } = useTranslation()
+  const content = tutorialId
+    ? getLocalizedTutorialContent(t, tutorialId) || TUTORIAL_CONTENT[tutorialId]
+    : null
 
   const isMultiStep = content && content.steps && content.steps.length > 1
   const currentStep = content?.steps?.[step] || null
@@ -170,103 +176,109 @@ export default function SpotlightOverlay() {
           zIndex: 10000,
           width: 340,
           maxWidth: "calc(100vw - 32px)",
-          maxHeight: "calc(100vh - 40px)",
-          overflowY: "auto",
-          background: "var(--color-card, white)",
-          borderRadius: 16,
-          border: `1px solid ${theme.border}`,
-          boxShadow: `0 16px 48px rgba(0,0,0,0.15), 0 0 0 1px ${theme.primary}11`,
-          padding: "24px 24px 20px",
+          overflow: "visible",
           opacity: positioned ? (closing ? 0 : 1) : 0,
           transform: positioned ? (closing ? "translateY(8px)" : "translateY(0)") : "translateY(8px)",
           transition: "opacity 0.25s ease, transform 0.25s ease",
         }}
       >
-        {/* Close button */}
-        <button
-          type="button"
-          onClick={handleClose}
-          style={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            width: 28,
-            height: 28,
-            borderRadius: "50%",
-            border: "none",
-            background: "var(--color-input)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: theme.muted,
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = theme.primary + "1a"
-            e.currentTarget.style.color = theme.primary
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "var(--color-input)"
-            e.currentTarget.style.color = theme.muted
-          }}
-        >
-          <X size={13} />
-        </button>
-
-        {/* Step indicator dots */}
-        {isMultiStep && (
-          <div style={{ display: "flex", gap: 5, marginBottom: 14 }}>
-            {content.steps.map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  width: i === step ? 18 : 6,
-                  height: 6,
-                  borderRadius: 3,
-                  background: i === step ? dotColor : theme.border,
-                  transition: "all 0.3s ease",
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Title */}
-        <h3
-          style={{
-            fontSize: 15,
-            fontWeight: 600,
-            color: theme.dark,
-            margin: "0 0 4px",
-          }}
-        >
-          {isMultiStep && currentStep ? currentStep.title : content.title}
-        </h3>
-
-        {/* Description or step text */}
-        <p
-          style={{
-            fontSize: 13,
-            lineHeight: 1.6,
-            color: theme.muted,
-            margin: "0 0 16px",
-          }}
-        >
-          {isMultiStep && currentStep
-            ? currentStep.text
-            : content.description}
-        </p>
-
-        {/* Navigation */}
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+            background: "var(--color-card, white)",
+            borderRadius: 16,
+            border: `1px solid ${theme.border}`,
+            boxShadow: `0 16px 48px rgba(0,0,0,0.15), 0 0 0 1px ${theme.primary}11`,
+            padding: "24px 24px 20px",
+            maxHeight: "calc(100vh - 40px)",
+            overflowY: "auto",
+            position: "relative",
           }}
         >
-          <div style={{ display: "flex", gap: 6 }}>
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={handleClose}
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              border: "none",
+              background: "var(--color-input)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: theme.muted,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = theme.primary + "1a"
+              e.currentTarget.style.color = theme.primary
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--color-input)"
+              e.currentTarget.style.color = theme.muted
+            }}
+          >
+            <X size={13} />
+          </button>
+
+          {/* Step indicator dots */}
+          {isMultiStep && (
+            <div style={{ display: "flex", gap: 5, marginBottom: 14 }}>
+              {content.steps.map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: i === step ? 18 : 6,
+                    height: 6,
+                    borderRadius: 3,
+                    background: i === step ? dotColor : theme.border,
+                    transition: "all 0.3s ease",
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Title */}
+          <h3
+            style={{
+              fontSize: 15,
+              fontWeight: 600,
+              color: theme.dark,
+              margin: "0 0 4px",
+            }}
+          >
+            {isMultiStep && currentStep ? currentStep.title : content.title}
+          </h3>
+
+          {/* Description or step text */}
+          <p
+            style={{
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: theme.muted,
+              margin: "0 0 16px",
+            }}
+          >
+            {isMultiStep && currentStep
+              ? currentStep.text
+              : content.description}
+          </p>
+
+          {/* Navigation */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              gap: 6,
+            }}
+          >
             {isMultiStep && step > 0 && (
               <button
                 type="button"
@@ -296,9 +308,7 @@ export default function SpotlightOverlay() {
                 Back
               </button>
             )}
-          </div>
 
-          <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
             {isMultiStep && step < content.steps.length - 1 ? (
               <button
                 type="button"
@@ -342,6 +352,31 @@ export default function SpotlightOverlay() {
             )}
           </div>
         </div>
+
+        {/* Mascot — bottom-left overflow */}
+        {tutorialId && (
+          <motion.img
+            src={getTutorialMascot(tutorialId)}
+            alt=""
+            animate={{ y: [0, -5, 0] }}
+            transition={{
+              duration: 3.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            style={{
+              position: "absolute",
+              bottom: -60,
+              left: -24,
+              width: 100,
+              height: "auto",
+              pointerEvents: "none",
+              zIndex: 10001,
+              filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.12))",
+              objectFit: "contain",
+            }}
+          />
+        )}
       </div>
     </>
   )

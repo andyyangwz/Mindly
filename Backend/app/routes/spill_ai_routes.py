@@ -3,6 +3,7 @@
 Endpoints:
     POST /api/spill-ai/chat          — Main chat endpoint
     POST /api/spill-ai/personality   — Change personality for a session
+    POST /api/spill-ai/transcribe    — Transcribe audio via Whisper
     POST /api/spill-ai/test          — Direct AI test (no persistence)
 """
 
@@ -137,9 +138,15 @@ def chat(user_id):
             current_journal_context=journal_context,
         )
 
-        ai_msg = ChatMessage(session_id=session.id, role="assistant", content=reply)
+        ai_msg = ChatMessage(
+            session_id=session.id,
+            role="assistant",
+            content=reply,
+            personality_mode=personality,
+        )
         db.session.add(ai_msg)
         session.updated_at = db.func.now()
+        session.last_message_at = db.func.now()
 
         db.session.commit()
 
@@ -240,6 +247,63 @@ def set_personality(user_id):
         "name": info["name"],
         "description": info["description"],
     }), 200
+
+
+@spill_ai_bp.route("/transcribe", methods=["POST"])
+@require_auth
+def transcribe_audio(user_id):
+    """Receive audio, transcribe with Whisper, return text."""
+    if "audio" not in request.files:
+        return jsonify({"error": "No audio file provided"}), 400
+
+    audio_file = request.files["audio"]
+    audio_data = audio_file.read()
+
+    if not audio_data or len(audio_data) < 100:
+        return jsonify({"error": "Audio file is empty or too small"}), 400
+
+    content_type = audio_file.content_type or "audio/webm"
+    filename = audio_file.filename or "recording.webm"
+
+    logger.info(
+        "Spill AI transcribe: user=%s size=%d bytes",
+        user_id, len(audio_data),
+    )
+
+    try:
+        api_key = current_app.config.get("GROQ_API_KEY", "")
+        if not api_key:
+            return jsonify({"error": "GROQ_API_KEY is not configured"}), 500
+
+        from groq import Groq
+        client = Groq(api_key=api_key)
+        model = "whisper-large-v3-turbo"
+
+        transcription = client.audio.transcriptions.create(
+            file=(filename, audio_data, content_type),
+            model=model,
+            response_format="text",
+        )
+        text = transcription.strip()
+
+        if not text:
+            return jsonify({
+                "error": "Transcription returned empty result",
+                "text": "",
+            }), 422
+
+        logger.info("Spill AI transcribe success: text=%s", text[:100])
+        return jsonify({"text": text}), 200
+
+    except Exception as e:
+        logger.error(
+            "Spill AI transcribe error: %s: %s\n%s",
+            type(e).__name__, str(e), traceback.format_exc(),
+        )
+        return jsonify({
+            "error": f"Transcription failed: {str(e)}",
+            "type": type(e).__name__,
+        }), 500
 
 
 @spill_ai_bp.route("/test", methods=["POST"])

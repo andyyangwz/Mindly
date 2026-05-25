@@ -41,8 +41,12 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
-    if (searchParams.get("action") === "create") {
+    const action = searchParams.get("action")
+    if (action === "create" || action === "createActivity") {
       setActivityFormOpen(true)
+      setSearchParams({}, { replace: true })
+    } else if (action === "createTask") {
+      setTaskFormOpen(true)
       setSearchParams({}, { replace: true })
     }
   }, [searchParams, setSearchParams])
