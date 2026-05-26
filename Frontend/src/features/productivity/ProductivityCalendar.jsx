@@ -212,11 +212,15 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
         const prevSnapshot = { ...prev }
 
         let payload = { ...data }
-        if (!editingActivity.hasDeadline && editingActivity.startDatetime) {
-          payload = {
-            ...data,
-            startDatetime: data.startDatetime,
-            endDatetime: data.endDatetime,
+        if (!editingActivity.hasDeadline) {
+          let startDt = data.startDatetime || editingActivity.startDatetime
+          let endDt = data.endDatetime || editingActivity.endDatetime
+          if ((!startDt || !endDt) && data.eventDate && data.startTime && data.endTime) {
+            startDt = `${data.eventDate}T${data.startTime}`
+            endDt = `${data.eventDate}T${data.endTime}`
+          }
+          if (startDt && endDt) {
+            payload = { ...data, startDatetime: startDt, endDatetime: endDt }
           }
         }
 
@@ -229,11 +233,15 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
         setUseRealData(true)
       } else {
         let payload = { ...data }
-        if (!data.hasDeadline && data.startDatetime && data.endDatetime) {
-          payload = {
-            ...data,
-            startDatetime: data.startDatetime,
-            endDatetime: data.endDatetime,
+        if (!data.hasDeadline) {
+          let startDt = data.startDatetime
+          let endDt = data.endDatetime
+          if ((!startDt || !endDt) && data.eventDate && data.startTime && data.endTime) {
+            startDt = `${data.eventDate}T${data.startTime}`
+            endDt = `${data.eventDate}T${data.endTime}`
+          }
+          if (startDt && endDt) {
+            payload = { ...data, startDatetime: startDt, endDatetime: endDt }
           }
         }
         const next = { id: `new-${Date.now()}`, ...payload }

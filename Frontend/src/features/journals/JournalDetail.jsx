@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import {
   ChevronLeft,
@@ -7,6 +7,9 @@ import {
   Trash2,
   MessageCircle,
   X,
+  Folder,
+  Plus,
+  Loader2,
 } from "lucide-react"
 import DOMPurify from "dompurify"
 import { theme } from "../../theme"
@@ -15,6 +18,7 @@ import ConfirmDialog from "../../components/ui/ConfirmDialog"
 
 export default function JournalDetail({
   journal,
+  folders,
   onBack,
   onEdit,
   onDelete,
@@ -24,11 +28,47 @@ export default function JournalDetail({
   onChatAboutIt,
   chatAboutItLoading,
   deleting,
+  onAssignFolders,
 }) {
   const { t } = useTranslation()
   const [highlights, setHighlights] = useState([])
   const [selectedText, setSelectedText] = useState("")
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showFolderPicker, setShowFolderPicker] = useState(false)
+  const [folderAssigning, setFolderAssigning] = useState(false)
+  const folderPickerRef = useRef(null)
+
+  useEffect(() => {
+    if (!showFolderPicker) return
+    const handleClick = (e) => {
+      if (folderPickerRef.current && !folderPickerRef.current.contains(e.target)) {
+        setShowFolderPicker(false)
+      }
+    }
+    const handleKey = (e) => {
+      if (e.key === "Escape") setShowFolderPicker(false)
+    }
+    document.addEventListener("mousedown", handleClick)
+    document.addEventListener("keydown", handleKey)
+    return () => {
+      document.removeEventListener("mousedown", handleClick)
+      document.removeEventListener("keydown", handleKey)
+    }
+  }, [showFolderPicker])
+
+  const handleToggleFolder = async (folderId) => {
+    setFolderAssigning(true)
+    const current = journal.folderIds || []
+    const next = current.includes(folderId)
+      ? current.filter((id) => id !== folderId)
+      : [...current, folderId]
+    try {
+      await onAssignFolders(journal.id, next)
+    } catch {
+    } finally {
+      setFolderAssigning(false)
+    }
+  }
 
   const handleMouseUp = () => {
     const sel = window.getSelection()
@@ -260,6 +300,165 @@ export default function JournalDetail({
 
         <div
           style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+            marginBottom: 16,
+            position: "relative",
+          }}
+        >
+          {(journal.folderIds || []).map((fid) => {
+            const f = folders?.find((x) => x.id === fid)
+            if (!f) return null
+            return (
+              <span
+                key={fid}
+                style={{
+                  fontSize: 12,
+                  background: `color-mix(in srgb, ${theme.primary} 10%, transparent)`,
+                  color: theme.primaryText,
+                  borderRadius: 20,
+                  padding: "4px 10px",
+                  fontWeight: 500,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                {f.emoji} {f.name}
+                <button
+                  type="button"
+                  onClick={() => handleToggleFolder(fid)}
+                  disabled={folderAssigning}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: folderAssigning ? "not-allowed" : "pointer",
+                    padding: 0,
+                    display: "flex",
+                    color: theme.muted,
+                    fontSize: 12,
+                    opacity: 0.6,
+                    transition: "opacity 0.1s",
+                    marginLeft: 2,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = "1" }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6" }}
+                >
+                  <X size={11} />
+                </button>
+              </span>
+            )
+          })}
+          <div style={{ position: "relative" }}>
+            <button
+              type="button"
+              onClick={() => setShowFolderPicker(!showFolderPicker)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "4px 10px",
+                borderRadius: 20,
+                border: `1.5px dashed ${theme.border}`,
+                background: "transparent",
+                color: theme.muted,
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = theme.primary
+                e.currentTarget.style.color = theme.primary
+              }}
+              onMouseLeave={(e) => {
+                if (!showFolderPicker) {
+                  e.currentTarget.style.borderColor = theme.border
+                  e.currentTarget.style.color = theme.muted
+                }
+              }}
+            >
+              {folderAssigning ? (
+                <Loader2 size={11} className="jd-folder-spin" />
+              ) : (
+                <Plus size={11} />
+              )}
+              {showFolderPicker || (journal.folderIds || []).length > 0
+                ? "Folder"
+                : "Add to Folder"}
+            </button>
+
+            {showFolderPicker && folders && folders.length > 0 && (
+              <div
+                ref={folderPickerRef}
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 6px)",
+                  left: 0,
+                  zIndex: 50,
+                  background: "var(--color-card, white)",
+                  borderRadius: 14,
+                  border: `1px solid ${theme.border}`,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                  padding: 10,
+                  minWidth: 200,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                }}
+              >
+                {folders.map((f) => {
+                  const isSelected = (journal.folderIds || []).includes(f.id)
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => handleToggleFolder(f.id)}
+                      disabled={folderAssigning}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "8px 10px",
+                        borderRadius: 10,
+                        border: "none",
+                        background: isSelected
+                          ? `color-mix(in srgb, ${theme.primary} 10%, transparent)`
+                          : "transparent",
+                        color: isSelected ? theme.primary : theme.dark,
+                        fontSize: 13,
+                        fontWeight: isSelected ? 600 : 400,
+                        cursor: folderAssigning ? "not-allowed" : "pointer",
+                        textAlign: "left",
+                        transition: "all 0.1s",
+                        opacity: folderAssigning ? 0.6 : 1,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.background = theme.bg
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.background = "transparent"
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: 16 }}>{f.emoji}</span>
+                      <span style={{ flex: 1 }}>{f.name}</span>
+                      {isSelected && <span style={{ fontSize: 11 }}>✓</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div
+          style={{
             background: "var(--color-card, white)",
             borderRadius: 16,
             border: `1px solid ${theme.border}`,
@@ -384,6 +583,15 @@ export default function JournalDetail({
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmDelete(false)}
       />
+      <style>{`
+        .jd-folder-spin {
+          animation: jd-spin 0.8s linear infinite;
+        }
+        @keyframes jd-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

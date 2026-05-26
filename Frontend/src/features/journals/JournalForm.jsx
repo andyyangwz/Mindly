@@ -20,10 +20,11 @@ function textToHtml(text) {
 
 const API = config.API_BASE_URL
 
-export default function JournalForm({ form, setForm, editId, onSave, onBack }) {
+export default function JournalForm({ form, setForm, editId, onSave, onBack, folders, selectedFolderIds, onFolderIdsChange }) {
   const { t } = useTranslation()
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
+  const [localFolderIds, setLocalFolderIds] = useState(selectedFolderIds || [])
 
   const [voicePhase, setVoicePhase] = useState("idle")
   const [voiceTimer, setVoiceTimer] = useState(0)
@@ -276,6 +277,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack }) {
         title: form.title,
         content: form.content,
         emojis: trimmed.length > 0 ? trimmed : ["📝", "", ""],
+        folderIds: localFolderIds,
       }
       await onSave(payload)
     } catch (err) {
@@ -736,6 +738,61 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack }) {
             ))}
           </div>
         </div>
+
+        {folders && folders.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <label
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: theme.dark,
+                display: "block",
+                marginBottom: 8,
+              }}
+            >
+              Folders
+            </label>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {folders.map((f) => {
+                const isSelected = localFolderIds.includes(f.id)
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => {
+                      setLocalFolderIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== f.id)
+                          : [...prev, f.id]
+                      )
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      padding: "6px 12px",
+                      borderRadius: 20,
+                      border: `1.5px solid ${
+                        isSelected ? theme.primary : theme.border
+                      }`,
+                      background: isSelected
+                        ? `color-mix(in srgb, ${theme.primary} 10%, transparent)`
+                        : "var(--color-card, white)",
+                      color: isSelected ? theme.primary : theme.muted,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <span style={{ fontSize: 14 }}>{f.emoji}</span>
+                    {f.name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <button
           onClick={handleSave}

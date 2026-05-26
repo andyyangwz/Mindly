@@ -1,8 +1,10 @@
 import { useMemo, useState, useRef, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { Search, X, Plus, Star, Pin, CalendarDays, List } from "lucide-react"
+import { Search, X, Plus, Star, Pin, CalendarDays, List, FolderOpen } from "lucide-react"
 import { theme } from "../../theme"
 import { formatDate } from "../../utils/formatters"
+import FolderAssignMenu from "./FolderAssignMenu"
+import { useToast } from "../../components/ui/Toast"
 
 const FILTERS = [
   { key: "all", icon: List },
@@ -49,6 +51,10 @@ export default function JournalList({
   onStartCreate,
   toggleFavorite,
   togglePinned,
+  folders,
+  activeFolderId,
+  onOpenFolderExplorer,
+  onAssignFolders,
 }) {
   const { t } = useTranslation()
   const [showDatePopover, setShowDatePopover] = useState(false)
@@ -56,6 +62,8 @@ export default function JournalList({
   const [draftTo, setDraftTo] = useState("")
   const popoverRef = useRef(null)
   const dateBtnRef = useRef(null)
+  const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, journal: null })
+  const toast = useToast()
 
   useEffect(() => {
     if (!showDatePopover) return
@@ -89,6 +97,14 @@ export default function JournalList({
     return formatDateRange(dateFrom, dateTo) || "Without Filter"
   }, [dateFrom, dateTo])
 
+  const folderMap = useMemo(() => {
+    const map = {}
+    if (folders) {
+      folders.forEach((f) => { map[f.id] = f })
+    }
+    return map
+  }, [folders])
+
   const filtered = useMemo(() => {
     let result = [...journals]
 
@@ -119,6 +135,35 @@ export default function JournalList({
 
     return result
   }, [journals, filter, search, dateFrom, dateTo])
+
+  const handleDragStart = useCallback((e, journalId) => {
+    e.dataTransfer.setData("text/journal-id", journalId)
+    e.dataTransfer.effectAllowed = "move"
+    e.currentTarget.style.opacity = "0.6"
+  }, [])
+
+  const handleDragEnd = useCallback((e) => {
+    e.currentTarget.style.opacity = "1"
+  }, [])
+
+  const handleContextMenu = useCallback((e, journal) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setContextMenu({ open: true, x: e.clientX, y: e.clientY, journal })
+  }, [])
+
+  const handleCloseContextMenu = useCallback(() => {
+    setContextMenu((prev) => ({ ...prev, open: false }))
+  }, [])
+
+  const handleContextSave = useCallback(
+    async (selectedFolderIds) => {
+      if (!contextMenu.journal) return
+      await onAssignFolders(contextMenu.journal.id, selectedFolderIds)
+      toast.show("Folders updated")
+    },
+    [contextMenu.journal, onAssignFolders, toast]
+  )
 
   const handleOpenDatePopover = useCallback(() => {
     setDraftFrom(dateFrom || new Date().toISOString().slice(0, 10))
@@ -325,6 +370,38 @@ export default function JournalList({
             <CalendarDays size={13} />
             Date Filter
           </button>
+          <button
+            type="button"
+            onClick={onOpenFolderExplorer}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              padding: "6px 12px",
+              borderRadius: 8,
+              border: `1px solid ${activeFolderId ? theme.primary : theme.border}`,
+              background: activeFolderId ? `color-mix(in srgb, ${theme.primary} 8%, transparent)` : "var(--color-card, white)",
+              cursor: "pointer",
+              fontSize: 12,
+              fontWeight: 500,
+              color: activeFolderId ? theme.primary : theme.muted,
+              transition: "all 0.2s",
+              outline: "none",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = theme.primary
+              e.currentTarget.style.color = theme.primary
+            }}
+            onMouseLeave={(e) => {
+              if (!activeFolderId) {
+                e.currentTarget.style.borderColor = theme.border
+                e.currentTarget.style.color = theme.muted
+              }
+            }}
+          >
+            <FolderOpen size={13} />
+            Folders
+          </button>
 
           {showDatePopover && (
             <div
@@ -528,12 +605,16 @@ export default function JournalList({
           {filtered.map((j) => (
             <div
               key={j.id}
+              draggable
+              onDragStart={(e) => handleDragStart(e, j.id)}
+              onDragEnd={handleDragEnd}
+              onContextMenu={(e) => handleContextMenu(e, j)}
               style={{
                 background: "var(--color-card, white)",
                 borderRadius: 14,
                 border: `1px solid ${theme.border}`,
                 padding: "18px 20px",
-                cursor: "pointer",
+                cursor: "grab",
                 transition: "all 0.15s",
                 boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
               }}
@@ -596,6 +677,43 @@ export default function JournalList({
                       >
                         ⭐ {t("journal.detail.favorite")}
                       </span>
+                    )}
+                    {j.folderIds && j.folderIds.length > 0 && (
+                      <>
+                        {j.folderIds.slice(0, 2).map((fid) => {
+                          const folder = folderMap[fid]
+                          if (!folder) return null
+                          return (
+                            <span
+                              key={fid}
+                              style={{
+                                fontSize: 11,
+                                background: `color-mix(in srgb, ${theme.primary} 10%, transparent)`,
+                                color: theme.primaryText,
+                                borderRadius: 20,
+                                padding: "3px 8px",
+                                fontWeight: 500,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 3,
+                              }}
+                            >
+                              {folder.emoji} {folder.name}
+                            </span>
+                          )
+                        })}
+                        {j.folderIds.length > 2 && (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              color: theme.muted,
+                              fontWeight: 500,
+                            }}
+                          >
+                            +{j.folderIds.length - 2}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                   <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
@@ -678,6 +796,16 @@ export default function JournalList({
           ))}
         </div>
       )}
+
+      <FolderAssignMenu
+        open={contextMenu.open}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        folders={folders || []}
+        journalFolderIds={contextMenu.journal?.folderIds || []}
+        onSave={handleContextSave}
+        onClose={handleCloseContextMenu}
+      />
     </div>
   )
 }

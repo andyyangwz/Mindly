@@ -18,6 +18,7 @@ function toFrontend(j) {
     isFavorite: j.is_favorite,
     isPinned: j.is_pinned,
     allowAI: j.ai_enabled,
+    folderIds: j.folder_ids || [],
     createdAt: j.created_at,
     updatedAt: j.updated_at,
   };
@@ -31,7 +32,19 @@ function toBackend(data) {
   if (data.isFavorite !== undefined) body.is_favorite = data.isFavorite;
   if (data.isPinned !== undefined) body.is_pinned = data.isPinned;
   if (data.allowAI !== undefined) body.ai_enabled = data.allowAI;
+  if (data.folderIds !== undefined) body.folder_ids = data.folderIds;
   return body;
+}
+
+function toFolderFrontend(f) {
+  return {
+    id: f.id,
+    name: f.name,
+    emoji: f.emoji || "📁",
+    journalCount: f.journal_count || 0,
+    createdAt: f.created_at,
+    updatedAt: f.updated_at,
+  };
 }
 
 export const journalService = {
@@ -44,6 +57,7 @@ export const journalService = {
     if (params.pinned !== undefined) query.set("pinned", params.pinned);
     if (params.page) query.set("page", params.page);
     if (params.per_page) query.set("per_page", params.per_page);
+    if (params.folder_id) query.set("folder_id", params.folder_id);
 
     const qs = query.toString();
     const data = await api.get(`/journals${qs ? `?${qs}` : ""}`);
@@ -74,5 +88,38 @@ export const journalService = {
     return {
       journals: data.journals.map(toFrontend),
     };
+  },
+
+  // ---- Folder methods ----
+
+  async getFolders() {
+    const data = await api.get("/journals/folders");
+    return { folders: (data.folders || []).map(toFolderFrontend) };
+  },
+
+  async createFolder(data) {
+    const result = await api.post("/journals/folders", {
+      name: data.name,
+      emoji: data.emoji || "📁",
+    });
+    return toFolderFrontend(result.folder);
+  },
+
+  async updateFolder(id, data) {
+    const result = await api.put(`/journals/folders/${id}`, data);
+    return toFolderFrontend(result.folder);
+  },
+
+  async deleteFolder(id) {
+    return api.delete(`/journals/folders/${id}`);
+  },
+
+  async setJournalFolders(journalId, folderIds) {
+    await api.post(`/journals/${journalId}/folders`, { folder_ids: folderIds });
+  },
+
+  async getJournalFolders(journalId) {
+    const data = await api.get(`/journals/${journalId}/folders`);
+    return data.folder_ids || [];
   },
 };

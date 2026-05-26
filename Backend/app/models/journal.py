@@ -16,6 +16,8 @@ class Journal(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
+    folders = db.relationship("Folder", secondary="journal_folders", back_populates="journals", lazy="select")
+
     def to_dict(self):
         return {
             "id": str(self.id),
@@ -26,6 +28,7 @@ class Journal(db.Model):
             "is_favorite": self.is_favorite,
             "is_pinned": self.is_pinned,
             "ai_enabled": self.ai_enabled,
+            "folder_ids": [str(f.id) for f in self.folders] if self.folders else [],
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

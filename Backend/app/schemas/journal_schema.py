@@ -24,7 +24,7 @@ def validate_create(data):
     if errors:
         raise ValidationError(str(errors))
 
-    return {
+    result = {
         "title": title.strip(),
         "content": content.strip(),
         "emojis": data.get("emojis", []),
@@ -32,13 +32,19 @@ def validate_create(data):
         "is_pinned": bool(data.get("is_pinned", False)),
         "ai_enabled": bool(data.get("ai_enabled", False)),
     }
+    if "folder_ids" in data:
+        if not isinstance(data["folder_ids"], list):
+            errors["folder_ids"] = "folder_ids must be a list"
+        else:
+            result["folder_ids"] = data["folder_ids"]
+    return result
 
 
 def validate_update(data):
     if not data:
         raise ValidationError("Request body is required")
 
-    allowed = {"title", "content", "emojis", "is_favorite", "is_pinned", "ai_enabled"}
+    allowed = {"title", "content", "emojis", "is_favorite", "is_pinned", "ai_enabled", "folder_ids"}
     invalid = set(data.keys()) - allowed
     if invalid:
         raise ValidationError(f"Unexpected fields: {', '.join(sorted(invalid))}")

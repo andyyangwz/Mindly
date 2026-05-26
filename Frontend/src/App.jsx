@@ -10,11 +10,13 @@ import JournalsPage from "./features/journals/JournalsPage";
 import ProductivityPage from "./features/productivity/ProductivityPage";
 import InsightPage from "./features/insight/InsightPage";
 import SpillAIPage from "./features/spill/SpillAIPage";
+import ToastContainer from "./components/ui/Toast";
 
 export default function MindlyApp() {
   return (
     <TutorialProvider>
     <ThemeProvider>
+      <ToastContainer />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
