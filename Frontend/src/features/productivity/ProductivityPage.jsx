@@ -185,13 +185,13 @@ export default function ProductivityPage() {
           display: "flex",
           alignItems: "center",
           gap: 8,
-          padding: "10px 18px",
-          marginBottom: 18,
+            padding: "8px 16px",
+          marginBottom: 16,
           background: "var(--color-card, white)",
           border: `1px solid ${theme.border}`,
           borderRadius: 12,
           color: theme.dark,
-          fontSize: 14,
+          fontSize: 12,
           fontWeight: 600,
           cursor: "pointer",
           transition: "all 0.15s",
@@ -229,7 +229,7 @@ export default function ProductivityPage() {
           }}>
             <Lightbulb size={16} color={theme.primaryText} />
           </div>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: theme.dark, display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <h3 style={{           fontSize: 12, fontWeight: 600, color: theme.dark, display: "inline-flex", alignItems: "center", gap: 6 }}>
             {t("productivity.page.smartSuggestions")}
             <InfoButton tutorialId="smart-suggestions" />
           </h3>
@@ -259,7 +259,7 @@ export default function ProductivityPage() {
 
       <div id="overview-cards" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, marginTop: 24, alignItems: "start" }}>
         <div style={{ background: "var(--color-card, white)", borderRadius: 16, border: `1px solid ${theme.border}`, padding: "18px 20px", display: "flex", flexDirection: "column", maxHeight: 500, overflow: "hidden" }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: theme.dark, marginBottom: 14, flexShrink: 0 }}>{t("productivity.page.todaysPlan")}</h3>
+          <h3 style={{           fontSize: 12, fontWeight: 600, color: theme.dark, marginBottom: 14, flexShrink: 0 }}>{t("productivity.page.todaysPlan")}</h3>
           <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           {planLoading && <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{t("productivity.page.loading")}</p>}
           {!planLoading && planItems.length === 0 && (
@@ -289,7 +289,7 @@ export default function ProductivityPage() {
         </div>
 
         <div style={{ background: "var(--color-card, white)", borderRadius: 16, border: `1px solid ${theme.border}`, padding: "18px 20px", display: "flex", flexDirection: "column", maxHeight: 500, overflow: "hidden" }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: theme.dark, marginBottom: 12, flexShrink: 0 }}>
+          <h3 style={{           fontSize: 12, fontWeight: 600, color: theme.dark, marginBottom: 12, flexShrink: 0 }}>
             {t("productivity.page.yourTasks")}
             {tasksLoading && <span style={{ fontSize: 11, fontWeight: 400, color: theme.muted, marginLeft: 6 }}>{t("productivity.page.loading")}</span>}
           </h3>

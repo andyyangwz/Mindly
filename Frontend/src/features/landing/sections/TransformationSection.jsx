@@ -1,5 +1,7 @@
 import { ArrowRight } from "lucide-react"
 import ScrollReveal from "../components/ScrollReveal"
+import productiveSpilli from "../../../assets/mascot_images/productive_spilli.png"
+import unproductiveSpilli from "../../../assets/mascot_images/unproductive_spilli.jpg"
 
 const BEFORE = [
   "distracted",
@@ -18,6 +20,30 @@ const AFTER = [
   "structured",
   "aligned",
 ]
+
+function SpilliImg({ src, alt, accent }) {
+  return (
+    <div
+      style={{
+        margin: "0 0 20px",
+        borderRadius: 12,
+        overflow: "hidden",
+        border: `1px solid ${accent}`,
+        lineHeight: 0,
+      }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        style={{
+          width: "100%",
+          height: "auto",
+          display: "block",
+        }}
+      />
+    </div>
+  )
+}
 
 export default function TransformationSection() {
   return (
@@ -94,12 +120,15 @@ export default function TransformationSection() {
                   letterSpacing: "0.15em",
                   textTransform: "uppercase",
                   color: "var(--landing-text-muted)",
-                  margin: "0 0 20px",
+                  margin: "0 0 6px",
                   opacity: 0.5,
+                  textAlign: "center",
                 }}
               >
                 Before
               </p>
+
+              <SpilliImg src={unproductiveSpilli} alt="Unproductive state" accent="var(--landing-border)" />
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {BEFORE.map((item) => (
@@ -236,11 +265,14 @@ export default function TransformationSection() {
                   letterSpacing: "0.15em",
                   textTransform: "uppercase",
                   color: "var(--landing-accent)",
-                  margin: "0 0 20px",
+                  margin: "0 0 6px",
+                  textAlign: "center",
                 }}
               >
                 After
               </p>
+
+              <SpilliImg src={productiveSpilli} alt="Productive state" accent="var(--landing-accent)" />
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {AFTER.map((item) => (

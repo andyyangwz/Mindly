@@ -1,0 +1,103 @@
+/**
+ * Cross-day activity segmentation utility.
+ *
+ * Takes an activity and a target date, returns the visual segment
+ * that should be rendered for that day — or null if the activity
+ * doesn't overlap the target date.
+ *
+ * Each segment shares the source activity's id so editing/dragging
+ * any segment affects the original record.
+ */
+
+export function getDaySegment(activity, dateStr) {
+  if (!activity.startDatetime || !activity.endDatetime) {
+    if (activity.eventDate === dateStr) {
+      return {
+        ...activity,
+        segmentStart: activity.startTime,
+        segmentEnd: activity.endTime,
+        isCrossDay: false,
+        continuesPrev: false,
+        continuesNext: false,
+      }
+    }
+    return null
+  }
+
+  const sd = new Date(activity.startDatetime)
+  const ed = new Date(activity.endDatetime)
+  const target = new Date(dateStr + "T00:00:00")
+  const nextDay = new Date(target)
+  nextDay.setDate(nextDay.getDate() + 1)
+
+  if (ed <= target || sd >= nextDay) return null
+
+  const startsOnDay = sd >= target && sd < nextDay
+  const endsOnDay = ed > target && ed <= nextDay
+  const startsBefore = sd < target
+  const endsAfter = ed > nextDay
+
+  const dayStart = dateStr + "T00:00"
+  const dayEnd = dateStr + "T23:59"
+
+  const segmentStart = startsBefore || !startsOnDay ? dayStart : activity.startDatetime.slice(0, 16)
+  const segmentEnd = endsAfter || !endsOnDay ? dayEnd : activity.endDatetime.slice(0, 16)
+
+  return {
+    ...activity,
+    segmentStart,
+    segmentEnd,
+    isCrossDay: startsBefore || endsAfter,
+    continuesPrev: startsBefore,
+    continuesNext: endsAfter,
+  }
+}
+
+/**
+ * Compute the proportional minutes an activity contributes to a specific day.
+ * Used for productivity scoring.
+ */
+export function getDayMinutes(activity, dateStr) {
+  if (!activity.startDatetime || !activity.endDatetime) {
+    if (activity.eventDate !== dateStr) return 0
+    return minutesBetween(activity.startTime, activity.endTime)
+  }
+
+  const sd = new Date(activity.startDatetime)
+  const ed = new Date(activity.endDatetime)
+  const target = new Date(dateStr + "T00:00:00")
+  const nextDay = new Date(target)
+  nextDay.setDate(nextDay.getDate() + 1)
+
+  if (ed <= target || sd >= nextDay) return 0
+
+  const seg = getDaySegment(activity, dateStr)
+  if (!seg) return 0
+
+  return minutesBetween(seg.segmentStart, seg.segmentEnd)
+}
+
+function minutesBetween(start, end) {
+  const s = start.length <= 5 ? `1970-01-01T${start}` : start
+  const e = end.length <= 5 ? `1970-01-01T${end}` : end
+  const d1 = new Date(s)
+  const d2 = new Date(e)
+  return Math.max(0, (d2 - d1) / 60000)
+}
+
+/**
+ * Memoization helper — caches segments per (activity.id, dateStr).
+ */
+const segmentCache = new Map()
+
+export function getCachedDaySegment(activity, dateStr) {
+  const key = `${activity.id}|${dateStr}`
+  if (segmentCache.has(key)) return segmentCache.get(key)
+  const seg = getDaySegment(activity, dateStr)
+  segmentCache.set(key, seg)
+  return seg
+}
+
+export function clearSegmentCache() {
+  segmentCache.clear()
+}

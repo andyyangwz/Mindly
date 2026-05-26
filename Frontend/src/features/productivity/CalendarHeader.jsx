@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { Plus, ChevronLeft, ChevronRight, Undo, Redo, Waves, Target, Mic } from "lucide-react"
+import { Plus, ChevronLeft, ChevronRight, Undo, Redo, Waves, Target, Mic, Lock, Move, RefreshCw } from "lucide-react"
 import { theme } from "../../theme"
 import InfoButton from "../../components/tutorial/InfoButton"
 import { isSameDay, toDateStr } from "./calendarConstants"
@@ -86,12 +86,24 @@ function MonthPicker({ currentMonth, onSelect, onClose }) {
   )
 }
 
-export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRedo, canUndo, canRedo, onAddActivity, onAddTask, onVoice, showTutorial = true }) {
+export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRedo, canUndo, canRedo, onAddActivity, onAddTask, onVoice, showTutorial = true, interactionMode, onModeChange, onAutoSync }) {
   const { t } = useTranslation()
   const [showMonthPicker, setShowMonthPicker] = useState(false)
   const [showCreateMenu, setShowCreateMenu] = useState(false)
   const monthRef = useRef(null)
   const createBtnRef = useRef(null)
+  const [syncing, setSyncing] = useState(false)
+  const [showModeTip, setShowModeTip] = useState(false)
+
+  const handleSync = useCallback(async () => {
+    if (syncing || !onAutoSync) return
+    setSyncing(true)
+    try {
+      await onAutoSync()
+    } finally {
+      setSyncing(false)
+    }
+  }, [syncing, onAutoSync])
 
   useEffect(() => {
     if (!showCreateMenu) return
@@ -114,11 +126,20 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
   const goToToday = () => onDateChange(new Date())
 
   const goBack = () => {
-    onDateChange(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 7))
+    const day = currentDate.getDay()
+    const diff = day === 0 ? -6 : 1 - day
+    const monday = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + diff)
+    monday.setDate(monday.getDate() - 7)
+    monday.setDate(monday.getDate() + 6)
+    onDateChange(monday)
   }
 
   const goForward = () => {
-    onDateChange(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 7))
+    const day = currentDate.getDay()
+    const diff = day === 0 ? -6 : 1 - day
+    const monday = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + diff)
+    monday.setDate(monday.getDate() + 7)
+    onDateChange(monday)
   }
 
   const handleMonthSelect = useCallback(
@@ -312,6 +333,120 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
           >
             <Redo size={15} />
           </button>
+
+          <div style={{ width: 1, height: 20, background: theme.border }} />
+
+          <div style={{ position: "relative" }}
+            onMouseEnter={() => setShowModeTip(true)}
+            onMouseLeave={() => setShowModeTip(false)}
+          >
+            <button
+              type="button"
+              onClick={() => onModeChange(interactionMode === "fixed" ? "reschedule" : "fixed")}
+              title={interactionMode === "fixed" ? "Switch to Reschedule Mode" : "Switch to Fixed Mode"}
+              style={{
+                background: interactionMode === "reschedule" ? theme.primary : "transparent",
+                border: `1px solid ${interactionMode === "reschedule" ? theme.primary : theme.border}`,
+                borderRadius: 8,
+                height: 32,
+                padding: "0 10px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                fontSize: 11,
+                fontWeight: 600,
+                color: interactionMode === "reschedule" ? "white" : theme.muted,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                if (interactionMode !== "reschedule") {
+                  e.currentTarget.style.borderColor = theme.accent
+                  e.currentTarget.style.color = theme.dark
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (interactionMode !== "reschedule") {
+                  e.currentTarget.style.borderColor = theme.border
+                  e.currentTarget.style.color = theme.muted
+                }
+              }}
+            >
+              {interactionMode === "fixed" ? <Lock size={12} /> : <Move size={12} />}
+              {interactionMode === "fixed" ? "Fixed" : "Reschedule"}
+            </button>
+            {showModeTip && (
+              <div style={{
+                position: "absolute",
+                top: "calc(100% + 6px)",
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: theme.dark,
+                color: "white",
+                fontSize: 10,
+                fontWeight: 500,
+                padding: "3px 8px",
+                borderRadius: 5,
+                whiteSpace: "nowrap",
+                zIndex: theme.z.tooltip || 1200,
+                pointerEvents: "none",
+              }}>
+                Press CTRL+K to toggle
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "0 10px",
+              height: 32,
+              borderRadius: 8,
+              border: `1px solid ${theme.border}`,
+              background: syncing ? theme.bg : "transparent",
+              cursor: syncing ? "not-allowed" : "pointer",
+              fontSize: 11,
+              fontWeight: 600,
+              color: theme.dark,
+              transition: "all 0.2s ease",
+              opacity: syncing ? 0.7 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (!syncing) {
+                e.currentTarget.style.borderColor = theme.accent
+                e.currentTarget.style.background = theme.bg
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!syncing) {
+                e.currentTarget.style.borderColor = theme.border
+                e.currentTarget.style.background = "transparent"
+              }
+            }}
+          >
+            <RefreshCw
+              size={12}
+              style={{
+                animation: syncing ? "syncRotate 1s linear infinite" : "none",
+                flexShrink: 0,
+              }}
+            />
+            {syncing ? "Syncing..." : "Auto Sync"}
+          </button>
+
+          {/* Keyframes for sync rotation */}
+          <style>{`
+            @keyframes syncRotate {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+
+          <div style={{ width: 1, height: 20, background: theme.border }} />
 
           <div ref={createBtnRef} style={{ position: "relative" }}>
             <button
@@ -554,6 +689,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
           )
         })}
       </div>
+
     </div>
   )
 }

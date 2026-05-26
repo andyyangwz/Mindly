@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+
+const SPILL_PERSONALITY_KEY = "mindly_spill_personality"
 import { Send, Loader2, MessageCircle, BookOpen, Mic, Square, X } from "lucide-react"
 import { theme } from "../../theme"
 import InfoButton from "../../components/tutorial/InfoButton"
@@ -104,6 +106,7 @@ export default function SpillAIPage() {
   const { t } = useTranslation()
   const { chatId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const bottomRef = useRef(null)
   const [input, setInput] = useState("")
   const [personality, setPersonality] = useState("empathetic")
@@ -280,6 +283,19 @@ export default function SpillAIPage() {
   useEffect(() => {
     if (isNewChat) {
       setLocalMessages([])
+
+      const state = location.state
+      if (state?.forwardedJournal) {
+        setForwardedJournal(state.forwardedJournal)
+      }
+      if (state?.personality) {
+        setPersonality(state.personality)
+      }
+
+      if (state?.forwardedJournal || state?.personality) {
+        window.history.replaceState({}, "")
+      }
+
       setInitialized(true)
     } else if (chatId) {
       fetchMessages(chatId)
@@ -290,13 +306,17 @@ export default function SpillAIPage() {
       })
       setInitialized(true)
     }
-  }, [chatId, fetchMessages, fetchSession, isNewChat])
+  }, [chatId, fetchMessages, fetchSession, isNewChat, location])
 
   useEffect(() => {
     if (!isNewChat && !loading && messages.length > 0) {
       setLocalMessages(messages)
     }
   }, [messages, loading, isNewChat])
+
+  useEffect(() => {
+    localStorage.setItem(SPILL_PERSONALITY_KEY, personality)
+  }, [personality])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })

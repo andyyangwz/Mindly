@@ -15,6 +15,8 @@ const INITIAL_STATE = {
   title: "",
   description: "",
   eventDate: "",
+  startDate: "",
+  endDate: "",
   startTime: "",
   endTime: "",
   color: "#7C3AED",
@@ -45,12 +47,20 @@ export default function ActivityFormModal({
   useEffect(() => {
     if (!open) return
     if (editingActivity) {
+      const sd = editingActivity.startDatetime
+        ? editingActivity.startDatetime.slice(0, 10)
+        : editingActivity.eventDate || ""
+      const ed = editingActivity.endDatetime
+        ? editingActivity.endDatetime.slice(0, 10)
+        : editingActivity.eventDate || ""
       setForm({
         title: editingActivity.isDeadlineMarker
           ? editingActivity.title.replace(/ Deadline$/, "")
           : editingActivity.title,
         description: editingActivity.description || "",
         eventDate: editingActivity.eventDate || "",
+        startDate: sd,
+        endDate: ed,
         startTime: editingActivity.startTime || "",
         endTime: editingActivity.endTime || "",
         color: editingActivity.color || "#7C3AED",
@@ -67,9 +77,12 @@ export default function ActivityFormModal({
       const mm = String(now.getMinutes()).padStart(2, "0")
       const currentTime = `${hh}:${mm}`
       const defaultEnd = `${String((now.getHours() + 1) % 24).padStart(2, "0")}:${mm}`
+      const dateStr = toDateStr(selectedSlot.date)
       setForm({
         ...INITIAL_STATE,
-        eventDate: toDateStr(selectedSlot.date),
+        eventDate: dateStr,
+        startDate: dateStr,
+        endDate: dateStr,
         startTime: selectedSlot.startTime || currentTime,
         endTime: selectedSlot.endTime || defaultEnd,
         priority: selectedSlot.startTime ? "low" : INITIAL_STATE.priority,
@@ -112,11 +125,24 @@ export default function ActivityFormModal({
         if (deadline <= start) errs.deadlineTime = t("productivity.eventForm.validation.mustBeAfterStart")
       }
     } else {
-      if (!form.eventDate) errs.eventDate = t("productivity.eventForm.validation.required")
+      const sd = form.startDate || form.eventDate
+      const ed = form.endDate || form.eventDate
+      if (!sd) errs.startDate = t("productivity.eventForm.validation.required")
+      if (!ed) errs.endDate = t("productivity.eventForm.validation.required")
       if (!form.startTime) errs.startTime = t("productivity.eventForm.validation.required")
       if (!form.endTime) errs.endTime = t("productivity.eventForm.validation.required")
-      if (form.startTime && form.endTime && form.startTime >= form.endTime) {
-        errs.endTime = t("productivity.eventForm.validation.mustBeAfterStart")
+
+      if (sd && ed && form.startTime && form.endTime) {
+        const start = new Date(`${sd}T${form.startTime}`)
+        const end = new Date(`${ed}T${form.endTime}`)
+        if (end <= start) {
+          errs.endTime = t("productivity.eventForm.validation.mustBeAfterStart")
+        }
+        const diffMs = end - start
+        const maxMs = 2 * 24 * 60 * 60 * 1000
+        if (diffMs > maxMs) {
+          errs.endDate = "Activities cannot span more than 2 days"
+        }
       }
     }
 
@@ -131,8 +157,6 @@ export default function ActivityFormModal({
       const payload = {
         title: form.title.trim(),
         description: form.description.trim(),
-        eventDate: form.eventDate,
-        startTime: form.startTime,
         color: form.color,
         priority: form.priority,
         productivityLevel: form.productivityLevel,
@@ -141,12 +165,20 @@ export default function ActivityFormModal({
       }
 
       if (form.hasDeadline) {
+        payload.eventDate = form.eventDate
+        payload.startTime = form.startTime
         const [sh, sm] = form.startTime.split(":").map(Number)
         const eh = (sh + 1) % 24
         payload.endTime = `${String(eh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`
         payload.deadlineDate = form.deadlineDate
         payload.deadlineTime = form.deadlineTime
       } else {
+        const sd = form.startDate || form.eventDate
+        const ed = form.endDate || form.eventDate
+        payload.startDatetime = `${sd}T${form.startTime}`
+        payload.endDatetime = `${ed}T${form.endTime}`
+        payload.eventDate = sd
+        payload.startTime = form.startTime
         payload.endTime = form.endTime
       }
 
@@ -571,14 +603,27 @@ function StandardSection({ form, errors, set }) {
 
   return (
     <>
-      <Field label={t("productivity.eventForm.activityDateLabel")} error={errors.eventDate}>
-        <In
-          type="date"
-          value={form.eventDate}
-          onChange={(e) => set("eventDate", e.target.value)}
-          error={errors.eventDate}
-        />
-      </Field>
+      <Grid cols="minmax(0,1fr) minmax(0,1fr)" gap={12}>
+        <Field label={t("productivity.eventForm.startLabel") + " " + t("productivity.eventForm.datePlaceholder")} error={errors.startDate}>
+          <In
+            type="date"
+            value={form.startDate || form.eventDate}
+            onChange={(e) => {
+              set("startDate", e.target.value)
+              set("eventDate", e.target.value)
+            }}
+            error={errors.startDate}
+          />
+        </Field>
+        <Field label={t("productivity.eventForm.endLabel") + " " + t("productivity.eventForm.datePlaceholder")} error={errors.endDate}>
+          <In
+            type="date"
+            value={form.endDate || form.eventDate}
+            onChange={(e) => set("endDate", e.target.value)}
+            error={errors.endDate}
+          />
+        </Field>
+      </Grid>
       <Grid cols="minmax(0,1fr) minmax(0,1fr)" gap={12}>
         <Field label={t("productivity.eventForm.startLabel")} error={errors.startTime}>
           <In

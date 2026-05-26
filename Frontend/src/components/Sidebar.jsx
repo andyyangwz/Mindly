@@ -229,7 +229,7 @@ export default function Sidebar({ sessions, onNewChat, onRenameChat, onDeleteCha
               }}
             >
               <Icon size={17} />
-              {t(`nav.${item.id}`)}
+              {item.id === "new-chat" ? t("nav.newChat") : t(`nav.${item.id}`)}
             </button>
           );
         })}

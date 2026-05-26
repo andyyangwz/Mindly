@@ -13,6 +13,8 @@ class ProductivityEvent(db.Model):
     event_date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
+    start_datetime = db.Column(db.DateTime, nullable=True)
+    end_datetime = db.Column(db.DateTime, nullable=True)
     color = db.Column(db.String(7), default="#7C3AED")
     priority = db.Column(db.String(10), default="medium")
     created_at = db.Column(db.DateTime, default=db.func.now())
@@ -46,6 +48,8 @@ class ProductivityEvent(db.Model):
             "has_deadline": self.has_deadline,
             "is_deadline_marker": self.is_deadline_marker,
             "task_group_id": str(self.task_group_id) if self.task_group_id else None,
+            "start_datetime": self.start_datetime.isoformat() if self.start_datetime else None,
+            "end_datetime": self.end_datetime.isoformat() if self.end_datetime else None,
             "deadline_date": self.deadline_date.isoformat() if self.deadline_date else None,
             "deadline_time": self.deadline_time.strftime("%H:%M") if self.deadline_time else None,
             "status": self.status,

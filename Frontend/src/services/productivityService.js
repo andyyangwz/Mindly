@@ -8,6 +8,8 @@ function toFrontend(e) {
     eventDate: e.event_date,
     startTime: e.start_time,
     endTime: e.end_time,
+    startDatetime: e.start_datetime || null,
+    endDatetime: e.end_datetime || null,
     color: e.color || "#7C3AED",
     priority: e.priority || "medium",
     createdAt: e.created_at,
@@ -33,6 +35,8 @@ function toBackend(data) {
   if (data.color !== undefined) body.color = data.color
   if (data.priority !== undefined) body.priority = data.priority
   if (data.productivityLevel !== undefined) body.productivity_level = data.productivityLevel
+  if (data.startDatetime !== undefined) body.start_datetime = data.startDatetime
+  if (data.endDatetime !== undefined) body.end_datetime = data.endDatetime
   if (data.hasDeadline !== undefined) body.has_deadline = data.hasDeadline
   if (data.deadlineDate !== undefined) body.deadline_date = data.deadlineDate
   if (data.deadlineTime !== undefined) body.deadline_time = data.deadlineTime
@@ -72,5 +76,30 @@ export const productivityService = {
   async delete(id) {
     const result = await api.delete(`/productivity/${id}`)
     return { deletedIds: result.deleted_ids || [id] }
+  },
+
+  async classifyTitle(title) {
+    const result = await api.post("/productivity/classify", { title })
+    return {
+      productivityLevel: result.productivity_level || "neutral",
+      priority: result.priority || "medium",
+    }
+  },
+
+  async syncDayStatuses(dateStr) {
+    const now = new Date()
+    const y = now.getFullYear()
+    const m = String(now.getMonth() + 1).padStart(2, "0")
+    const d = String(now.getDate()).padStart(2, "0")
+    const h = String(now.getHours()).padStart(2, "0")
+    const min = String(now.getMinutes()).padStart(2, "0")
+    const todayStr = `${y}-${m}-${d}`
+    const localDatetime = `${todayStr}T${h}:${min}`
+    const result = await api.post("/productivity/sync-status", {
+      date: dateStr,
+      current_datetime: localDatetime,
+      today_date: todayStr,
+    })
+    return result
   },
 }

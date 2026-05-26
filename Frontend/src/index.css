@@ -90,6 +90,15 @@ select:-webkit-autofill:focus {
   to { transform: rotate(360deg); }
 }
 
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes authFloat {
   0%, 100% { transform: translate(-50%, -50%) translateY(0px) scale(1); }
   25% { transform: translate(-50%, -50%) translateY(-20px) scale(1.05); }

@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
+import { Loader } from "lucide-react"
 import { useJournals } from "../../hooks/useJournals"
 import { theme } from "../../theme"
 import JournalList from "./JournalList"
 import JournalDetail from "./JournalDetail"
 import JournalForm from "./JournalForm"
+
+const SPILL_PERSONALITY_KEY = "mindly_spill_personality"
 
 function useJournalRoutes() {
   const location = useLocation()
@@ -34,6 +37,7 @@ export default function JournalsPage() {
     emojis: ["", "", ""],
   })
   const [deleting, setDeleting] = useState(false)
+  const [chatAboutItLoading, setChatAboutItLoading] = useState(false)
 
   const {
     journals,
@@ -117,6 +121,35 @@ export default function JournalsPage() {
     const j = journals.find((x) => x.id === id)
     if (!j) return
     await updateJournal(id, { allowAI: !j.allowAI })
+  }
+
+  const handleChatAboutIt = async (id) => {
+    setChatAboutItLoading(true)
+    try {
+      const j = journals.find((x) => x.id === id)
+      if (!j) return
+
+      if (!j.allowAI) {
+        await updateJournal(id, { allowAI: true })
+      }
+
+      const personality =
+        localStorage.getItem(SPILL_PERSONALITY_KEY) || "empathetic"
+
+      navigate("/app/spill", {
+        state: {
+          forwardedJournal: {
+            id: j.id,
+            title: j.title,
+            content: j.content,
+          },
+          personality,
+        },
+      })
+    } catch (err) {
+      console.error("Failed to start reflection session:", err)
+      setChatAboutItLoading(false)
+    }
   }
 
   if (loading && journals.length === 0 && route.view !== "create") {
@@ -204,16 +237,54 @@ export default function JournalsPage() {
       )
     }
     return (
-      <JournalDetail
-        journal={journal}
-        onBack={handleBack}
-        onEdit={handleStartEdit}
-        onDelete={handleDelete}
-        toggleFavorite={handleToggleFavorite}
-        togglePinned={handleTogglePinned}
-        toggleAllowAI={handleToggleAllowAI}
-        deleting={deleting}
-      />
+      <>
+        <JournalDetail
+          journal={journal}
+          onBack={handleBack}
+          onEdit={handleStartEdit}
+          onDelete={handleDelete}
+          toggleFavorite={handleToggleFavorite}
+          togglePinned={handleTogglePinned}
+          toggleAllowAI={handleToggleAllowAI}
+          onChatAboutIt={() => handleChatAboutIt(journal.id)}
+          chatAboutItLoading={chatAboutItLoading}
+          deleting={deleting}
+        />
+        {chatAboutItLoading && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.25)",
+              backdropFilter: "blur(3px)",
+              animation: "fadeIn 0.15s ease",
+            }}
+          >
+            <div
+              style={{
+                background: "var(--color-card, white)",
+                borderRadius: 16,
+                padding: "28px 36px",
+                textAlign: "center",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.15)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <Loader size={22} color={theme.primary} className="spin" />
+              <p style={{ fontSize: 14, color: theme.dark, fontWeight: 500, margin: 0 }}>
+                Preparing reflection session...
+              </p>
+            </div>
+          </div>
+        )}
+      </>
     )
   }
 

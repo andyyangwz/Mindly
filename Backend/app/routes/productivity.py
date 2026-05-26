@@ -1,13 +1,81 @@
 import uuid
+import json
+import logging
 from datetime import datetime
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 
 from app.auth.decorators import require_auth
 from app.schemas.productivity_schema import validate_event_data
 from app.services.productivity_service import ProductivityService
+from app.services.ai.groq_provider import GroqProvider
+
+logger = logging.getLogger(__name__)
 
 productivity_bp = Blueprint("productivity", __name__, url_prefix="/api/productivity")
+
+CLASSIFY_MODEL = "llama-3.3-70b-versatile"
+
+CLASSIFY_SYSTEM_PROMPT = """You are an activity classifier. Your ONLY job is to classify an activity title.
+
+Return ONLY valid JSON, no explanation, no markdown, no code blocks.
+
+Rules:
+- productivity_level must be one of: "productive", "neutral", "unproductive", "obligation"
+- priority must be one of: "low", "medium", "high"
+- "productive" = intentional growth activities (learning, exercise, creation, deep work)
+- "obligation" = necessary but not growth-oriented (bills, chores, admin, errands)
+- "neutral" = routine / maintenance / unclear
+- "unproductive" = distraction, procrastination, time-wasting
+- priority: "high" for urgent/important, "low" for optional/leisure, "medium" otherwise
+
+Examples:
+Title: "Gym Session" → {{"productivity_level": "productive", "priority": "medium"}}
+Title: "Pay electricity bill" → {{"productivity_level": "obligation", "priority": "high"}}
+Title: "Watch Netflix" → {{"productivity_level": "unproductive", "priority": "low"}}
+Title: "Team standup" → {{"productivity_level": "neutral", "priority": "medium"}}
+
+Remember: JSON only. No extra text."""
+
+
+@productivity_bp.route("/classify", methods=["POST"])
+@require_auth
+def classify_activity(user_id):
+    data = request.get_json(silent=True)
+    if not data or not data.get("title"):
+        return jsonify({"error": "title is required"}), 400
+
+    title = data["title"].strip()
+    if not title:
+        return jsonify({"error": "title must not be empty"}), 400
+
+    try:
+        api_key = current_app.config.get("GROQ_API_KEY", "")
+        if not api_key:
+            raise ValueError("GROQ_API_KEY is not configured")
+        provider = GroqProvider(api_key, CLASSIFY_MODEL)
+        raw = provider.chat(
+            messages=[
+                {"role": "system", "content": CLASSIFY_SYSTEM_PROMPT},
+                {"role": "user", "content": title},
+            ],
+            max_tokens=100,
+            temperature=0.1,
+        )
+        cleaned = raw.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[-1]
+            cleaned = cleaned.rsplit("```", 1)[0]
+        cleaned = cleaned.strip()
+        result = json.loads(cleaned)
+    except Exception as e:
+        logger.warning("Title classification failed for %r: %s", title, e)
+        result = {"productivity_level": "neutral", "priority": "medium"}
+
+    return jsonify({
+        "productivity_level": result.get("productivity_level", "neutral"),
+        "priority": result.get("priority", "medium"),
+    })
 
 
 @productivity_bp.route("", methods=["GET"])
@@ -57,6 +125,25 @@ def create_event(user_id):
         response["linked_event"] = result["linked_event"].to_dict()
 
     return jsonify(response), 201
+
+
+@productivity_bp.route("/sync-status", methods=["POST"])
+@require_auth
+def sync_day_statuses(user_id):
+    data = request.get_json(silent=True)
+    if not data or not data.get("date"):
+        return jsonify({"error": "date is required"}), 400
+    try:
+        result = ProductivityService.sync_day_statuses(
+            user_id,
+            data["date"],
+            current_datetime=data.get("current_datetime"),
+            today_date=data.get("today_date"),
+        )
+    except Exception as e:
+        logger.error("Status sync failed: %s", e)
+        return jsonify({"error": str(e)}), 500
+    return jsonify(result)
 
 
 @productivity_bp.route("/<event_id>", methods=["PUT"])

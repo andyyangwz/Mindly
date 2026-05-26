@@ -21,6 +21,8 @@ export default function JournalDetail({
   toggleFavorite,
   togglePinned,
   toggleAllowAI,
+  onChatAboutIt,
+  chatAboutItLoading,
   deleting,
 }) {
   const { t } = useTranslation()
@@ -87,6 +89,8 @@ export default function JournalDetail({
           <ChevronLeft size={16} color={theme.dark} /> {t("journal.detail.back")}
         </button>
         <button
+          onClick={onChatAboutIt}
+          disabled={chatAboutItLoading}
           style={{
             display: "flex",
             alignItems: "center",
@@ -95,11 +99,13 @@ export default function JournalDetail({
             borderRadius: 24,
             border: "none",
             background: theme.primary,
-            cursor: "pointer",
+            cursor: chatAboutItLoading ? "not-allowed" : "pointer",
             fontSize: 12,
             color: "white",
             fontWeight: 500,
+            opacity: chatAboutItLoading ? 0.7 : 1,
             boxShadow: `0 4px 12px color-mix(in srgb, ${theme.primary} 44%, transparent)`,
+            transition: "opacity 0.2s",
           }}
         >
           <MessageCircle size={13} color="white" /> {t("journal.detail.chatAboutIt")}

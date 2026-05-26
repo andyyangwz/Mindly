@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom"
 import { RotateCcw, CheckCircle2, Circle, Plus } from "lucide-react"
 import { theme } from "../../theme"
 import { useProductivity } from "../../hooks/useProductivity"
+import { productivityService } from "../../services/productivityService"
 import { useCalendarHistory } from "./useCalendarHistory"
 import CalendarHeader from "./CalendarHeader"
 import CalendarGrid from "./CalendarGrid"
@@ -15,9 +16,14 @@ import VoiceRecorderModal from "./VoiceRecorderModal"
 import {
   toDateStr,
 } from "./calendarConstants"
+import {
+  getCachedDaySegment,
+  clearSegmentCache,
+} from "./segmentActivity"
 
 export default function ProductivityCalendar({ onActivityUpdated }) {
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [interactionMode, setInteractionMode] = useState("fixed")
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [editingActivity, setEditingActivity] = useState(null)
   const [viewingActivity, setViewingActivity] = useState(null)
@@ -74,6 +80,10 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
       setUseRealData(true)
     })
   }, [currentDate, fetchActivities])
+
+  useEffect(() => {
+    clearSegmentCache()
+  }, [currentDate])
 
   useEffect(() => {
     if (!ctxMenu) return
@@ -162,8 +172,20 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
 
   const displayActivities = useMemo(() => {
     const base = useRealData ? localActivities : []
-    return inlineDraft ? [...base, inlineDraft] : base
-  }, [useRealData, localActivities, inlineDraft])
+    const dateStr = toDateStr(currentDate)
+    clearSegmentCache()
+    const segmented = []
+    for (const act of base) {
+      const seg = act.startDatetime ? getCachedDaySegment(act, dateStr) : act
+      if (!seg) continue
+      segmented.push({
+        ...seg,
+        isSegmented: act.startDatetime && seg.isCrossDay,
+      })
+    }
+    if (inlineDraft) segmented.push(inlineDraft)
+    return segmented
+  }, [useRealData, localActivities, inlineDraft, currentDate])
 
   const handleActivityViewDetails = useCallback((activity) => {
     setCtxMenu(null)
@@ -188,18 +210,36 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
         const prev = localActivitiesRef.current.find((e) => e.id === editingActivity.id)
         if (!prev) return
         const prevSnapshot = { ...prev }
-        const next = { ...prev, ...data }
+
+        let payload = { ...data }
+        if (!editingActivity.hasDeadline && editingActivity.startDatetime) {
+          payload = {
+            ...data,
+            startDatetime: data.startDatetime,
+            endDatetime: data.endDatetime,
+          }
+        }
+
+        const next = { ...prev, ...payload }
         setLocalActivities((prevActivities) =>
           prevActivities.map((e) => (e.id === editingActivity.id ? next : e))
         )
         record({ type: "edit", prev: prevSnapshot, next })
-        await updateActivity(editingActivity.id, data)
+        await updateActivity(editingActivity.id, payload)
         setUseRealData(true)
       } else {
-        const next = { id: `new-${Date.now()}`, ...data }
+        let payload = { ...data }
+        if (!data.hasDeadline && data.startDatetime && data.endDatetime) {
+          payload = {
+            ...data,
+            startDatetime: data.startDatetime,
+            endDatetime: data.endDatetime,
+          }
+        }
+        const next = { id: `new-${Date.now()}`, ...payload }
         setLocalActivities((prevActivities) => [...prevActivities, next])
         record({ type: "create", prev: null, next: { ...next } })
-        await createActivity(data)
+        await createActivity(payload)
         setUseRealData(true)
       }
       setActivityFormOpen(false)
@@ -227,6 +267,8 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   )
 
   const handleActivityResize = useCallback(async (activity, oldStartTime, oldEndTime, newStartTime, newEndTime) => {
+    if (activity.isSegmented) return
+    clearSegmentCache()
     const prev = { ...activity, startTime: oldStartTime, endTime: oldEndTime }
     const next = { ...activity, startTime: newStartTime, endTime: newEndTime }
     setLocalActivities((prevActivities) =>
@@ -239,6 +281,7 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
 
   const handleDragEnd = useCallback(async (id, oldStartTime, oldEndTime, newStartTime, newEndTime) => {
     if (!newStartTime) return
+    clearSegmentCache()
     const prev = localActivitiesRef.current.find((e) => e.id === id)
     if (!prev) return
     const prevSnapshot = { ...prev, startTime: oldStartTime, endTime: oldEndTime }
@@ -286,19 +329,36 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     }
     const draft = inlineDraft
     try {
-      const result = await createActivity({
+      let productivityLevel = draft.productivityLevel
+      let priority = draft.priority
+      try {
+        const classification = await productivityService.classifyTitle(title.trim())
+        productivityLevel = classification.productivityLevel
+        priority = classification.priority
+      } catch {
+        productivityLevel = "neutral"
+        priority = "medium"
+      }
+
+      const payload = {
         title: title.trim(),
         description: draft.description,
-        eventDate: draft.eventDate,
-        startTime: draft.startTime,
-        endTime: draft.endTime,
         color: draft.color,
-        priority: draft.priority,
-        productivityLevel: draft.productivityLevel,
+        priority,
+        productivityLevel,
         hasDeadline: draft.hasDeadline,
         status: draft.status,
-      })
-      const next = result.event || { id: draft.id, title: title.trim(), ...draft }
+      }
+      if (draft.hasDeadline) {
+        payload.eventDate = draft.eventDate
+        payload.startTime = draft.startTime
+        payload.endTime = draft.endTime
+      } else {
+        payload.startDatetime = `${draft.eventDate}T${draft.startTime}`
+        payload.endDatetime = `${draft.eventDate}T${draft.endTime}`
+      }
+      const result = await createActivity(payload)
+      const next = result.event || { id: draft.id, title: title.trim(), ...draft, productivityLevel, priority }
       setLocalActivities((prevActivities) => [...prevActivities, next])
       record({ type: "create", prev: null, next })
       setUseRealData(true)
@@ -318,6 +378,17 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     setTaskFormOpen(false)
     setEditingActivity(null)
     setSelectedSlot(null)
+  }, [])
+
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault()
+        setInteractionMode(prev => prev === "fixed" ? "reschedule" : "fixed")
+      }
+    }
+    document.addEventListener("keydown", handler)
+    return () => document.removeEventListener("keydown", handler)
   }, [])
 
   const handleAddActivity = useCallback(() => {
@@ -352,6 +423,15 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     })
   }, [])
 
+  const handleAutoSync = useCallback(async () => {
+    const dateStr = toDateStr(currentDate)
+    await productivityService.syncDayStatuses(dateStr)
+    const events = await fetchActivities(currentDate)
+    setLocalActivities(events)
+    setUseRealData(true)
+    onActivityUpdated?.()
+  }, [currentDate, fetchActivities, onActivityUpdated])
+
   const handleCtxAddActivity = useCallback(() => {
     if (!ctxMenu) return
     setSelectedSlot({ date: ctxMenu.date, startTime: ctxMenu.startTime, endTime: ctxMenu.endTime })
@@ -367,6 +447,17 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     setTaskFormOpen(true)
     setCtxMenu(null)
   }, [ctxMenu])
+
+  const handleCtxEdit = useCallback((activity) => {
+    setEditingActivity(activity)
+    setSelectedSlot(null)
+    if (activity.hasDeadline) {
+      setTaskFormOpen(true)
+    } else {
+      setActivityFormOpen(true)
+    }
+    setCtxMenu(null)
+  }, [])
 
   return (
     <div
@@ -391,6 +482,9 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
         onAddActivity={handleAddActivity}
         onAddTask={handleAddTask}
         onVoice={handleVoice}
+        interactionMode={interactionMode}
+        onModeChange={setInteractionMode}
+        onAutoSync={handleAutoSync}
       />
 
       <div style={{ borderTop: `1px solid ${theme.border}` }}>
@@ -401,13 +495,14 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
           inlineDraftId={inlineDraft?.id}
           onViewDetails={handleActivityViewDetails}
           onActivityContextMenu={handleContextMenu}
-          onEmptyContextMenu={handleEmptyContextMenu}
           onActivityResize={handleActivityResize}
           onDragUpdate={handleDragUpdate}
           onDragEnd={handleDragEnd}
           onInlineCreate={handleInlineCreate}
           onInlineSave={handleInlineSave}
           onInlineCancel={handleInlineCancel}
+          onStatusChange={handleStatusChange}
+          interactionMode={interactionMode}
         />
       </div>
 
@@ -444,6 +539,7 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
           containerRef={calendarRef}
           onViewDetails={handleActivityViewDetails}
           onStatusChange={handleStatusChange}
+          onEdit={handleCtxEdit}
           onDelete={(id) => { handleDelete(id); setCtxMenu(null) }}
           onAddActivity={handleCtxAddActivity}
           onAddTask={handleCtxAddTask}

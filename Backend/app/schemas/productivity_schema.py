@@ -11,44 +11,99 @@ def validate_event_data(data, require_all=True):
         if not title or not title.strip():
             errors["title"] = "Title is required"
 
-    if require_all or "event_date" in data:
-        date_val = data.get("event_date")
-        if not date_val:
-            errors["event_date"] = "Date is required"
+    if data.get("has_deadline"):
+        if require_all or "event_date" in data:
+            date_val = data.get("event_date")
+            if not date_val:
+                errors["event_date"] = "Date is required"
+            else:
+                try:
+                    datetime.strptime(date_val, "%Y-%m-%d").date()
+                except (ValueError, TypeError):
+                    errors["event_date"] = "Invalid date format (use YYYY-MM-DD)"
+
+        if require_all or "start_time" in data:
+            start = data.get("start_time")
+            if not start:
+                errors["start_time"] = "Start time is required"
+            else:
+                try:
+                    datetime.strptime(start, "%H:%M").time()
+                except (ValueError, TypeError):
+                    errors["start_time"] = "Invalid time format (use HH:MM)"
+
+        if require_all or "end_time" in data:
+            end = data.get("end_time")
+            if not end:
+                errors["end_time"] = "End time is required"
+            else:
+                try:
+                    datetime.strptime(end, "%H:%M").time()
+                except (ValueError, TypeError):
+                    errors["end_time"] = "Invalid time format (use HH:MM)"
+
+        if "start_time" in data and "end_time" in data:
+            try:
+                start_t = datetime.strptime(data["start_time"], "%H:%M").time()
+                end_t = datetime.strptime(data["end_time"], "%H:%M").time()
+                if end_t <= start_t:
+                    errors["end_time"] = "End time must be after start time"
+            except (ValueError, TypeError):
+                pass
+
+        if not data.get("deadline_date"):
+            errors["deadline_date"] = "Deadline date is required when has_deadline is true"
         else:
             try:
-                datetime.strptime(date_val, "%Y-%m-%d").date()
+                datetime.strptime(data["deadline_date"], "%Y-%m-%d").date()
             except (ValueError, TypeError):
-                errors["event_date"] = "Invalid date format (use YYYY-MM-DD)"
+                errors["deadline_date"] = "Invalid date format (use YYYY-MM-DD)"
 
-    if require_all or "start_time" in data:
-        start = data.get("start_time")
-        if not start:
-            errors["start_time"] = "Start time is required"
+        if not data.get("deadline_time"):
+            errors["deadline_time"] = "Deadline time is required when has_deadline is true"
         else:
             try:
-                datetime.strptime(start, "%H:%M").time()
+                datetime.strptime(data["deadline_time"], "%H:%M").time()
             except (ValueError, TypeError):
-                errors["start_time"] = "Invalid time format (use HH:MM)"
+                errors["deadline_time"] = "Invalid time format (use HH:MM)"
+    else:
+        sd_key = "start_datetime"
+        ed_key = "end_datetime"
 
-    if require_all or "end_time" in data:
-        end = data.get("end_time")
-        if not end:
-            errors["end_time"] = "End time is required"
-        else:
+        if require_all or sd_key in data:
+            sd_val = data.get(sd_key)
+            if not sd_val:
+                errors[sd_key] = "Start datetime is required"
+            else:
+                try:
+                    datetime.strptime(sd_val, "%Y-%m-%dT%H:%M")
+                except (ValueError, TypeError):
+                    try:
+                        datetime.strptime(sd_val, "%Y-%m-%d %H:%M")
+                    except (ValueError, TypeError):
+                        errors[sd_key] = "Invalid format (use YYYY-MM-DDTHH:MM)"
+
+        if require_all or ed_key in data:
+            ed_val = data.get(ed_key)
+            if not ed_val:
+                errors[ed_key] = "End datetime is required"
+            else:
+                try:
+                    datetime.strptime(ed_val, "%Y-%m-%dT%H:%M")
+                except (ValueError, TypeError):
+                    try:
+                        datetime.strptime(ed_val, "%Y-%m-%d %H:%M")
+                    except (ValueError, TypeError):
+                        errors[ed_key] = "Invalid format (use YYYY-MM-DDTHH:MM)"
+
+        if sd_key in data and ed_key in data:
             try:
-                datetime.strptime(end, "%H:%M").time()
+                sd = datetime.strptime(data[sd_key], "%Y-%m-%dT%H:%M")
+                ed = datetime.strptime(data[ed_key], "%Y-%m-%dT%H:%M")
+                if ed <= sd:
+                    errors[ed_key] = "End datetime must be after start datetime"
             except (ValueError, TypeError):
-                errors["end_time"] = "Invalid time format (use HH:MM)"
-
-    if "start_time" in data and "end_time" in data:
-        try:
-            start_t = datetime.strptime(data["start_time"], "%H:%M").time()
-            end_t = datetime.strptime(data["end_time"], "%H:%M").time()
-            if end_t <= start_t:
-                errors["end_time"] = "End time must be after start time"
-        except (ValueError, TypeError):
-            pass
+                pass
 
     if "priority" in data and data["priority"] not in VALID_PRIORITIES:
         errors["priority"] = f"Priority must be one of: {', '.join(sorted(VALID_PRIORITIES))}"
@@ -66,21 +121,5 @@ def validate_event_data(data, require_all=True):
 
     if "status" in data and data["status"] not in VALID_STATUSES:
         errors["status"] = f"Status must be one of: {', '.join(sorted(VALID_STATUSES))}"
-
-    if data.get("has_deadline"):
-        if not data.get("deadline_date"):
-            errors["deadline_date"] = "Deadline date is required when has_deadline is true"
-        else:
-            try:
-                datetime.strptime(data["deadline_date"], "%Y-%m-%d").date()
-            except (ValueError, TypeError):
-                errors["deadline_date"] = "Invalid date format (use YYYY-MM-DD)"
-        if not data.get("deadline_time"):
-            errors["deadline_time"] = "Deadline time is required when has_deadline is true"
-        else:
-            try:
-                datetime.strptime(data["deadline_time"], "%H:%M").time()
-            except (ValueError, TypeError):
-                errors["deadline_time"] = "Invalid time format (use HH:MM)"
 
     return errors

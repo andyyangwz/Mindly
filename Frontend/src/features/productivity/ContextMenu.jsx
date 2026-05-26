@@ -1,62 +1,48 @@
 import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { Plus, Target, Waves, Mic, CheckCircle2, Circle, RotateCcw, Eye, Trash2 } from "lucide-react"
+import { Plus, Target, Waves, Mic, Pencil, Trash2 } from "lucide-react"
 import { theme } from "../../theme"
 
-const STATUS_META = {
-  "Done": { color: "#10B981", bg: "#10B98114", border: "#10B98130", icon: CheckCircle2 },
-  "In Progress": { color: "#B45309", bg: "#B4530918", border: "#B4530940", icon: RotateCcw },
-  "To Do": { color: "#6B7280", bg: "#6B728010", border: "#6B728020", icon: Circle },
-}
+const GAP = 6
 
-const STATUS_OPTIONS = ["To Do", "In Progress", "Done"]
-
-export default function ContextMenu({ x, y, activity, menuRef, containerRef, onViewDetails, onStatusChange, onDelete, onAddActivity, onAddTask, onVoice }) {
+export default function ContextMenu({ x, y, activity, menuRef, containerRef, onEdit, onDelete, onAddActivity, onAddTask, onVoice }) {
   const { t } = useTranslation()
   const [pos, setPos] = useState({ left: 0, top: 0 })
 
   useEffect(() => {
     if (!menuRef?.current || !containerRef?.current) return
-    const containerRect = containerRef.current.getBoundingClientRect()
-    const vw = window.innerWidth
-    const vh = window.innerHeight
+    const cr = containerRef.current.getBoundingClientRect()
 
-    const left = x - containerRect.left
-    const top = y - containerRect.top
+    // Convert viewport coords to container-relative
+    const originLeft = x - cr.left
+    const originTop = y - cr.top
 
     requestAnimationFrame(() => {
       if (!menuRef?.current) return
-      const rect = menuRef.current.getBoundingClientRect()
-      const menuH = rect.height
-      const menuW = rect.width
+      const mr = menuRef.current.getBoundingClientRect()
+      const mw = mr.width
+      const mh = mr.height
 
-      let finalLeft = left
-      let finalTop = top
+      let left = originLeft
+      let top = originTop
 
-      const rightEdge = left + menuW
-      const bottomEdge = top + menuH
+      // Horizontal: stay within container
+      if (left + mw > cr.width - GAP) left = cr.width - mw - GAP
+      if (left < GAP) left = GAP
 
-      if (rightEdge > containerRect.width) {
-        finalLeft = containerRect.width - menuW - 8
+      // Vertical: try below first, flip upward if no space
+      const spaceBelow = cr.height - originTop
+      const spaceAbove = originTop
+      if (mh > spaceBelow && spaceAbove >= mh) {
+        top = originTop - mh
+      } else if (mh > spaceBelow) {
+        top = cr.height - mh - GAP
       }
-      if (finalLeft < 0) {
-        finalLeft = 8
-      }
-      if (bottomEdge > vh - containerRect.top) {
-        finalTop = y - containerRect.top - menuH
-      }
-      if (finalTop < 0) {
-        finalTop = 8
-      }
+      if (top < GAP) top = GAP
 
-      setPos({ left: finalLeft, top: finalTop })
+      setPos({ left, top })
     })
   }, [x, y, menuRef, containerRef])
-
-  const tStatus = (s) => {
-    const k = { "To Do": "todo", "In Progress": "inProgress", "Done": "done" }
-    return t(`productivity.status.${k[s]}`)
-  }
 
   if (activity) {
     return (
@@ -72,36 +58,18 @@ export default function ContextMenu({ x, y, activity, menuRef, containerRef, onV
           border: `1px solid ${theme.border}`,
           boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
           padding: 4,
-          minWidth: 170,
+          minWidth: 140,
         }}
       >
         <button
-          onClick={() => onViewDetails(activity)}
+          onClick={() => onEdit(activity)}
           style={menuItemStyle()}
           onMouseEnter={(e) => { e.currentTarget.style.background = `color-mix(in srgb, ${theme.primary} 10%, transparent)` }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
         >
-          <Eye size={14} />
-          {t("productivity.event.details")}
+          <Pencil size={14} />
+          {t("productivity.event.edit")}
         </button>
-        <div style={{ height: 1, background: theme.border, margin: "4px 0" }} />
-        {STATUS_OPTIONS.filter(s => s !== activity.status).map(s => {
-          const meta = STATUS_META[s]
-          const Icon = meta.icon
-          return (
-            <button
-              key={s}
-              onClick={() => onStatusChange(activity, s)}
-              style={menuItemStyle(s === "Done" ? "#10B981" : s === "In Progress" ? "#B45309" : "#6B7280")}
-              onMouseEnter={(e) => { e.currentTarget.style.background = meta.bg }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
-            >
-              <Icon size={14} />
-              {t("productivity.event.setTo", { status: tStatus(s) })}
-            </button>
-          )
-        })}
-        <div style={{ height: 1, background: theme.border, margin: "4px 0" }} />
         <button
           onClick={() => onDelete(activity.id)}
           style={menuItemStyle("#EF4444")}

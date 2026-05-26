@@ -6,6 +6,36 @@ from app.models.productivity import ProductivityEvent
 DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 
+def _duration_minutes(ev):
+    if ev.start_datetime and ev.end_datetime:
+        return max(0, (ev.end_datetime - ev.start_datetime).total_seconds() / 60)
+    start_mins = ev.start_time.hour * 60 + ev.start_time.minute
+    end_mins = ev.end_time.hour * 60 + ev.end_time.minute
+    return max(0, end_mins - start_mins)
+
+
+def _overlap_minutes(ev, range_start, range_end):
+    if ev.start_datetime and ev.end_datetime:
+        overlap_start = max(ev.start_datetime, range_start)
+        overlap_end = min(ev.end_datetime, range_end)
+        return max(0, (overlap_end - overlap_start).total_seconds() / 60)
+    start_mins = ev.start_time.hour * 60 + ev.start_time.minute
+    end_mins = ev.end_time.hour * 60 + ev.end_time.minute
+    return max(0, end_mins - start_mins)
+
+
+def _day_minutes(ev, target_date):
+    if ev.start_datetime and ev.end_datetime:
+        target_start = datetime.combine(target_date, datetime.min.time())
+        target_end = datetime.combine(target_date, datetime.max.time())
+        return _overlap_minutes(ev, target_start, target_end)
+    if ev.event_date != target_date:
+        return 0
+    start_mins = ev.start_time.hour * 60 + ev.start_time.minute
+    end_mins = ev.end_time.hour * 60 + ev.end_time.minute
+    return max(0, end_mins - start_mins)
+
+
 class StatsService:
     @staticmethod
     def get_home_stats(user_id):
@@ -40,24 +70,45 @@ class StatsService:
             if deadline.deadline_date and deadline.deadline_date >= today:
                 x += 1
 
-        week_events = ProductivityEvent.query.filter(
+        week_start_dt = datetime.combine(week_start, datetime.min.time())
+        week_end_dt = datetime.combine(today, datetime.max.time())
+
+        legacy_events = ProductivityEvent.query.filter(
             ProductivityEvent.user_id == user_id,
-            ProductivityEvent.event_date >= week_start,
-            ProductivityEvent.event_date <= today,
             ProductivityEvent.has_deadline == False,
             ProductivityEvent.status == "Done",
+            ProductivityEvent.start_datetime.is_(None),
+            ProductivityEvent.event_date >= week_start,
+            ProductivityEvent.event_date <= today,
+        ).all()
+
+        cross_day_events = ProductivityEvent.query.filter(
+            ProductivityEvent.user_id == user_id,
+            ProductivityEvent.has_deadline == False,
+            ProductivityEvent.status == "Done",
+            ProductivityEvent.start_datetime.isnot(None),
+            ProductivityEvent.start_datetime < week_end_dt,
+            ProductivityEvent.end_datetime > week_start_dt,
         ).all()
 
         productive_minutes = 0
         unproductive_minutes = 0
 
-        for ev in week_events:
+        for ev in legacy_events:
             level = ev.productivity_level
             if level not in ("productive", "unproductive"):
                 continue
-            start_mins = ev.start_time.hour * 60 + ev.start_time.minute
-            end_mins = ev.end_time.hour * 60 + ev.end_time.minute
-            duration = max(0, end_mins - start_mins)
+            duration = _duration_minutes(ev)
+            if level == "productive":
+                productive_minutes += duration
+            elif level == "unproductive":
+                unproductive_minutes += duration
+
+        for ev in cross_day_events:
+            level = ev.productivity_level
+            if level not in ("productive", "unproductive"):
+                continue
+            duration = _overlap_minutes(ev, week_start_dt, week_end_dt)
             if level == "productive":
                 productive_minutes += duration
             elif level == "unproductive":
@@ -108,21 +159,37 @@ class StatsService:
                 day = ev.status_change_at.date()
                 tasks_by_day[day].add(ev.task_group_id)
 
-        productive_events = ProductivityEvent.query.filter(
+        legacy_events = ProductivityEvent.query.filter(
             ProductivityEvent.user_id == user_id,
             ProductivityEvent.has_deadline == False,
             ProductivityEvent.productivity_level == "productive",
             ProductivityEvent.status == "Done",
+            ProductivityEvent.start_datetime.is_(None),
             ProductivityEvent.event_date >= week_start,
             ProductivityEvent.event_date <= week_end,
         ).all()
 
+        cross_day_events = ProductivityEvent.query.filter(
+            ProductivityEvent.user_id == user_id,
+            ProductivityEvent.has_deadline == False,
+            ProductivityEvent.productivity_level == "productive",
+            ProductivityEvent.status == "Done",
+            ProductivityEvent.start_datetime.isnot(None),
+            ProductivityEvent.start_datetime < end_dt,
+            ProductivityEvent.end_datetime > start_dt,
+        ).all()
+
         minutes_by_day = defaultdict(float)
-        for ev in productive_events:
+        for ev in legacy_events:
             start_mins = ev.start_time.hour * 60 + ev.start_time.minute
             end_mins = ev.end_time.hour * 60 + ev.end_time.minute
             duration = max(0, end_mins - start_mins)
             minutes_by_day[ev.event_date] += duration
+        for ev in cross_day_events:
+            for day in dates:
+                m = _day_minutes(ev, day)
+                if m:
+                    minutes_by_day[day] += m
 
         week_days = []
         total_minutes = 0
