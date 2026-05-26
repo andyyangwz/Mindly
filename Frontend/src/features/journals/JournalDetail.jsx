@@ -1,15 +1,16 @@
-import { useState, useMemo, useRef, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import {
   ChevronLeft,
   Star,
+  Pin,
   Edit,
   Trash2,
   MessageCircle,
   X,
-  Folder,
   Plus,
   Loader2,
+  MoreHorizontal,
 } from "lucide-react"
 import DOMPurify from "dompurify"
 import { theme } from "../../theme"
@@ -35,8 +36,10 @@ export default function JournalDetail({
   const [selectedText, setSelectedText] = useState("")
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showFolderPicker, setShowFolderPicker] = useState(false)
+  const [showActions, setShowActions] = useState(false)
   const [folderAssigning, setFolderAssigning] = useState(false)
   const folderPickerRef = useRef(null)
+  const actionsRef = useRef(null)
 
   useEffect(() => {
     if (!showFolderPicker) return
@@ -55,6 +58,24 @@ export default function JournalDetail({
       document.removeEventListener("keydown", handleKey)
     }
   }, [showFolderPicker])
+
+  useEffect(() => {
+    if (!showActions) return
+    const handleClick = (e) => {
+      if (actionsRef.current && !actionsRef.current.contains(e.target)) {
+        setShowActions(false)
+      }
+    }
+    const handleKey = (e) => {
+      if (e.key === "Escape") setShowActions(false)
+    }
+    document.addEventListener("mousedown", handleClick)
+    document.addEventListener("keydown", handleKey)
+    return () => {
+      document.removeEventListener("mousedown", handleClick)
+      document.removeEventListener("keydown", handleKey)
+    }
+  }, [showActions])
 
   const handleToggleFolder = async (folderId) => {
     setFolderAssigning(true)
@@ -94,18 +115,23 @@ export default function JournalDetail({
   }
 
   return (
-    <div style={{ padding: "0", maxWidth: "100%", margin: "0 auto" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: theme.bg,
+      }}
+    >
+      {/* Minimal top bar */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "14px 32px",
-          background: "var(--color-card, white)",
-          borderBottom: `1px solid ${theme.border}`,
+          padding: "8px 24px",
           position: "sticky",
           top: 0,
-          zIndex: 10,
+          zIndex: 20,
+          background: theme.bg,
         }}
       >
         <button
@@ -117,194 +143,225 @@ export default function JournalDetail({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 6,
+            gap: 4,
             background: "none",
             border: "none",
             cursor: "pointer",
             fontSize: 13,
-            color: theme.dark,
-            fontWeight: 500,
+            color: theme.muted,
+            fontWeight: 400,
+            padding: "4px 6px",
+            borderRadius: 6,
+            transition: "all 0.15s",
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
         >
-          <ChevronLeft size={16} color={theme.dark} /> {t("journal.detail.back")}
+          <ChevronLeft size={15} color={theme.muted} /> {t("journal.detail.back")}
         </button>
-        <button
-          onClick={onChatAboutIt}
-          disabled={chatAboutItLoading}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "7px 18px",
-            borderRadius: 24,
-            border: "none",
-            background: theme.primary,
-            cursor: chatAboutItLoading ? "not-allowed" : "pointer",
-            fontSize: 12,
-            color: "white",
-            fontWeight: 500,
-            opacity: chatAboutItLoading ? 0.7 : 1,
-            boxShadow: `0 4px 12px color-mix(in srgb, ${theme.primary} 44%, transparent)`,
-            transition: "opacity 0.2s",
-          }}
-        >
-          <MessageCircle size={13} color="white" /> {t("journal.detail.chatAboutIt")}
-        </button>
-      </div>
 
-      <div style={{ padding: "28px 32px", maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
-          {journal.emojis.map(
-            (e, i) =>
-              e && (
-                <span key={i} style={{ fontSize: 40 }}>
-                  {e}
-                </span>
-              )
-          )}
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 6,
-          }}
-        >
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: theme.dark }}>
-            {journal.title}
-          </h1>
-          {journal.isFavorite && (
-            <Star size={20} fill="#F59E0B" color="#F59E0B" />
-          )}
-        </div>
-        <p style={{ fontSize: 13, color: theme.muted, marginBottom: 24 }}>
-          {formatDate(journal.date)}
-        </p>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 2, position: "relative" }} ref={actionsRef}>
+          {/* Pin toggle */}
           <button
-            onClick={() => onEdit(journal.id)}
+            onClick={() => togglePinned(journal.id)}
+            aria-label={journal.isPinned ? t("journal.detail.pinned") : t("journal.detail.pin")}
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: 34,
-              height: 34,
-              borderRadius: 10,
-              border: `1px solid ${theme.border}`,
-              background: "var(--color-card, white)",
+              width: 30,
+              height: 30,
+              borderRadius: 6,
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              color: journal.isPinned ? "#3B82F6" : theme.muted,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+          >
+            <Pin
+              size={15}
+              fill={journal.isPinned ? "#3B82F6" : "none"}
+              color={journal.isPinned ? "#3B82F6" : theme.muted}
+            />
+          </button>
+
+          {/* Favorite toggle */}
+          <button
+            onClick={() => toggleFavorite(journal.id)}
+            aria-label={journal.isFavorite ? t("journal.detail.favorited") : t("journal.detail.favorite")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 30,
+              height: 30,
+              borderRadius: 6,
+              border: "none",
+              background: "transparent",
               cursor: "pointer",
               color: theme.muted,
               transition: "all 0.15s",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg; e.currentTarget.style.color = theme.primaryText }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-card, white)"; e.currentTarget.style.color = theme.muted }}
-            aria-label={t("journal.detail.edit")}
+            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
           >
-            <Edit size={14} />
+            <Star
+              size={15}
+              fill={journal.isFavorite ? "#F59E0B" : "none"}
+              color={journal.isFavorite ? "#F59E0B" : theme.muted}
+            />
           </button>
+
+          {/* More actions toggle */}
           <button
-            onClick={handleDelete}
+            onClick={() => setShowActions((s) => !s)}
+            aria-label="More actions"
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: 34,
-              height: 34,
-              borderRadius: 10,
-              border: "1px solid rgba(239,68,68,0.3)",
-              background: "rgba(239,68,68,0.06)",
-              cursor: "pointer",
-              color: "#EF4444",
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.15)" }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.06)" }}
-            aria-label={t("journal.detail.delete")}
-          >
-            <Trash2 size={14} />
-          </button>
-          <button
-            onClick={() => togglePinned(journal.id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "6px 14px",
-              borderRadius: 10,
-              border: `1px solid ${journal.isPinned ? "rgba(59,130,246,0.4)" : theme.border}`,
-              background: journal.isPinned ? "rgba(59,130,246,0.1)" : "var(--color-card, white)",
-              cursor: "pointer",
-              fontSize: 12,
-              color: journal.isPinned ? "#3B82F6" : theme.muted,
-              fontWeight: 500,
-              whiteSpace: "nowrap",
-              transition: "all 0.15s",
-            }}
-          >
-            📌 {journal.isPinned ? t("journal.detail.pinned") : t("journal.detail.pin")}
-          </button>
-          <button
-            onClick={() => toggleFavorite(journal.id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "6px 14px",
-              borderRadius: 10,
-              border: `1px solid ${journal.isFavorite ? "rgba(245,158,11,0.4)" : theme.border}`,
-              background: journal.isFavorite ? "rgba(245,158,11,0.1)" : "var(--color-card, white)",
-              cursor: "pointer",
-              fontSize: 12,
-              color: journal.isFavorite ? "#F59E0B" : theme.muted,
-              fontWeight: 500,
-              whiteSpace: "nowrap",
-              transition: "all 0.15s",
-            }}
-          >
-            <Star
-              size={13}
-              fill={journal.isFavorite ? "#F59E0B" : "none"}
-              color={journal.isFavorite ? "#F59E0B" : theme.muted}
-            />
-            {journal.isFavorite ? t("journal.detail.favorited") : t("journal.detail.favorite")}
-          </button>
-          <div style={{ width: 1, height: 20, background: theme.border, margin: "0 4px" }} />
-          <button
-            onClick={() => toggleAllowAI(journal.id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "6px 14px",
-              borderRadius: 10,
+              width: 30,
+              height: 30,
+              borderRadius: 6,
               border: "none",
-              background: journal.allowAI ? "#5B21B6" : theme.primary,
+              background: showActions ? theme.bg : "transparent",
               cursor: "pointer",
-              fontSize: 12,
-              color: "white",
-              fontWeight: 600,
+              color: theme.muted,
               transition: "all 0.15s",
-              boxShadow: journal.allowAI ? "none" : `0 2px 8px color-mix(in srgb, ${theme.primary} 44%, transparent)`,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = journal.allowAI ? "#4C1D95" : "#6D28D9" }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = journal.allowAI ? "#5B21B6" : theme.primary }}
-            aria-label={journal.allowAI ? t("journal.detail.stopSharing") : t("journal.detail.allowSharing")}
+            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
+            onMouseLeave={(e) => {
+              if (!showActions) e.currentTarget.style.background = "transparent"
+            }}
           >
-            <MessageCircle size={13} color="white" />
-            {journal.allowAI ? t("journal.detail.stopSharing") : t("journal.detail.allowSharing")}
+            <MoreHorizontal size={15} />
           </button>
-        </div>
 
+          {/* Actions dropdown */}
+          {showActions && (
+            <div
+              style={{
+                position: "absolute",
+                top: "calc(100% + 4px)",
+                right: 0,
+                zIndex: 30,
+                background: "var(--color-card, white)",
+                borderRadius: 10,
+                border: `1px solid ${theme.border}`,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                padding: "6px",
+                minWidth: 180,
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}
+            >
+              <ActionRow icon={<Edit size={14} />} label={t("journal.detail.edit")} onClick={() => { onEdit(journal.id); setShowActions(false) }} />
+              <ActionRow icon={<Trash2 size={14} />} label={t("journal.detail.delete")} onClick={() => { handleDelete(); setShowActions(false) }} color="#EF4444" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Document area */}
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 32px 80px" }}>
+        {/* Share with Spill AI toggle */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            justifyContent: "space-between",
+            padding: "10px 14px",
+            borderRadius: 8,
+            marginBottom: 28,
+            background: "var(--color-card)",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <MessageCircle
+              size={15}
+              color={journal.allowAI ? theme.primary : theme.muted}
+            />
+            <span style={{ fontSize: 13, fontWeight: 500, color: theme.dark }}>
+              {journal.allowAI
+                ? t("journal.detail.stopSharing")
+                : t("journal.detail.allowSharing")}
+            </span>
+          </div>
+          <button
+            onClick={() => toggleAllowAI(journal.id)}
+            aria-label={journal.allowAI ? t("journal.detail.stopSharing") : t("journal.detail.allowSharing")}
+            style={{
+              width: 36,
+              height: 22,
+              borderRadius: 11,
+              border: "none",
+              background: journal.allowAI ? theme.primary : theme.border,
+              cursor: "pointer",
+              position: "relative",
+              transition: "all 0.2s",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: 2,
+                left: journal.allowAI ? 16 : 2,
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                background: "white",
+                transition: "all 0.2s",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+              }}
+            />
+          </button>
+        </div>
+        {/* Page icons */}
+        <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+          {journal.emojis.map((e, i) =>
+            e ? <span key={i} style={{ fontSize: 48, lineHeight: 1 }}>{e}</span> : null
+          )}
+        </div>
+
+        {/* Title */}
+        <h1
+          style={{
+            fontSize: 32,
+            fontWeight: 700,
+            color: theme.dark,
+            margin: "0 0 8px",
+            lineHeight: 1.3,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {journal.title}
+        </h1>
+
+        {/* Date */}
+        <p
+          style={{
+            fontSize: 13,
+            color: theme.muted,
+            margin: "0 0 32px",
+            fontWeight: 400,
+          }}
+        >
+          {formatDate(journal.date)}
+        </p>
+
+        {/* Folder tags */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
             flexWrap: "wrap",
-            marginBottom: 16,
+            marginBottom: 40,
             position: "relative",
           }}
         >
@@ -316,10 +373,10 @@ export default function JournalDetail({
                 key={fid}
                 style={{
                   fontSize: 12,
-                  background: `color-mix(in srgb, ${theme.primary} 10%, transparent)`,
-                  color: theme.primaryText,
-                  borderRadius: 20,
-                  padding: "4px 10px",
+                  background: "var(--color-hover)",
+                  color: theme.dark,
+                  borderRadius: 4,
+                  padding: "3px 8px",
                   fontWeight: 500,
                   display: "inline-flex",
                   alignItems: "center",
@@ -338,13 +395,9 @@ export default function JournalDetail({
                     padding: 0,
                     display: "flex",
                     color: theme.muted,
-                    fontSize: 12,
-                    opacity: 0.6,
-                    transition: "opacity 0.1s",
-                    marginLeft: 2,
+                    fontSize: 11,
+                    marginLeft: 1,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.opacity = "1" }}
-                  onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6" }}
                 >
                   <X size={11} />
                 </button>
@@ -359,9 +412,9 @@ export default function JournalDetail({
                 display: "flex",
                 alignItems: "center",
                 gap: 4,
-                padding: "4px 10px",
-                borderRadius: 20,
-                border: `1.5px dashed ${theme.border}`,
+                padding: "3px 8px",
+                borderRadius: 4,
+                border: "none",
                 background: "transparent",
                 color: theme.muted,
                 fontSize: 12,
@@ -369,16 +422,8 @@ export default function JournalDetail({
                 cursor: "pointer",
                 transition: "all 0.15s",
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = theme.primary
-                e.currentTarget.style.color = theme.primary
-              }}
-              onMouseLeave={(e) => {
-                if (!showFolderPicker) {
-                  e.currentTarget.style.borderColor = theme.border
-                  e.currentTarget.style.color = theme.muted
-                }
-              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-hover)" }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
             >
               {folderAssigning ? (
                 <Loader2 size={11} className="jd-folder-spin" />
@@ -399,14 +444,14 @@ export default function JournalDetail({
                   left: 0,
                   zIndex: 50,
                   background: "var(--color-card, white)",
-                  borderRadius: 14,
+                  borderRadius: 10,
                   border: `1px solid ${theme.border}`,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                  padding: 10,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                  padding: 6,
                   minWidth: 200,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 4,
+                  gap: 2,
                 }}
               >
                 {folders.map((f) => {
@@ -421,34 +466,28 @@ export default function JournalDetail({
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
-                        padding: "8px 10px",
-                        borderRadius: 10,
+                        padding: "7px 10px",
+                        borderRadius: 8,
                         border: "none",
-                        background: isSelected
-                          ? `color-mix(in srgb, ${theme.primary} 10%, transparent)`
-                          : "transparent",
-                        color: isSelected ? theme.primary : theme.dark,
+                        background: isSelected ? "var(--color-hover)" : "transparent",
+                        color: isSelected ? theme.dark : theme.dark,
                         fontSize: 13,
-                        fontWeight: isSelected ? 600 : 400,
+                        fontWeight: isSelected ? 500 : 400,
                         cursor: folderAssigning ? "not-allowed" : "pointer",
                         textAlign: "left",
                         transition: "all 0.1s",
                         opacity: folderAssigning ? 0.6 : 1,
                       }}
                       onMouseEnter={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.background = theme.bg
-                        }
+                        if (!isSelected) e.currentTarget.style.background = "var(--color-hover)"
                       }}
                       onMouseLeave={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.background = "transparent"
-                        }
+                        if (!isSelected) e.currentTarget.style.background = "transparent"
                       }}
                     >
                       <span style={{ fontSize: 16 }}>{f.emoji}</span>
                       <span style={{ flex: 1 }}>{f.name}</span>
-                      {isSelected && <span style={{ fontSize: 11 }}>✓</span>}
+                      {isSelected && <span style={{ fontSize: 11, color: theme.primary }}>✓</span>}
                     </button>
                   )
                 })}
@@ -457,15 +496,11 @@ export default function JournalDetail({
           </div>
         </div>
 
+        {/* Content */}
         <div
           style={{
-            background: "var(--color-card, white)",
-            borderRadius: 16,
-            border: `1px solid ${theme.border}`,
-            padding: "28px 32px",
-            marginBottom: 16,
-            fontSize: 15,
-            lineHeight: 1.85,
+            fontSize: 16,
+            lineHeight: 1.75,
             color: theme.dark,
             userSelect: "text",
           }}
@@ -474,6 +509,7 @@ export default function JournalDetail({
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(journal.content, { ADD_ATTR: ["target"] }) }}
         />
 
+        {/* Floating highlight save bar */}
         {selectedText && (
           <div
             style={{
@@ -483,7 +519,7 @@ export default function JournalDetail({
               transform: "translateX(-50%)",
               background: theme.dark,
               color: "white",
-              borderRadius: 12,
+              borderRadius: 10,
               padding: "10px 18px",
               display: "flex",
               alignItems: "center",
@@ -501,7 +537,7 @@ export default function JournalDetail({
               style={{
                 background: theme.primary,
                 border: "none",
-                borderRadius: 8,
+                borderRadius: 6,
                 padding: "6px 14px",
                 color: "white",
                 fontSize: 12,
@@ -514,45 +550,48 @@ export default function JournalDetail({
           </div>
         )}
 
+        {/* Saved highlights section */}
         {highlights.length > 0 && (
           <div
             style={{
-              background: "rgba(245,158,11,0.06)",
-              borderRadius: 16,
-              border: `1px solid rgba(245,158,11,0.25)`,
-              padding: "20px 24px",
+              marginTop: 48,
+              paddingTop: 24,
+              borderTop: `1px solid ${theme.border}`,
             }}
           >
             <p
               style={{
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: 600,
-                color: "#B45309",
-                marginBottom: 14,
+                color: theme.dark,
+                marginBottom: 12,
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
               }}
             >
-              <Star size={16} fill="#F59E0B" color="#F59E0B" /> {t("journal.detail.savedHighlights", { count: highlights.length })}
+              <Star size={13} fill="#F59E0B" color="#F59E0B" />{" "}
+              {t("journal.detail.savedHighlights", { count: highlights.length })}
             </p>
             {highlights.map((h, i) => (
               <div
                 key={i}
                 style={{
-                  background: "var(--color-card, white)",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  marginBottom: 8,
-                  fontSize: 13,
+                  padding: "10px 0",
+                  borderBottom: i < highlights.length - 1 ? `1px solid ${theme.border}` : "none",
+                  fontSize: 14,
                   color: theme.dark,
-                   border: `1px solid rgba(245,158,11,0.25)`,
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "flex-start",
                   justifyContent: "space-between",
+                  gap: 8,
                 }}
               >
-                <span>&ldquo;{h}&rdquo;</span>
+                <span style={{ lineHeight: 1.6 }}>
+                  &ldquo;{h}&rdquo;
+                </span>
                 <button
                   onClick={() =>
                     setHighlights((hh) => hh.filter((_, idx) => idx !== i))
@@ -562,15 +601,50 @@ export default function JournalDetail({
                     border: "none",
                     cursor: "pointer",
                     color: theme.muted,
+                    padding: 4,
+                    flexShrink: 0,
+                    borderRadius: 4,
                   }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-hover)" }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
                 >
-                  <X size={14} />
+                  <X size={13} />
                 </button>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Spill AI FAB */}
+      <button
+        onClick={onChatAboutIt}
+        disabled={chatAboutItLoading}
+        aria-label={t("journal.detail.chatAboutIt")}
+        style={{
+          position: "fixed",
+          bottom: 32,
+          right: 32,
+          zIndex: 50,
+          width: 48,
+          height: 48,
+          borderRadius: "50%",
+          border: "none",
+          background: theme.primary,
+          cursor: chatAboutItLoading ? "not-allowed" : "pointer",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: `0 4px 16px color-mix(in srgb, ${theme.primary} 44%, transparent)`,
+          transition: "all 0.2s",
+          opacity: chatAboutItLoading ? 0.7 : 1,
+        }}
+        onMouseEnter={(e) => { if (!chatAboutItLoading) e.currentTarget.style.transform = "scale(1.05)" }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)" }}
+      >
+        {chatAboutItLoading ? <Loader2 size={20} className="jd-folder-spin" /> : <MessageCircle size={20} />}
+      </button>
 
       <ConfirmDialog
         open={confirmDelete}
@@ -593,5 +667,34 @@ export default function JournalDetail({
         }
       `}</style>
     </div>
+  )
+}
+
+function ActionRow({ icon, label, onClick, color = "var(--color-dark)" }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "7px 10px",
+        borderRadius: 8,
+        border: "none",
+        background: "transparent",
+        color,
+        fontSize: 13,
+        fontWeight: 400,
+        cursor: "pointer",
+        textAlign: "left",
+        width: "100%",
+        transition: "all 0.1s",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-hover)" }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
   )
 }

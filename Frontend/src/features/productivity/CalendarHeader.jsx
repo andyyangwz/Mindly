@@ -4,6 +4,7 @@ import { Plus, ChevronLeft, ChevronRight, Undo, Redo, Waves, Target, Mic, Lock, 
 import { theme } from "../../theme"
 import InfoButton from "../../components/tutorial/InfoButton"
 import { isSameDay, toDateStr } from "./calendarConstants"
+import { useTutorial } from "../../components/tutorial/TutorialContext"
 
 function setMonthSafe(date, month) {
   const d = new Date(date)
@@ -88,7 +89,9 @@ function MonthPicker({ currentMonth, onSelect, onClose }) {
 
 export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRedo, canUndo, canRedo, onAddActivity, onAddTask, onVoice, showTutorial = true, interactionMode, onModeChange, onAutoSync }) {
   const { t } = useTranslation()
+  const { tutorialStep } = useTutorial()
   const [showMonthPicker, setShowMonthPicker] = useState(false)
+  const forcedMenuOpen = tutorialStep === 1 || tutorialStep === 2 || tutorialStep === 3
   const [showCreateMenu, setShowCreateMenu] = useState(false)
   const monthRef = useRef(null)
   const createBtnRef = useRef(null)
@@ -100,6 +103,8 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
     setSyncing(true)
     try {
       await onAutoSync()
+    } catch {
+      // ignore
     } finally {
       setSyncing(false)
     }
@@ -268,6 +273,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div data-tutorial-target="undo-redo" style={{ display: "flex", gap: 4 }}>
           <button
             type="button"
             onClick={onUndo}
@@ -333,6 +339,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
           >
             <Redo size={15} />
           </button>
+          </div>
 
           <div style={{ width: 1, height: 20, background: theme.border }} />
 
@@ -342,6 +349,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
           >
             <button
               type="button"
+              data-tutorial-target="mode-toggle"
               onClick={() => onModeChange(interactionMode === "fixed" ? "reschedule" : "fixed")}
               title={interactionMode === "fixed" ? "Switch to Reschedule Mode" : "Switch to Fixed Mode"}
               style={{
@@ -397,8 +405,10 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
           </div>
 
           <button
+            data-tutorial-target="sync-btn"
             onClick={handleSync}
             disabled={syncing}
+            className={`sync-btn${syncing ? " syncing-active" : ""}`}
             style={{
               display: "flex",
               alignItems: "center",
@@ -407,13 +417,13 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
               height: 32,
               borderRadius: 8,
               border: `1px solid ${theme.border}`,
-              background: syncing ? theme.bg : "transparent",
+              background: "transparent",
               cursor: syncing ? "not-allowed" : "pointer",
               fontSize: 11,
               fontWeight: 600,
               color: theme.dark,
-              transition: "all 0.2s ease",
-              opacity: syncing ? 0.7 : 1,
+              position: "relative",
+              overflow: "hidden",
             }}
             onMouseEnter={(e) => {
               if (!syncing) {
@@ -428,21 +438,67 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
               }
             }}
           >
+            <span className="sync-glow" />
             <RefreshCw
               size={12}
+              className={`sync-icon${syncing ? " spinning" : ""}`}
               style={{
-                animation: syncing ? "syncRotate 1s linear infinite" : "none",
                 flexShrink: 0,
+                position: "relative",
+                zIndex: 1,
               }}
             />
-            {syncing ? "Syncing..." : "Auto Sync"}
+            <span className="sync-label" style={{ position: "relative", zIndex: 1 }}>
+              {syncing ? "Synchronizing" : "Auto Sync"}
+            </span>
           </button>
 
-          {/* Keyframes for sync rotation */}
           <style>{`
-            @keyframes syncRotate {
+            .sync-btn {
+              transition: border-color 0.2s ease, background 0.2s ease, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+              transform: scale(1);
+            }
+            .sync-btn:not(:disabled):active {
+              transform: scale(0.95);
+            }
+            .sync-btn.syncing-active {
+              border-color: ${theme.primary} !important;
+              background: color-mix(in srgb, ${theme.primary} 6%, transparent) !important;
+              box-shadow: 0 0 0 1px color-mix(in srgb, ${theme.primary} 20%, transparent), 0 0 20px color-mix(in srgb, ${theme.primary} 12%, transparent);
+            }
+
+            .sync-glow {
+              position: absolute;
+              inset: -4px;
+              border-radius: 12px;
+              background: radial-gradient(circle at center, color-mix(in srgb, ${theme.primary} 15%, transparent), transparent 70%);
+              opacity: 0;
+              transition: opacity 0.3s ease;
+              pointer-events: none;
+            }
+            .sync-btn.syncing-active .sync-glow {
+              opacity: 1;
+              animation: syncGlowPulse 1.8s ease-in-out infinite;
+            }
+
+            .sync-icon {
+              transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+            }
+            .sync-icon.spinning {
+              animation: syncSmoothRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            }
+
+            .sync-label {
+              transition: opacity 0.2s ease, transform 0.2s ease;
+            }
+
+            @keyframes syncSmoothRotate {
               from { transform: rotate(0deg); }
               to { transform: rotate(360deg); }
+            }
+            @keyframes syncGlowPulse {
+              0%, 100% { opacity: 0.3; transform: scale(1); }
+              50% { opacity: 0.7; transform: scale(1.08); }
             }
           `}</style>
 
@@ -451,6 +507,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
           <div ref={createBtnRef} style={{ position: "relative" }}>
             <button
               type="button"
+              data-tutorial-target="add-activity-btn"
               onClick={() => setShowCreateMenu((v) => !v)}
               aria-label={t("productivity.event.addActivity")}
               style={{
@@ -480,8 +537,9 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
               {"Add"}
             </button>
 
-            {showCreateMenu && (
+            {(showCreateMenu || forcedMenuOpen) && (
               <div
+                data-tutorial-target="add-menu-options"
                 style={{
                   position: "absolute",
                   top: "calc(100% + 6px)",
@@ -544,6 +602,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
                 </button>
                 <div style={{ height: 1, background: theme.border, margin: "4px 0" }} />
                 <button
+                  data-tutorial-target="voice-option"
                   onClick={() => { setShowCreateMenu(false); onVoice?.() }}
                   style={{
                     display: "flex", alignItems: "center", gap: 10,

@@ -22,6 +22,7 @@ const TutorialContext = createContext(null)
 
 export function TutorialProvider({ children }) {
   const [tutorialId, setTutorialId] = useState(null)
+  const [tutorialStep, setTutorialStep] = useState(-1)
   const [spotlightRect, setSpotlightRect] = useState(null)
   const [smartHint, setSmartHint] = useState(null)
   const hintTimers = useRef({})
@@ -49,6 +50,7 @@ export function TutorialProvider({ children }) {
   const closeTutorial = useCallback(() => {
     setTutorialId(null)
     setSpotlightRect(null)
+    setTutorialStep(-1)
   }, [])
 
   const isHintDismissed = useCallback((id) => {
@@ -105,11 +107,13 @@ export function TutorialProvider({ children }) {
     <TutorialContext.Provider
       value={{
         tutorialId,
+        tutorialStep,
         spotlightRect,
         smartHint,
         openTutorial,
         closeTutorial,
         updateSpotlightTarget,
+        setTutorialStep,
         isHintDismissed,
         dismissHint,
         showHint,

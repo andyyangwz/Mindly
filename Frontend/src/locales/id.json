@@ -611,15 +611,15 @@
       "tooltip": "Jadwalkan aktivitas, kelola tugas, dan atur minggumu",
       "description": "Kalender mingguan visual di mana kamu bisa merencanakan aktivitas blok waktu, menetapkan tugas tenggat, dan menyesuaikan semuanya dengan seret dan lepas.",
       "steps": [
-        { "title": "Tampilan Minggu & Navigasi", "text": "Kalender menampilkan satu hari dalam garis waktu vertikal 24 jam. Gunakan pemilih hari di bagian atas untuk melompat antar hari, panah kiri/kanan untuk bergerak minggu-per-minggu, atau klik nama bulan untuk memilih bulan mana pun." },
-        { "title": "Aktivitas vs Tugas — Apa Perbedaannya?", "text": "Aktivitas adalah acara blok waktu dengan waktu mulai dan selesai — seperti 'Gym 9–10'. Tugas memiliki tenggat — seperti 'Tugas kuliah due Jumat'. Tugas tidak bisa diubah ukurannya (durasi tetap 1 jam)." },
-        { "title": "Menambahkan Aktivitas", "text": "Klik tombol '+ Tambah' di kanan atas dan pilih 'Aktivitas', atau klik kanan slot waktu kosong. Kamu juga bisa klik dua kali tempat kosong di grid dan mengetik inline." },
-        { "title": "Menambahkan Tugas", "text": "Klik '+ Tambah' > 'Tugas'. Beri nama, tanggal/jam mulai, dan tanggal/jam tenggat. Penanda tenggat otomatis muncul di tanggal jatuh tempo." },
-        { "title": "Pindah & Ubah Ukuran Aktivitas", "text": "Klik dua kali dan tahan blok aktivitas, lalu seret ke atas/bawah untuk memindahkannya. Untuk mengubah ukuran, arahkan kursor ke tepi atas/bawah hingga gagang muncul." },
-        { "title": "Edit, Ubah Status, atau Hapus", "text": "Klik kanan blok mana pun dan pilih 'Lihat Detail' untuk info lengkap, edit, atau hapus. Dari menu klik kanan kamu juga bisa mengubah status dengan cepat." },
-        { "title": "Urungkan & Ulangi", "text": "Gunakan tombol urungkan (↩) dan ulangi (↪) untuk membalikkan atau menerapkan ulang tindakan apa pun — membuat, menghapus, memindahkan, mengubah ukuran, atau mengedit." },
-        { "title": "Jadwal Suara", "text": "Klik '+ Tambah' > 'Gunakan Suara'. Rekam rencanamu secara alami — AI mengisi formulir. Tinjau dan kirim." },
-        { "title": "Rencana Hari Ini & Sidebar Tugas", "text": "Di bawah kalender, 'Rencana Hari Ini' mendaftar aktivitas terjadwalmu. Tab 'Tugas' menampilkan semua tugas tenggat yang dikelompokkan berdasarkan status." }
+        { "targetId": "productivity-calendar", "title": "Tampilan Minggu & Navigasi", "text": "Kalender menampilkan satu hari dalam garis waktu vertikal 24 jam. Gunakan pemilih hari di bagian atas untuk melompat antar hari, panah kiri/kanan untuk bergerak minggu-per-minggu, atau klik nama bulan untuk memilih bulan mana pun." },
+        { "targetId": "add-activity-btn", "title": "Menambahkan Aktivitas", "text": "Klik tombol '+ Tambah' di kanan atas dan pilih 'Aktivitas', atau klik kanan slot waktu kosong. Kamu juga bisa klik dua kali tempat kosong di grid dan mengetik inline." },
+        { "targetId": "add-menu-options", "title": "Aktivitas vs Tugas — Apa Perbedaannya?", "text": "Aktivitas adalah acara blok waktu dengan waktu mulai dan selesai — seperti 'Gym 9–10'. Tugas memiliki tenggat — seperti 'Tugas kuliah due Jumat'. Tugas tidak bisa diubah ukurannya (durasi tetap 1 jam)." },
+        { "targetId": "voice-option", "title": "Input Aktivitas/Tugas dengan Suara", "text": "Klik '+ Tambah' > 'Gunakan Suara'. Rekam rencanamu secara alami — AI mengisi formulir. Tinjau dan kirim." },
+        { "targetId": "mode-toggle", "title": "Mode Tetap vs Jadwal Ulang", "text": "Beralih antara mode 'Tetap' (blok tetap di tempatnya — seret untuk memindahkan) dan 'Jadwal Ulang' (seret menyesuaikan jadwal tanpa resistensi). Tekan CTRL+K untuk beralih mode dengan cepat. Tombol menyala biru dalam mode Jadwal Ulang." },
+        { "targetId": "demo-activity-block", "title": "Pindah dan Ubah Ukuran Aktivitas", "text": "Klik dua kali dan tahan blok aktivitas, lalu seret ke atas/bawah untuk memindahkannya. Untuk mengubah ukuran, arahkan kursor ke tepi atas/bawah hingga gagang muncul." },
+        { "targetId": "demo-activity-block", "title": "Edit, Ubah Status, dan Hapus", "text": "Klik kanan blok mana pun dan pilih 'Lihat Detail' untuk info lengkap, edit, atau hapus. Dari menu klik kanan kamu juga bisa mengubah status dengan cepat." },
+        { "targetId": "undo-redo", "title": "Urungkan & Ulangi", "text": "Gunakan tombol urungkan (↩) dan ulangi (↪) untuk membalikkan atau menerapkan ulang tindakan apa pun — membuat, menghapus, memindahkan, mengubah ukuran, atau mengedit." },
+        { "targetId": "sync-btn", "title": "Sinkronisasi Otomatis", "text": "Klik tombol 'Sinkronisasi Otomatis' untuk menyinkronkan kalendermu dengan sumber tugas eksternal. Animasi sapuan melintasi garis waktu saat aktivitas diambil dan digabungkan. Tombol bersinar dan ikon berputar selama sinkronisasi — tidak perlu refresh." }
       ]
     },
     "smart-suggestions": {

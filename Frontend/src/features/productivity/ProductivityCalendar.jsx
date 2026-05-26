@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { useSearchParams } from "react-router-dom"
 import { RotateCcw, CheckCircle2, Circle, Plus } from "lucide-react"
 import { theme } from "../../theme"
+import { useTutorial } from "../../components/tutorial/TutorialContext"
 import { useProductivity } from "../../hooks/useProductivity"
 import { productivityService } from "../../services/productivityService"
 import { useCalendarHistory } from "./useCalendarHistory"
@@ -37,6 +38,42 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   const [voiceAutofill, setVoiceAutofill] = useState(null)
   const [dragOverrides, setDragOverrides] = useState({})
   const [inlineDraft, setInlineDraft] = useState(null)
+  const { tutorialId, tutorialStep, closeTutorial, updateSpotlightTarget } = useTutorial()
+  const demoModeStep4 = tutorialId === "productivity-calendar" && tutorialStep === 5
+  const demoModeStep5 = tutorialId === "productivity-calendar" && tutorialStep === 6
+  const isTutorialDemoMode = demoModeStep4 || demoModeStep5
+  const isStep4 = demoModeStep4
+
+  const [tutorialBlock, setTutorialBlock] = useState({ startTime: "12:00", endTime: "13:00", status: "To Do", visible: true })
+
+  const demoActivity = useMemo(() => ({
+    id: "tutorial-demo",
+    title: "Sample Activity",
+    eventDate: toDateStr(currentDate),
+    startTime: tutorialBlock.startTime,
+    endTime: tutorialBlock.endTime,
+    startDatetime: null,
+    endDatetime: null,
+    color: theme.primary || "#7C3AED",
+    priority: "medium",
+    hasDeadline: false,
+    isDeadlineMarker: false,
+    status: tutorialBlock.status,
+  }), [currentDate, tutorialBlock])
+
+  useEffect(() => {
+    if (!isTutorialDemoMode) {
+      setTutorialBlock({ startTime: "12:00", endTime: "13:00", status: "To Do", visible: true })
+    }
+  }, [isTutorialDemoMode])
+
+  useEffect(() => {
+    if (isTutorialDemoMode) {
+      requestAnimationFrame(() => updateSpotlightTarget("demo-activity-block"))
+    }
+  }, [isTutorialDemoMode, updateSpotlightTarget])
+
+  const [isSyncing, setIsSyncing] = useState(false)
   const [localActivities, setLocalActivities] = useState([])
   const localActivitiesRef = useRef([])
   useEffect(() => {
@@ -152,6 +189,10 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   const handleStatusChange = useCallback(async (activity, newStatus) => {
     setCtxMenu(null)
     if (activity.status === newStatus) return
+    if (isTutorialDemoMode && activity.id === "tutorial-demo") {
+      setTutorialBlock(prev => ({ ...prev, status: newStatus }))
+      return
+    }
     const prev = { ...activity }
     const next = { ...activity, status: newStatus }
     setLocalActivities((prevActivities) =>
@@ -160,17 +201,26 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     record({ type: "edit", prev, next })
     await updateActivity(activity.id, { status: newStatus })
     onActivityUpdated?.()
-  }, [updateActivity, onActivityUpdated, record])
+  }, [updateActivity, onActivityUpdated, record, isTutorialDemoMode])
 
   const handleContextMenu = useCallback((activity, pos) => {
+    if (isTutorialDemoMode) {
+      if (isStep4) return
+      if (activity.id === "tutorial-demo") {
+        setCtxMenu({ activity, x: pos.x, y: pos.y })
+      }
+      return
+    }
     setCtxMenu({ activity, x: pos.x, y: pos.y })
-  }, [])
+  }, [isTutorialDemoMode, isStep4])
 
   const handleEmptyContextMenu = useCallback((date, startTime, endTime, pos) => {
+    if (isTutorialDemoMode) return
     setCtxMenu({ date, startTime, endTime, x: pos.x, y: pos.y })
-  }, [])
+  }, [isTutorialDemoMode])
 
   const displayActivities = useMemo(() => {
+    if (isTutorialDemoMode) return tutorialBlock.visible ? [demoActivity] : []
     const base = useRealData ? localActivities : []
     const dateStr = toDateStr(currentDate)
     clearSegmentCache()
@@ -185,12 +235,13 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     }
     if (inlineDraft) segmented.push(inlineDraft)
     return segmented
-  }, [useRealData, localActivities, inlineDraft, currentDate])
+  }, [useRealData, localActivities, inlineDraft, currentDate, isTutorialDemoMode, tutorialBlock, demoActivity])
 
   const handleActivityViewDetails = useCallback((activity) => {
     setCtxMenu(null)
+    if (isTutorialDemoMode && activity.id !== "tutorial-demo") return
     setViewingActivity(activity)
-  }, [])
+  }, [isTutorialDemoMode])
 
   const handleEditFromDetail = useCallback(() => {
     if (!viewingActivity) return
@@ -261,6 +312,13 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
 
   const handleDelete = useCallback(
     async (id) => {
+      if (isTutorialDemoMode && id === "tutorial-demo") {
+        setTutorialBlock(prev => ({ ...prev, visible: false }))
+        setCtxMenu(null)
+        setConfirmDelete(null)
+        setViewingActivity(null)
+        return
+      }
       const prev = localActivitiesRef.current.find((e) => e.id === id)
       if (!prev) return
       const prevSnapshot = { ...prev }
@@ -271,11 +329,15 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
       setViewingActivity(null)
       onActivityUpdated?.()
     },
-    [deleteActivity, onActivityUpdated, record]
+    [deleteActivity, onActivityUpdated, record, isTutorialDemoMode]
   )
 
   const handleActivityResize = useCallback(async (activity, oldStartTime, oldEndTime, newStartTime, newEndTime) => {
     if (activity.isSegmented) return
+    if (isTutorialDemoMode && activity.id === "tutorial-demo") {
+      setTutorialBlock(prev => ({ ...prev, startTime: newStartTime, endTime: newEndTime }))
+      return
+    }
     clearSegmentCache()
     const prev = { ...activity, startTime: oldStartTime, endTime: oldEndTime }
     const next = { ...activity, startTime: newStartTime, endTime: newEndTime }
@@ -285,10 +347,19 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     record({ type: "resize", prev, next })
     await updateActivity(activity.id, { startTime: newStartTime, endTime: newEndTime })
     onActivityUpdated?.()
-  }, [updateActivity, record, onActivityUpdated])
+  }, [updateActivity, record, onActivityUpdated, isTutorialDemoMode])
 
   const handleDragEnd = useCallback(async (id, oldStartTime, oldEndTime, newStartTime, newEndTime) => {
     if (!newStartTime) return
+    if (isTutorialDemoMode && id === "tutorial-demo") {
+      setDragOverrides((prev) => {
+        const next = { ...prev }
+        delete next[id]
+        return next
+      })
+      setTutorialBlock(prev => ({ ...prev, startTime: newStartTime, endTime: newEndTime }))
+      return
+    }
     clearSegmentCache()
     const prev = localActivitiesRef.current.find((e) => e.id === id)
     if (!prev) return
@@ -300,9 +371,20 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     record({ type: "move", prev: prevSnapshot, next })
     await updateActivity(id, { startTime: newStartTime, endTime: newEndTime })
     onActivityUpdated?.()
-  }, [record, updateActivity, onActivityUpdated])
+  }, [record, updateActivity, onActivityUpdated, isTutorialDemoMode])
 
   const handleDragUpdate = useCallback((id, startTime, endTime) => {
+    if (isTutorialDemoMode && id === "tutorial-demo") {
+      setDragOverrides((prev) => {
+        if (startTime === null) {
+          const next = { ...prev }
+          delete next[id]
+          return next
+        }
+        return { ...prev, [id]: { startTime, endTime } }
+      })
+      return
+    }
     setDragOverrides((prev) => {
       if (startTime === null) {
         const next = { ...prev }
@@ -311,7 +393,7 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
       }
       return { ...prev, [id]: { startTime, endTime } }
     })
-  }, [])
+  }, [isTutorialDemoMode])
 
   const handleInlineCreate = useCallback((date, startTime, endTime) => {
     const id = `inline-${Date.now()}`
@@ -432,12 +514,14 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   }, [])
 
   const handleAutoSync = useCallback(async () => {
+    setIsSyncing(true)
     const dateStr = toDateStr(currentDate)
     await productivityService.syncDayStatuses(dateStr)
     const events = await fetchActivities(currentDate)
     setLocalActivities(events)
     setUseRealData(true)
     onActivityUpdated?.()
+    setTimeout(() => setIsSyncing(false), 600)
   }, [currentDate, fetchActivities, onActivityUpdated])
 
   const handleCtxAddActivity = useCallback(() => {
@@ -457,6 +541,7 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   }, [ctxMenu])
 
   const handleCtxEdit = useCallback((activity) => {
+    if (isTutorialDemoMode) { setCtxMenu(null); return }
     setEditingActivity(activity)
     setSelectedSlot(null)
     if (activity.hasDeadline) {
@@ -465,7 +550,7 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
       setActivityFormOpen(true)
     }
     setCtxMenu(null)
-  }, [])
+  }, [isTutorialDemoMode])
 
   return (
     <div
@@ -496,22 +581,24 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
       />
 
       <div style={{ borderTop: `1px solid ${theme.border}` }}>
-        <CalendarGrid
-          activities={displayActivities}
-          currentDate={currentDate}
-          dragOverrides={dragOverrides}
-          inlineDraftId={inlineDraft?.id}
-          onViewDetails={handleActivityViewDetails}
-          onActivityContextMenu={handleContextMenu}
-          onActivityResize={handleActivityResize}
-          onDragUpdate={handleDragUpdate}
-          onDragEnd={handleDragEnd}
-          onInlineCreate={handleInlineCreate}
-          onInlineSave={handleInlineSave}
-          onInlineCancel={handleInlineCancel}
-          onStatusChange={handleStatusChange}
-          interactionMode={interactionMode}
-        />
+          <CalendarGrid
+            activities={displayActivities}
+            currentDate={currentDate}
+            dragOverrides={dragOverrides}
+            inlineDraftId={inlineDraft?.id}
+            onViewDetails={handleActivityViewDetails}
+            onActivityContextMenu={handleContextMenu}
+            onActivityResize={handleActivityResize}
+            onDragUpdate={handleDragUpdate}
+            onDragEnd={handleDragEnd}
+            onInlineCreate={handleInlineCreate}
+            onInlineSave={handleInlineSave}
+            onInlineCancel={handleInlineCancel}
+            onStatusChange={handleStatusChange}
+            interactionMode={interactionMode}
+            isSyncing={isSyncing}
+            scrollToHour={isTutorialDemoMode ? 12 : null}
+          />
       </div>
 
       <AddActivityModal

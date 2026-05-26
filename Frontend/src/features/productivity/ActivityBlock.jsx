@@ -50,7 +50,8 @@ function formatDeadlineDate(dateStr) {
 
 const RESIZE_ZONE_HEIGHT = 8
 
-const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMenu, onViewDetails, isInlineEditing, onInlineSave, onInlineCancel, onStatusChange, interactionMode }) {
+const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMenu, onViewDetails, isInlineEditing, onInlineSave, onInlineCancel, onStatusChange, interactionMode, isSyncing, tutorialTarget }) {
+  const [statusUpdated, setStatusUpdated] = useState(false)
   const { t } = useTranslation()
   const { startTime, endTime, status, hasDeadline } = activity
   const height = style?.height || 60
@@ -72,6 +73,23 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
   const [inlineTitle, setInlineTitle] = useState("")
   const inlineInputRef = useRef(null)
   const hoverTimerRef = useRef(null)
+  const prevStatusRef = useRef(activity.status)
+  const statusTimerRef = useRef(null)
+
+  useEffect(() => {
+    if (prevStatusRef.current !== activity.status) {
+      prevStatusRef.current = activity.status
+      setStatusUpdated(true)
+      if (statusTimerRef.current) clearTimeout(statusTimerRef.current)
+      statusTimerRef.current = setTimeout(() => setStatusUpdated(false), 600)
+    }
+  }, [activity.status])
+
+  useEffect(() => {
+    return () => {
+      if (statusTimerRef.current) clearTimeout(statusTimerRef.current)
+    }
+  }, [])
 
   const handleBlockMouseEnter = useCallback(() => {
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
@@ -168,6 +186,8 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
       <div
         data-event-wrapper="true"
         data-activity-id={activity.id}
+        data-syncing={isSyncing ? "true" : undefined}
+        {...(tutorialTarget ? { "data-tutorial-target": tutorialTarget } : {})}
         onClick={handleDetailClick}
         onDoubleClick={(e) => e.stopPropagation()}
         onContextMenu={handleCtxMenu}
@@ -293,6 +313,7 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
           {statusMeta && !isMini && (
             <span
               onClick={handleStatusBadgeClick}
+              className={statusUpdated ? "status-flash" : ""}
               style={{
                 fontSize: 8, fontWeight: 600,
                 padding: "1px 6px", borderRadius: 3,
@@ -302,7 +323,7 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
                 flexShrink: 0,
                 cursor: interactionMode === "fixed" ? "pointer" : "default",
                 display: "inline-flex", alignItems: "center", gap: 3,
-                transition: "opacity 0.1s",
+                transition: "background 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.2s ease, opacity 0.1s",
               }}
               onMouseEnter={(e) => { if (interactionMode === "fixed") e.currentTarget.style.opacity = "0.7" }}
               onMouseLeave={(e) => { if (interactionMode === "fixed") e.currentTarget.style.opacity = "1" }}
@@ -406,6 +427,53 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
           </div>
         </Portal>
       )}
+      <style>{`
+        .status-flash {
+          animation: statusPulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes statusPulse {
+          0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+          }
+          40% {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+          }
+          100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+          }
+        }
+
+        @keyframes syncBlockGlow {
+          0%, 100% {
+            box-shadow: 0 0 0 0 color-mix(in srgb, ${theme.primary} 0%, transparent);
+          }
+          50% {
+            box-shadow: 0 0 0 2px color-mix(in srgb, ${theme.primary} 12%, transparent), 0 0 12px color-mix(in srgb, ${theme.primary} 6%, transparent);
+          }
+        }
+        [data-syncing="true"] {
+          animation: syncBlockGlow 1.2s ease-in-out 1;
+        }
+
+        [data-tutorial-target="demo-activity-block"] {
+          animation: tutorialBlockPulse 2s ease-in-out infinite;
+          outline: 2px solid color-mix(in srgb, ${theme.primary} 40%, transparent);
+          outline-offset: 1px;
+        }
+        @keyframes tutorialBlockPulse {
+          0%, 100% {
+            box-shadow: 0 0 6px color-mix(in srgb, ${theme.primary} 20%, transparent),
+                        0 0 20px color-mix(in srgb, ${theme.primary} 8%, transparent);
+          }
+          50% {
+            box-shadow: 0 0 12px color-mix(in srgb, ${theme.primary} 35%, transparent),
+                        0 0 40px color-mix(in srgb, ${theme.primary} 12%, transparent);
+          }
+        }
+      `}</style>
     </>
   )
 })

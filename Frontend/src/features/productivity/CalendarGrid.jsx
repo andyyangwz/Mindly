@@ -51,7 +51,7 @@ function snapMinutes(mins) {
   return Math.round(mins / SNAP_MINUTES) * SNAP_MINUTES
 }
 
-export default function CalendarGrid({ activities, currentDate, dragOverrides, inlineDraftId, onViewDetails, onActivityContextMenu, onActivityResize, onDragUpdate, onDragEnd, onInlineCreate, onInlineSave, onInlineCancel, onStatusChange, interactionMode }) {
+export default function CalendarGrid({ activities, currentDate, dragOverrides, inlineDraftId, onViewDetails, onActivityContextMenu, onActivityResize, onDragUpdate, onDragEnd, onInlineCreate, onInlineSave, onInlineCancel, onStatusChange, interactionMode, isSyncing, scrollToHour }) {
   const gridRef = useRef(null)
   const [canvasWidth, setCanvasWidth] = useState(0)
 
@@ -70,8 +70,14 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
   useEffect(() => {
     const el = gridRef.current
     if (!el) return
-    el.scrollTop = calcScrollTarget(currentDate, el.clientHeight)
-  }, [currentDate])
+    if (scrollToHour != null) {
+      const targetPx = scrollToHour * HOUR_HEIGHT
+      const centerOffset = el.clientHeight * 0.35
+      el.scrollTop = Math.max(0, targetPx - centerOffset)
+    } else {
+      el.scrollTop = calcScrollTarget(currentDate, el.clientHeight)
+    }
+  }, [scrollToHour, currentDate])
 
   useEffect(() => {
     const el = gridRef.current
@@ -430,10 +436,72 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
               onInlineSave={onInlineSave}
               onInlineCancel={onInlineCancel}
               interactionMode={interactionMode}
+              isSyncing={isSyncing}
+              tutorialTarget={activity.id === "tutorial-demo" ? "demo-activity-block" : undefined}
             />
           ))}
+
+          {/* Sync sweep overlay */}
+          {isSyncing && (
+            <div className="sync-sweep" />
+          )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes syncSweep {
+          0% {
+            top: -2%;
+            opacity: 0;
+          }
+          8% {
+            opacity: 1;
+          }
+          85% {
+            opacity: 1;
+          }
+          100% {
+            top: 102%;
+            opacity: 0;
+          }
+        }
+        .sync-sweep {
+          position: absolute;
+          left: 0;
+          right: 0;
+          height: 40%;
+          pointer-events: none;
+          z-index: 20;
+          background: linear-gradient(
+            180deg,
+            transparent 0%,
+            color-mix(in srgb, ${theme.primary} 6%, transparent) 30%,
+            color-mix(in srgb, ${theme.primary} 10%, transparent) 50%,
+            color-mix(in srgb, ${theme.primary} 6%, transparent) 70%,
+            transparent 100%
+          );
+          animation: syncSweep 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          will-change: top, opacity;
+        }
+        .sync-sweep::before {
+          content: '';
+          position: absolute;
+          left: 10%;
+          right: 10%;
+          top: 45%;
+          height: 10%;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            color-mix(in srgb, ${theme.primary} 20%, transparent) 30%,
+            color-mix(in srgb, ${theme.primary} 30%, transparent) 50%,
+            color-mix(in srgb, ${theme.primary} 20%, transparent) 70%,
+            transparent 100%
+          );
+          border-radius: 50%;
+          filter: blur(6px);
+        }
+      `}</style>
     </div>
   )
 }

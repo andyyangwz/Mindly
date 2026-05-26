@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
 import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
@@ -41,7 +41,7 @@ function getCardPosition(rect, cardW, cardH) {
 }
 
 export default function SpotlightOverlay() {
-  const { tutorialId, spotlightRect, closeTutorial, updateSpotlightTarget } = useTutorial()
+  const { tutorialId, spotlightRect, closeTutorial, updateSpotlightTarget, setTutorialStep } = useTutorial()
   const [step, setStep] = useState(0)
   const [visible, setVisible] = useState(false)
   const [closing, setClosing] = useState(false)
@@ -56,6 +56,16 @@ export default function SpotlightOverlay() {
 
   const isMultiStep = content && content.steps && content.steps.length > 1
   const currentStep = content?.steps?.[step] || null
+
+  // Sync tutorialStep to step when a tutorial opens
+  useEffect(() => {
+    if (tutorialId) setTutorialStep(step)
+  }, [tutorialId]) // eslint-disable-line
+
+  const goToStep = useCallback((newStep) => {
+    setStep(newStep)
+    setTutorialStep(newStep)
+  }, [setStep, setTutorialStep])
 
   const handleClose = () => {
     setClosing(true)
@@ -82,10 +92,20 @@ export default function SpotlightOverlay() {
     return () => cancelAnimationFrame(raf)
   }, [visible, spotlightRect, step])
 
+  const retrySpotlight = useCallback((targetId, attempt = 0) => {
+    if (attempt > 10) return
+    const el = document.querySelector(`[data-tutorial-target="${targetId}"]`)
+    if (el) {
+      updateSpotlightTarget(targetId)
+    } else {
+      requestAnimationFrame(() => retrySpotlight(targetId, attempt + 1))
+    }
+  }, [updateSpotlightTarget])
+
   useEffect(() => {
     if (!currentStep?.targetId) return
-    updateSpotlightTarget(currentStep.targetId)
-  }, [step, currentStep?.targetId])
+    retrySpotlight(currentStep.targetId)
+  }, [step, currentStep?.targetId, retrySpotlight])
 
   if (!tutorialId || !content || !spotlightRect) {
     if (visible) {
@@ -282,7 +302,7 @@ export default function SpotlightOverlay() {
             {isMultiStep && step > 0 && (
               <button
                 type="button"
-                onClick={() => setStep((s) => s - 1)}
+                onClick={() => goToStep(step - 1)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -312,7 +332,7 @@ export default function SpotlightOverlay() {
             {isMultiStep && step < content.steps.length - 1 ? (
               <button
                 type="button"
-                onClick={() => setStep((s) => s + 1)}
+                onClick={() => goToStep(step + 1)}
                 style={{
                   display: "flex",
                   alignItems: "center",
