@@ -609,6 +609,31 @@ export default function FolderExplorer({
   const [deleting, setDeleting] = useState(false)
   const [dragTargetId, setDragTargetId] = useState(null)
   const dragCounter = useRef(0)
+  const [ctxMenu, setCtxMenu] = useState({ open: false, x: 0, y: 0, folder: null })
+
+  const handleCtxMenu = useCallback((e, folder) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setCtxMenu({ open: true, x: e.clientX, y: e.clientY, folder })
+  }, [])
+
+  const handleCloseCtxMenu = useCallback(() => {
+    setCtxMenu((prev) => ({ ...prev, open: false }))
+  }, [])
+
+  useEffect(() => {
+    if (!ctxMenu.open) return
+    const handleClick = () => setCtxMenu((prev) => ({ ...prev, open: false }))
+    const handleKey = (e) => {
+      if (e.key === "Escape") setCtxMenu((prev) => ({ ...prev, open: false }))
+    }
+    document.addEventListener("mousedown", handleClick)
+    document.addEventListener("keydown", handleKey)
+    return () => {
+      document.removeEventListener("mousedown", handleClick)
+      document.removeEventListener("keydown", handleKey)
+    }
+  }, [ctxMenu.open])
 
   useEffect(() => {
     if (!open) {
@@ -973,6 +998,7 @@ export default function FolderExplorer({
                           key={f.id}
                           className="folder-card-wrapper"
                           onMouseEnter={() => {}}
+                          onContextMenu={(e) => handleCtxMenu(e, f)}
                         >
                           <FolderCard
                             folder={f}
@@ -1009,6 +1035,81 @@ export default function FolderExplorer({
               />
             )}
           </AnimatePresence>
+
+          {ctxMenu.open && (
+            <div
+              style={{
+                position: "fixed",
+                top: ctxMenu.y,
+                left: ctxMenu.x,
+                zIndex: theme.z.modalOverlay + 2,
+                background: "var(--color-card)",
+                borderRadius: 12,
+                border: `1px solid ${theme.border}`,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+                minWidth: 140,
+                padding: 4,
+                overflow: "hidden",
+              }}
+            >
+              <button
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  handleStartRename(ctxMenu.folder.id, ctxMenu.folder.name)
+                  handleCloseCtxMenu()
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  width: "100%",
+                  padding: "8px 14px",
+                  border: "none",
+                  background: "transparent",
+                  color: theme.dark,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  borderRadius: 8,
+                  textAlign: "left",
+                  transition: "background 0.1s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-hover)" }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+              >
+                <Pencil size={13} />
+                Edit
+              </button>
+              <button
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  setDeleteTarget(ctxMenu.folder)
+                  handleCloseCtxMenu()
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  width: "100%",
+                  padding: "8px 14px",
+                  border: "none",
+                  background: "transparent",
+                  color: "#EF4444",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  borderRadius: 8,
+                  textAlign: "left",
+                  transition: "background 0.1s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.08)" }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+              >
+                <Trash2 size={13} />
+                Delete
+              </button>
+            </div>
+          )}
         </Portal>
       )}
 

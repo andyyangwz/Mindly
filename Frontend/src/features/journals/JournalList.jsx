@@ -17,6 +17,11 @@ function formatSingleDate(dateStr) {
   return d.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
 }
 
+function cleanPreview(text) {
+  if (!text) return text
+  return text.replace(/\n+/g, " ").replace(/\s+/g, " ").trim()
+}
+
 function formatDateRange(from, to) {
   if (!from && !to) return null
 
@@ -64,6 +69,9 @@ export default function JournalList({
   const dateBtnRef = useRef(null)
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, journal: null })
   const toast = useToast()
+  const [hoveredId, setHoveredId] = useState(null)
+  const [displayCount, setDisplayCount] = useState(8)
+  const sentinelRef = useRef(null)
 
   useEffect(() => {
     if (!showDatePopover) return
@@ -135,6 +143,25 @@ export default function JournalList({
 
     return result
   }, [journals, filter, search, dateFrom, dateTo])
+
+  useEffect(() => {
+    setDisplayCount(8)
+  }, [filtered])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setDisplayCount((prev) => Math.min(prev + 8, filtered.length))
+        }
+      },
+      { rootMargin: "200px" }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [filtered.length])
 
   const handleDragStart = useCallback((e, journalId) => {
     e.dataTransfer.setData("text/journal-id", journalId)
@@ -549,12 +576,6 @@ export default function JournalList({
         </div>
       </div>
 
-      <p style={{ fontSize: 13, color: theme.muted, marginBottom: 14 }}>
-        {loading
-          ? t("common.loading")
-          : t("journal.list.showing", { count: filtered.length })}
-      </p>
-
       {!loading && filtered.length === 0 ? (
         <div
           style={{
@@ -601,199 +622,163 @@ export default function JournalList({
           )}
         </div>
       ) : (
-        <div style={{ display: "grid", gap: 12 }}>
-          {filtered.map((j) => (
-            <div
-              key={j.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, j.id)}
-              onDragEnd={handleDragEnd}
-              onContextMenu={(e) => handleContextMenu(e, j)}
-              style={{
-                background: "var(--color-card, white)",
-                borderRadius: 14,
-                border: `1px solid ${theme.border}`,
-                padding: "18px 20px",
-                cursor: "grab",
-                transition: "all 0.15s",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-              }}
-              onClick={() => onViewDetail(j.id)}
-            >
+        <div style={{ display: "grid", gap: 20 }}>
+          {filtered.slice(0, displayCount).map((j) => {
+            const isHovered = hoveredId === j.id
+            const isPinned = j.isPinned
+            const isFav = j.isFavorite
+            const showActions = isHovered || isPinned || isFav
+            const emojis = j.emojis
+
+            return (
               <div
+                key={j.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, j.id)}
+                onDragEnd={handleDragEnd}
+                onContextMenu={(e) => handleContextMenu(e, j)}
+                onClick={() => onViewDetail(j.id)}
+                onMouseEnter={() => setHoveredId(j.id)}
+                onMouseLeave={() => setHoveredId(null)}
                 style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  gap: 12,
+                  background: "var(--color-card)",
+                  borderRadius: 16,
+                  padding: "20px 24px",
+                  cursor: "grab",
+                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                  border: `1px solid ${isHovered ? `color-mix(in srgb, ${theme.primary} 20%, ${theme.border})` : `color-mix(in srgb, ${theme.border} 60%, transparent)`}`,
+                  borderLeft: `3px solid ${isHovered ? `color-mix(in srgb, ${theme.primary} 50%, transparent)` : `color-mix(in srgb, ${theme.primary} 12%, transparent)`}`,
+                  boxShadow: isHovered
+                    ? `0 8px 32px color-mix(in srgb, ${theme.primary} 6%, rgba(0,0,0,0.06))`
+                    : "0 1px 3px rgba(0,0,0,0.04)",
+                  transform: isHovered ? "translateY(-2px)" : "translateY(0)",
                 }}
               >
-                  <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: 6,
-                      marginBottom: 10,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 11,
-                        background: theme.bg,
-                        color: theme.primaryText,
-                        borderRadius: 20,
-                        padding: "3px 10px",
-                        fontWeight: 500,
-                      }}
-                    >
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
+                  {emojis && emojis.some(Boolean) && (
+                    <div style={{ display: "flex", gap: 3, flexShrink: 0, marginTop: 2 }}>
+                      {emojis.map((e, i) => e && <span key={i} style={{ fontSize: 20, lineHeight: 1 }}>{e}</span>)}
+                    </div>
+                  )}
+                  <h3 style={{ fontSize: 16, fontWeight: 600, color: theme.dark, margin: 0, lineHeight: 1.4 }}>
+                    {j.title}
+                  </h3>
+                </div>
+
+                {j.preview && (
+                  <p style={{
+                    fontSize: 14,
+                    color: `color-mix(in srgb, ${theme.muted} 90%, ${theme.dark})`,
+                    lineHeight: 1.6,
+                    margin: "0 0 16px 0",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}>
+                    {cleanPreview(j.preview)}
+                  </p>
+                )}
+
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12, color: theme.muted, letterSpacing: "0.01em" }}>
                       {formatDate(j.date)}
                     </span>
-                    {j.isPinned && (
-                      <span
-                        style={{
-                          fontSize: 11,
-                          background: "rgba(59,130,246,0.15)",
-                          color: "#60A5FA",
-                          borderRadius: 20,
-                          padding: "3px 10px",
-                          fontWeight: 500,
-                        }}
-                      >
-                        📌 {t("journal.detail.pinned")}
+                    {isPinned && (
+                      <span style={{ color: theme.primary, display: "flex", alignItems: "center" }}>
+                        <Pin size={11} color="currentColor" fill="currentColor" />
                       </span>
                     )}
-                    {j.isFavorite && (
-                      <span
-                        style={{
-                          fontSize: 11,
-                          background: "rgba(245,158,11,0.15)",
-                          color: "#FBBF24",
-                          borderRadius: 20,
-                          padding: "3px 10px",
-                          fontWeight: 500,
-                        }}
-                      >
-                        ⭐ {t("journal.detail.favorite")}
+                    {isFav && (
+                      <span style={{ color: "#F59E0B", display: "flex", alignItems: "center" }}>
+                        <Star size={11} color="currentColor" fill="currentColor" />
                       </span>
                     )}
                     {j.folderIds && j.folderIds.length > 0 && (
                       <>
+                        <span style={{ fontSize: 9, color: theme.muted, opacity: 0.35 }}>·</span>
                         {j.folderIds.slice(0, 2).map((fid) => {
                           const folder = folderMap[fid]
                           if (!folder) return null
                           return (
-                            <span
-                              key={fid}
-                              style={{
-                                fontSize: 11,
-                                background: `color-mix(in srgb, ${theme.primary} 10%, transparent)`,
-                                color: theme.primaryText,
-                                borderRadius: 20,
-                                padding: "3px 8px",
-                                fontWeight: 500,
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 3,
-                              }}
-                            >
+                            <span key={fid} style={{
+                              fontSize: 12,
+                              background: `color-mix(in srgb, ${theme.muted} 8%, transparent)`,
+                              color: `color-mix(in srgb, ${theme.muted} 90%, ${theme.dark})`,
+                              borderRadius: 6,
+                              padding: "1px 6px",
+                              fontWeight: 450,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 3,
+                            }}>
                               {folder.emoji} {folder.name}
                             </span>
                           )
                         })}
                         {j.folderIds.length > 2 && (
-                          <span
-                            style={{
-                              fontSize: 10,
-                              color: theme.muted,
-                              fontWeight: 500,
-                            }}
-                          >
+                          <span style={{ fontSize: 11, color: theme.muted, opacity: 0.6 }}>
                             +{j.folderIds.length - 2}
                           </span>
                         )}
                       </>
                     )}
                   </div>
-                  <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-                    {j.emojis.map(
-                      (e, i) =>
-                        e && (
-                          <span key={i} style={{ fontSize: 20 }}>
-                            {e}
-                          </span>
-                        )
-                    )}
+
+                  <div style={{
+                    display: "flex",
+                    gap: 2,
+                    opacity: showActions ? 1 : 0,
+                    transform: showActions ? "translateY(0)" : "translateY(4px)",
+                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}>
+                    <button
+                      onClick={(ev) => { ev.stopPropagation(); togglePinned?.(j.id) }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        borderRadius: 6,
+                        padding: 4,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: isPinned ? theme.primary : "#9CA3AF",
+                        transition: "color 0.15s",
+                      }}
+                      onMouseEnter={(e) => { if (!isPinned) e.currentTarget.style.color = theme.dark }}
+                      onMouseLeave={(e) => { if (!isPinned) e.currentTarget.style.color = "#9CA3AF" }}
+                    >
+                      <Pin size={14} color="currentColor" fill={isPinned ? "currentColor" : "none"} />
+                    </button>
+                    <button
+                      onClick={(ev) => { ev.stopPropagation(); toggleFavorite(j.id) }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        borderRadius: 6,
+                        padding: 4,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: isFav ? "#F59E0B" : "#9CA3AF",
+                        transition: "color 0.15s",
+                      }}
+                      onMouseEnter={(e) => { if (!isFav) e.currentTarget.style.color = theme.dark }}
+                      onMouseLeave={(e) => { if (!isFav) e.currentTarget.style.color = "#9CA3AF" }}
+                    >
+                      <Star size={14} color="currentColor" fill={isFav ? "currentColor" : "none"} />
+                    </button>
                   </div>
-                  <h3
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 600,
-                      color: theme.dark,
-                      marginBottom: 6,
-                    }}
-                  >
-                    {j.title}
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: 13,
-                      color: theme.muted,
-                      lineHeight: 1.5,
-                      marginBottom: 10,
-                    }}
-                  >
-                    {j.preview}
-                  </p>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                  <button
-                    onClick={(ev) => {
-                      ev.stopPropagation()
-                      togglePinned?.(j.id)
-                    }}
-                    style={{
-                      background: j.isPinned ? "#EEF2FF" : theme.bg,
-                      border: "none",
-                      borderRadius: 10,
-                      padding: 8,
-                      cursor: "pointer",
-                      display: "flex",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    <Pin
-                      size={16}
-                      color={j.isPinned ? theme.primary : "#9CA3AF"}
-                      fill={j.isPinned ? theme.primary : "none"}
-                    />
-                  </button>
-                  <button
-                    onClick={(ev) => {
-                      ev.stopPropagation()
-                      toggleFavorite(j.id)
-                    }}
-                    style={{
-                      background: j.isFavorite ? "#FFFBEB" : theme.bg,
-                      border: "none",
-                      borderRadius: 10,
-                      padding: 8,
-                      cursor: "pointer",
-                      display: "flex",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    <Star
-                      size={16}
-                      color={j.isFavorite ? "#F59E0B" : "#9CA3AF"}
-                      fill={j.isFavorite ? "#F59E0B" : "none"}
-                    />
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
+          {displayCount < filtered.length && (
+            <div ref={sentinelRef} style={{ height: 1 }} />
+          )}
         </div>
       )}
 

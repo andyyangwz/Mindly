@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from app.extensions import db
 
@@ -53,7 +55,7 @@ class ChatMessage(db.Model):
     content = db.Column(db.Text, nullable=False)
     journal_context = db.Column(JSON, nullable=True)
     personality_mode = db.Column(db.String(30), nullable=True)
-    created_at = db.Column(db.DateTime, default=db.func.now())
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
         return {

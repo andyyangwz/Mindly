@@ -17,7 +17,8 @@ const ACTIVITY_ACCENT = "#10B981"
 const INITIAL_STATE = {
   title: "",
   description: "",
-  eventDate: "",
+  startDate: "",
+  endDate: "",
   startTime: "",
   endTime: "",
   color: "#7C3AED",
@@ -36,10 +37,13 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
   useEffect(() => {
     if (!open) return
     if (voiceAutofill) {
+      const sd = voiceAutofill.event_date || voiceAutofill.start_date || ""
+      const ed = voiceAutofill.end_date || voiceAutofill.event_date || ""
       setForm({
         title: voiceAutofill.title || "",
         description: voiceAutofill.description || "",
-        eventDate: voiceAutofill.event_date || "",
+        startDate: sd,
+        endDate: ed,
         startTime: voiceAutofill.start_time || "",
         endTime: voiceAutofill.end_time || "",
         color: "#7C3AED",
@@ -47,10 +51,13 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
         productivityLevel: voiceAutofill.productivity_level || "neutral",
       })
     } else if (editingActivity) {
+      const sd = editingActivity.startDate || editingActivity.eventDate || ""
+      const ed = editingActivity.endDate || editingActivity.eventDate || ""
       setForm({
         title: editingActivity.title,
         description: editingActivity.description || "",
-        eventDate: editingActivity.eventDate || "",
+        startDate: sd,
+        endDate: ed,
         startTime: editingActivity.startTime || "",
         endTime: editingActivity.endTime || "",
         color: editingActivity.color || "#7C3AED",
@@ -63,9 +70,11 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
       const mm = String(now.getMinutes()).padStart(2, "0")
       const currentTime = `${hh}:${mm}`
       const defaultEnd = `${String((now.getHours() + 1) % 24).padStart(2, "0")}:${mm}`
+      const dateStr = toDateStr(selectedSlot.date)
       setForm({
         ...INITIAL_STATE,
-        eventDate: toDateStr(selectedSlot.date),
+        startDate: dateStr,
+        endDate: dateStr,
         startTime: selectedSlot.startTime || currentTime,
         endTime: selectedSlot.endTime || defaultEnd,
       })
@@ -85,11 +94,16 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
   const validate = () => {
     const errs = {}
     if (!form.title.trim()) errs.title = t("productivity.eventForm.validation.titleRequired")
-    if (!form.eventDate) errs.eventDate = t("productivity.eventForm.validation.required")
+    if (!form.startDate) errs.startDate = t("productivity.eventForm.validation.required")
+    if (!form.endDate) errs.endDate = t("productivity.eventForm.validation.required")
     if (!form.startTime) errs.startTime = t("productivity.eventForm.validation.required")
     if (!form.endTime) errs.endTime = t("productivity.eventForm.validation.required")
-    if (form.startTime && form.endTime && form.startTime >= form.endTime) {
-      errs.endTime = t("productivity.eventForm.validation.mustBeAfterStart")
+    if (form.startDate && form.endDate && form.startTime && form.endTime) {
+      const start = new Date(`${form.startDate}T${form.startTime}`)
+      const end = new Date(`${form.endDate}T${form.endTime}`)
+      if (end <= start) {
+        errs.endTime = t("productivity.eventForm.validation.mustBeAfterStart")
+      }
     }
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -102,7 +116,9 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
       await onSave({
         title: form.title.trim(),
         description: form.description.trim(),
-        eventDate: form.eventDate,
+        startDatetime: `${form.startDate}T${form.startTime}`,
+        endDatetime: `${form.endDate}T${form.endTime}`,
+        eventDate: form.startDate,
         startTime: form.startTime,
         endTime: form.endTime,
         color: form.color,
@@ -182,34 +198,36 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 24, alignItems: "start" }}>
             <div>
-              <Field label="Date & Time">
-                <Grid cols="1fr" gap={8}>
+              <Field label="Start">
+                <Grid cols="1fr 1fr" gap={8}>
                   <In
                     type="date"
-                    value={form.eventDate}
-                    onChange={(e) => set("eventDate", e.target.value)}
-                    error={errors.eventDate}
+                    value={form.startDate}
+                    onChange={(e) => set("startDate", e.target.value)}
+                    error={errors.startDate}
                   />
-                  <Grid cols="1fr 1fr" gap={8}>
-                    <div>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: theme.muted, display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Start</span>
-                      <In
-                        type="time"
-                        value={form.startTime}
-                        onChange={(e) => set("startTime", e.target.value)}
-                        error={errors.startTime}
-                      />
-                    </div>
-                    <div>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: theme.muted, display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>End</span>
-                      <In
-                        type="time"
-                        value={form.endTime}
-                        onChange={(e) => set("endTime", e.target.value)}
-                        error={errors.endTime}
-                      />
-                    </div>
-                  </Grid>
+                  <In
+                    type="time"
+                    value={form.startTime}
+                    onChange={(e) => set("startTime", e.target.value)}
+                    error={errors.startTime}
+                  />
+                </Grid>
+              </Field>
+              <Field label="End">
+                <Grid cols="1fr 1fr" gap={8}>
+                  <In
+                    type="date"
+                    value={form.endDate}
+                    onChange={(e) => set("endDate", e.target.value)}
+                    error={errors.endDate}
+                  />
+                  <In
+                    type="time"
+                    value={form.endTime}
+                    onChange={(e) => set("endTime", e.target.value)}
+                    error={errors.endTime}
+                  />
                 </Grid>
               </Field>
               <Field label="Priority">

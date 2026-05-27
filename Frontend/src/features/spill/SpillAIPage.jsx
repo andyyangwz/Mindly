@@ -29,7 +29,20 @@ const PERSONALITY_BUBBLE_STYLES = {
   },
 }
 
+function formatChatTime(iso) {
+  if (!iso) return ""
+  const d = new Date(iso)
+  const day = d.getDate()
+  const month = d.toLocaleDateString("en-US", { month: "short" })
+  const year = d.getFullYear()
+  const hh = String(d.getHours()).padStart(2, "0")
+  const mm = String(d.getMinutes()).padStart(2, "0")
+  return `${day} ${month} ${year}, ${hh}.${mm}`
+}
+
 function ChatBubble({ msg, personality }) {
+  const [hovered, setHovered] = useState(false)
+
   if (msg.role === "system") {
     return (
       <div style={{ textAlign: "center", marginBottom: 20 }}>
@@ -47,8 +60,8 @@ function ChatBubble({ msg, personality }) {
 
   if (msg.role === "user") {
     return (
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
-        <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+      <div onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)} style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
+        <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
           {jc && <JournalPreviewCard title={jc.title} content={jc.content} compact />}
           <div style={{
             padding: "14px 18px",
@@ -60,6 +73,7 @@ function ChatBubble({ msg, personality }) {
           }}>
             {msg.content}
           </div>
+          <span style={{ fontSize: 11, color: hovered ? "var(--color-muted)" : "transparent", userSelect: "none", transition: "color 0.15s ease" }}>{formatChatTime(msg.createdAt)}</span>
         </div>
       </div>
     )
@@ -70,7 +84,7 @@ function ChatBubble({ msg, personality }) {
   const bubbleStyle = PERSONALITY_BUBBLE_STYLES[msgPersonality] || PERSONALITY_BUBBLE_STYLES.empathetic
 
   return (
-    <div style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "flex-end" }}>
+    <div onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)} style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "flex-end" }}>
       <div style={{ flexShrink: 0, alignSelf: "flex-start" }}>
         <img
           key={msgPersonality}
@@ -85,7 +99,7 @@ function ChatBubble({ msg, personality }) {
           }}
         />
       </div>
-      <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 4 }}>
         {jc && <JournalPreviewCard title={jc.title} content={jc.content} compact />}
         <div style={{
           padding: "14px 18px",
@@ -97,6 +111,7 @@ function ChatBubble({ msg, personality }) {
         }}>
           {msg.content}
         </div>
+        <span style={{ fontSize: 11, color: hovered ? "var(--color-muted)" : "transparent", userSelect: "none", transition: "color 0.15s ease" }}>{formatChatTime(msg.createdAt)}</span>
       </div>
     </div>
   )
@@ -108,6 +123,8 @@ export default function SpillAIPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const bottomRef = useRef(null)
+  const initialSyncDone = useRef(false)
+  const navigatingFromSendRef = useRef(false)
   const [input, setInput] = useState("")
   const [personality, setPersonality] = useState("empathetic")
   const [localMessages, setLocalMessages] = useState([])
@@ -283,6 +300,8 @@ export default function SpillAIPage() {
   useEffect(() => {
     if (isNewChat) {
       setLocalMessages([])
+      initialSyncDone.current = false
+      navigatingFromSendRef.current = false
 
       const state = location.state
       if (state?.forwardedJournal) {
@@ -298,6 +317,11 @@ export default function SpillAIPage() {
 
       setInitialized(true)
     } else if (chatId) {
+      if (!navigatingFromSendRef.current) {
+        setLocalMessages([])
+        initialSyncDone.current = false
+      }
+      navigatingFromSendRef.current = false
       fetchMessages(chatId)
       fetchSession(chatId).then((session) => {
         if (session?.personalityType) {
@@ -309,8 +333,9 @@ export default function SpillAIPage() {
   }, [chatId, fetchMessages, fetchSession, isNewChat, location])
 
   useEffect(() => {
-    if (!isNewChat && !loading && messages.length > 0) {
+    if (!isNewChat && !loading && messages.length > 0 && !initialSyncDone.current) {
       setLocalMessages(messages)
+      initialSyncDone.current = true
     }
   }, [messages, loading, isNewChat])
 
@@ -370,6 +395,7 @@ export default function SpillAIPage() {
         title: journalPayload.title,
         content: journalPayload.content,
       } : null,
+      createdAt: new Date().toISOString(),
     }])
 
     try {
@@ -384,18 +410,30 @@ export default function SpillAIPage() {
 
       if (!result.response || !result.response.trim()) {
         console.warn("Spill AI returned empty response")
-        setLocalMessages((prev) => [
-          ...prev.filter((m) => m.id !== tempId),
-          { id: "error-" + Date.now(), role: "assistant", content: t("spill.errors.response") },
-        ])
+        setLocalMessages((prev) => [...prev, { id: "error-" + Date.now(), role: "assistant", content: t("spill.errors.response"), createdAt: new Date().toISOString() }])
         setSending(false)
         return
       }
 
       if (isNewChat) {
+        setLocalMessages((prev) => [...prev, {
+          id: result.aiMessageId || "ai-" + Date.now(),
+          role: "assistant",
+          content: result.response,
+          personalityMode: result.personality || null,
+          createdAt: new Date().toISOString(),
+        }])
+        initialSyncDone.current = true
+        navigatingFromSendRef.current = true
         navigate(`/app/spill/${result.sessionId}`, { replace: true })
       } else {
-        await fetchMessages(chatId)
+        setLocalMessages((prev) => [...prev, {
+          id: result.aiMessageId || "ai-" + Date.now(),
+          role: "assistant",
+          content: result.response,
+          personalityMode: result.personality || null,
+          createdAt: new Date().toISOString(),
+        }])
       }
     } catch (err) {
       console.error("Spill AI send error:", err)
@@ -414,14 +452,11 @@ export default function SpillAIPage() {
       } else if (errBody.details) {
         errorMsg = t("spill.errors.withDetails", { details: errBody.details })
       }
-      setLocalMessages((prev) => [
-        ...prev.filter((m) => m.id !== tempId),
-        { id: "error-" + Date.now(), role: "assistant", content: errorMsg },
-      ])
+      setLocalMessages((prev) => [...prev, { id: "error-" + Date.now(), role: "assistant", content: errorMsg, createdAt: new Date().toISOString() }])
     } finally {
       setSending(false)
     }
-  }, [input, forwardedJournal, isNewChat, chatId, fetchMessages, navigate, sending, personality, t])
+  }, [input, forwardedJournal, isNewChat, chatId, navigate, sending, personality, t])
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>

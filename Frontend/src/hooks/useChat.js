@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { chatService } from "../services/chatService"
 
 export function useChat() {
@@ -6,6 +6,7 @@ export function useChat() {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const fetchMessagesIdRef = useRef(0)
 
   const fetchSessions = useCallback(async () => {
     setLoading(true)
@@ -21,16 +22,21 @@ export function useChat() {
   }, [])
 
   const fetchMessages = useCallback(async (sessionId) => {
+    const reqId = ++fetchMessagesIdRef.current
     setLoading(true)
     setError(null)
     try {
       const result = await chatService.getMessages(sessionId)
+      if (reqId !== fetchMessagesIdRef.current) return
       console.log("[useChat] Fetched messages:", result.messages.length, "messages")
       setMessages(result.messages)
     } catch (err) {
+      if (reqId !== fetchMessagesIdRef.current) return
       setError(err.message)
     } finally {
-      setLoading(false)
+      if (reqId === fetchMessagesIdRef.current) {
+        setLoading(false)
+      }
     }
   }, [])
 
