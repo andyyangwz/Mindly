@@ -5,9 +5,6 @@ function sessionToFrontend(s) {
     id: s.id,
     title: s.title || "New Chat",
     personalityType: s.personality_type || "empathetic",
-    isPinned: s.is_pinned,
-    isArchived: s.is_archived,
-    isFavorite: s.is_favorite,
     createdAt: s.created_at,
     updatedAt: s.updated_at,
     lastMessageAt: s.last_message_at,
@@ -37,11 +34,6 @@ export const chatService = {
     return sessionToFrontend(data.session)
   },
 
-  async createSession(title) {
-    const data = await api.post("/chats", { title })
-    return sessionToFrontend(data.session)
-  },
-
   async renameSession(id, title) {
     const data = await api.put(`/chats/${id}`, { title })
     return sessionToFrontend(data.session)
@@ -54,10 +46,5 @@ export const chatService = {
   async getMessages(sessionId) {
     const data = await api.get(`/chats/${sessionId}/messages`)
     return { messages: data.messages.map(messageToFrontend) }
-  },
-
-  async createMessage(sessionId, role, content) {
-    const data = await api.post(`/chats/${sessionId}/messages`, { role, content })
-    return messageToFrontend(data.message)
   },
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
@@ -8,11 +8,10 @@ import { theme } from "../../theme"
 import InfoButton from "../../components/tutorial/InfoButton"
 import { useChat } from "../../hooks/useChat"
 import { spillAIService } from "../../services/spillAIService"
-import PersonalitySelector from "./PersonalitySelector"
-import ForwardJournalPopover from "./ForwardJournalPopover"
-import JournalPreviewCard from "./JournalPreviewCard"
-import WaveformAnimation from "../../components/ui/WaveformAnimation"
-import { getPersonalityAvatar } from "./personalityAvatars"
+import PersonalitySelector from "./components/PersonalitySelector"
+import ForwardJournalPopover from "./components/ForwardJournalPopover"
+import JournalPreviewCard from "./components/JournalPreviewCard"
+import { getPersonalityAvatar } from "./utils/personalityAvatars"
 
 const PERSONALITY_BUBBLE_STYLES = {
   empathetic: {
@@ -40,7 +39,7 @@ function formatChatTime(iso) {
   return `${day} ${month} ${year}, ${hh}.${mm}`
 }
 
-function ChatBubble({ msg, personality }) {
+const ChatBubble = memo(({ msg, personality, isStreaming, isError }) => {
   const [hovered, setHovered] = useState(false)
 
   if (msg.role === "system") {
@@ -79,7 +78,7 @@ function ChatBubble({ msg, personality }) {
     )
   }
 
-  const msgPersonality = msg.personalityMode || personality || "empathetic"
+  const msgPersonality = msg.personalityMode || "empathetic"
   const avatarSrc = getPersonalityAvatar(msgPersonality)
   const bubbleStyle = PERSONALITY_BUBBLE_STYLES[msgPersonality] || PERSONALITY_BUBBLE_STYLES.empathetic
 
@@ -104,32 +103,45 @@ function ChatBubble({ msg, personality }) {
         <div style={{
           padding: "14px 18px",
           borderRadius: "20px 20px 20px 4px",
-          background: "var(--color-card)",
-          color: theme.dark,
+          background: isError ? "#FEF2F2" : "var(--color-card)",
+          color: isError ? "#DC2626" : theme.dark,
           fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-line",
           ...bubbleStyle,
         }}>
-          {msg.content}
+          {isStreaming && !msg.content ? (
+            <span style={{ color: theme.muted, fontStyle: "italic" }}>Typing...</span>
+          ) : (
+            <>
+              {msg.content}
+              {isStreaming && <span className="streaming-cursor" />}
+            </>
+          )}
         </div>
-        <span style={{ fontSize: 11, color: hovered ? "var(--color-muted)" : "transparent", userSelect: "none", transition: "color 0.15s ease" }}>{formatChatTime(msg.createdAt)}</span>
+        {!isStreaming && (
+          <span style={{ fontSize: 11, color: hovered ? "var(--color-muted)" : "transparent", userSelect: "none", transition: "color 0.15s ease" }}>{formatChatTime(msg.createdAt)}</span>
+        )}
       </div>
     </div>
   )
-}
+})
 
 export default function SpillAIPage() {
   const { t } = useTranslation()
   const { chatId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const bottomRef = useRef(null)
   const initialSyncDone = useRef(false)
   const navigatingFromSendRef = useRef(false)
+  const scrollContainerRef = useRef(null)
+  const streamingAccumulatorRef = useRef("")
+  const streamingFlushTimerRef = useRef(null)
+  const streamingMessageIdRef = useRef(null)
   const [input, setInput] = useState("")
   const [personality, setPersonality] = useState("empathetic")
   const [localMessages, setLocalMessages] = useState([])
   const [initialized, setInitialized] = useState(false)
   const [sending, setSending] = useState(false)
+  const [userScrolledUp, setUserScrolledUp] = useState(false)
   const [forwardedJournal, setForwardedJournal] = useState(null)
   const [showJournalPicker, setShowJournalPicker] = useState(false)
   const textRef = useRef(null)
@@ -172,6 +184,36 @@ export default function SpillAIPage() {
       cleanupRecording()
     }
   }, [recordingPhase, cleanupRecording])
+
+  const flushStreamingContent = useCallback(() => {
+    const content = streamingAccumulatorRef.current
+    streamingAccumulatorRef.current = ""
+    if (content) {
+      setLocalMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === streamingMessageIdRef.current
+            ? { ...msg, content: msg.content + content }
+            : msg,
+        ),
+      )
+    }
+    streamingFlushTimerRef.current = null
+  }, [])
+
+  const handleChatScroll = useCallback(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+    setUserScrolledUp(!isNearBottom)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (streamingFlushTimerRef.current) {
+        cancelAnimationFrame(streamingFlushTimerRef.current)
+      }
+    }
+  }, [])
 
   const startRecording = useCallback(async () => {
     try {
@@ -344,8 +386,12 @@ export default function SpillAIPage() {
   }, [personality])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [localMessages])
+    if (!userScrolledUp) {
+      scrollContainerRef.current?.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+      })
+    }
+  }, [localMessages, userScrolledUp])
 
   const handlePersonalityChange = useCallback(async (newPersonality) => {
     setPersonality(newPersonality)
@@ -383,9 +429,15 @@ export default function SpillAIPage() {
     const journalPayload = forwardedJournal ? { ...forwardedJournal } : null
 
     setInput("")
+    setForwardedJournal(null)
     setSending(true)
 
     const tempId = "temp-" + Date.now()
+    const streamingMsgId = "streaming-" + Date.now()
+    streamingMessageIdRef.current = streamingMsgId
+
+    let sessionNavigated = false
+
     setLocalMessages((prev) => [...prev, {
       id: tempId,
       role: "user",
@@ -396,47 +448,85 @@ export default function SpillAIPage() {
         content: journalPayload.content,
       } : null,
       createdAt: new Date().toISOString(),
+    },
+    {
+      id: streamingMsgId,
+      role: "assistant",
+      content: "",
+      personalityMode: personality,
+      isStreaming: true,
+      createdAt: new Date().toISOString(),
     }])
 
     try {
-      const result = await spillAIService.sendMessage(
+      await spillAIService.sendMessageStream(
         userText,
         isNewChat ? null : chatId,
         personality,
         journalPayload,
+        {
+          onSession: (newSessionId) => {
+            if (!sessionNavigated) {
+              sessionNavigated = true
+              initialSyncDone.current = true
+              navigatingFromSendRef.current = true
+              navigate(`/app/spill/${newSessionId}`, { replace: true })
+            }
+          },
+          onChunk: (chunk) => {
+            streamingAccumulatorRef.current += chunk
+            if (!streamingFlushTimerRef.current) {
+              streamingFlushTimerRef.current =
+                requestAnimationFrame(flushStreamingContent)
+            }
+          },
+          onDone: (aiMessageId) => {
+            if (streamingFlushTimerRef.current) {
+              cancelAnimationFrame(streamingFlushTimerRef.current)
+              streamingFlushTimerRef.current = null
+            }
+            const remaining = streamingAccumulatorRef.current
+            streamingAccumulatorRef.current = ""
+            setLocalMessages((prev) =>
+              prev.map((msg) => {
+                if (msg.id === streamingMessageIdRef.current) {
+                  return {
+                    ...msg,
+                    id: aiMessageId || msg.id,
+                    content: msg.content + remaining,
+                    isStreaming: false,
+                    createdAt: new Date().toISOString(),
+                  }
+                }
+                return msg
+              }),
+            )
+          },
+          onError: (errorMsg) => {
+            if (streamingFlushTimerRef.current) {
+              cancelAnimationFrame(streamingFlushTimerRef.current)
+              streamingFlushTimerRef.current = null
+            }
+            const remaining = streamingAccumulatorRef.current
+            streamingAccumulatorRef.current = ""
+            setLocalMessages((prev) =>
+              prev.map((msg) => {
+                if (msg.id === streamingMessageIdRef.current) {
+                  return {
+                    ...msg,
+                    content: msg.content + remaining || t("spill.errors.response"),
+                    isStreaming: false,
+                    isError: true,
+                  }
+                }
+                return msg
+              }),
+            )
+          },
+        },
       )
-
-      setForwardedJournal(null)
-
-      if (!result.response || !result.response.trim()) {
-        console.warn("Spill AI returned empty response")
-        setLocalMessages((prev) => [...prev, { id: "error-" + Date.now(), role: "assistant", content: t("spill.errors.response"), createdAt: new Date().toISOString() }])
-        setSending(false)
-        return
-      }
-
-      if (isNewChat) {
-        setLocalMessages((prev) => [...prev, {
-          id: result.aiMessageId || "ai-" + Date.now(),
-          role: "assistant",
-          content: result.response,
-          personalityMode: result.personality || null,
-          createdAt: new Date().toISOString(),
-        }])
-        initialSyncDone.current = true
-        navigatingFromSendRef.current = true
-        navigate(`/app/spill/${result.sessionId}`, { replace: true })
-      } else {
-        setLocalMessages((prev) => [...prev, {
-          id: result.aiMessageId || "ai-" + Date.now(),
-          role: "assistant",
-          content: result.response,
-          personalityMode: result.personality || null,
-          createdAt: new Date().toISOString(),
-        }])
-      }
     } catch (err) {
-      console.error("Spill AI send error:", err)
+      console.error("Spill AI stream error:", err)
       let errorMsg = t("spill.errors.network")
       const errBody = err.response || {}
       if (errBody.type === "ConfigurationError") {
@@ -447,16 +537,22 @@ export default function SpillAIPage() {
         errorMsg = t("spill.errors.rateLimit")
       } else if (errBody.type === "TimeoutError") {
         errorMsg = t("spill.errors.timeout")
-      } else if (errBody.type === "ValidationError") {
-        errorMsg = t("spill.errors.unknown")
       } else if (errBody.details) {
         errorMsg = t("spill.errors.withDetails", { details: errBody.details })
       }
-      setLocalMessages((prev) => [...prev, { id: "error-" + Date.now(), role: "assistant", content: errorMsg, createdAt: new Date().toISOString() }])
+      streamingAccumulatorRef.current = ""
+      setLocalMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === streamingMessageIdRef.current
+            ? { ...msg, content: errorMsg, isStreaming: false, isError: true }
+            : msg,
+        ),
+      )
     } finally {
       setSending(false)
+      streamingMessageIdRef.current = null
     }
-  }, [input, forwardedJournal, isNewChat, chatId, navigate, sending, personality, t])
+  }, [input, forwardedJournal, isNewChat, chatId, navigate, sending, personality, flushStreamingContent, t])
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
@@ -480,8 +576,10 @@ export default function SpillAIPage() {
         <InfoButton tutorialId="ai-personalities" />
       </div>
 
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } } @keyframes mascotFadeIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }`}</style>
+      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } } @keyframes mascotFadeIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } } .streaming-cursor { display: inline-block; width: 2px; height: 1.1em; background: var(--color-muted); margin-left: 2px; vertical-align: text-bottom; animation: blink 0.8s step-end infinite; } @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
       <div
+        ref={scrollContainerRef}
+        onScroll={handleChatScroll}
         style={{
           flex: 1,
           overflowY: "auto",
@@ -504,36 +602,15 @@ export default function SpillAIPage() {
         {localMessages.length > 0 && (
           <div style={{ maxWidth: 900, margin: "0 auto" }}>
             {localMessages.map((msg) => (
-              <ChatBubble key={msg.id} msg={msg} personality={personality} />
+              <ChatBubble
+                key={msg.id}
+                msg={msg}
+                personality={personality}
+                isStreaming={msg.isStreaming}
+                isError={msg.isError}
+              />
             ))}
 
-            {sending && (
-              <div style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "flex-end" }}>
-                <div style={{ flexShrink: 0 }}>
-                  <img
-                    key={personality}
-                    src={getPersonalityAvatar(personality)}
-                    alt=""
-                    style={{
-                      width: 36, height: 36, borderRadius: "50%",
-                      objectFit: "cover",
-                      border: `2px solid color-mix(in srgb, ${theme.primary} 25%, transparent)`,
-                      boxShadow: `0 0 0 2px var(--color-card), 0 4px 12px rgba(0,0,0,0.08)`,
-                    }}
-                  />
-                </div>
-                <div style={{
-                  maxWidth: 560, padding: "14px 18px", borderRadius: "20px 20px 20px 4px",
-                  background: "var(--color-card)", color: theme.muted, fontSize: 14,
-                  display: "flex", alignItems: "center", gap: 8,
-                }}>
-                  <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
-                  {t("spill.thinking")}
-                </div>
-              </div>
-            )}
-
-            <div ref={bottomRef} />
           </div>
         )}
       </div>

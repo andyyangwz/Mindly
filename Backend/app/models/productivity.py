@@ -10,11 +10,8 @@ class ProductivityEvent(db.Model):
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"), nullable=False, index=True)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, default="")
-    event_date = db.Column(db.Date, nullable=False)
-    start_time = db.Column(db.Time, nullable=False)
-    end_time = db.Column(db.Time, nullable=False)
-    start_datetime = db.Column(db.DateTime, nullable=True)
-    end_datetime = db.Column(db.DateTime, nullable=True)
+    start_datetime = db.Column(db.DateTime, nullable=False)
+    end_datetime = db.Column(db.DateTime, nullable=False)
     color = db.Column(db.String(7), default="#7C3AED")
     priority = db.Column(db.String(10), default="medium")
     created_at = db.Column(db.DateTime, default=db.func.now())
@@ -38,8 +35,6 @@ class ProductivityEvent(db.Model):
             "user_id": str(self.user_id),
             "title": self.title,
             "description": self.description or "",
-            "event_date": self.event_date.isoformat() if self.event_date else None,
-            "end_time": self.end_time.strftime("%H:%M") if self.end_time else None,
             "color": self.color,
             "priority": self.priority,
             "created_at": self.created_at.isoformat() if self.created_at else None,
@@ -55,6 +50,4 @@ class ProductivityEvent(db.Model):
             "status": self.status,
             "status_change_at": self.status_change_at.isoformat() if self.status_change_at else None,
         }
-        if not (plan and self.has_deadline):
-            d["start_time"] = self.start_time.strftime("%H:%M") if self.start_time else None
         return d

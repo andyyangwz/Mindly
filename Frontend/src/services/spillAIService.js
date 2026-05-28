@@ -15,26 +15,66 @@ export const spillAIService = {
       }
     }
 
-    console.log("[SpillAI] Sending request:", {
-      message: message?.slice(0, 50),
-      sessionId,
-      personality,
-      hasJournal: !!forwardedJournal,
-    })
-
     const data = await api.post("/spill-ai/chat", payload)
-
-    console.log("[SpillAI] Response received:", {
-      sessionId: data.session_id,
-      responseLen: data.response?.length || 0,
-      personality: data.personality,
-    })
 
     return {
       response: data.response,
       sessionId: data.session_id,
       aiMessageId: data.ai_message_id,
       personality: data.personality,
+    }
+  },
+
+  async sendMessageStream(message, sessionId, personality, forwardedJournal, callbacks) {
+    const payload = {
+      message,
+      session_id: sessionId,
+      personality,
+    }
+    if (forwardedJournal) {
+      payload.forwarded_journal = {
+        id: forwardedJournal.id,
+        title: forwardedJournal.title,
+        content: forwardedJournal.content,
+      }
+    }
+
+    const response = await api.postRaw("/spill-ai/chat/stream", payload)
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ""
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split("\n")
+      buffer = lines.pop()
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        try {
+          const event = JSON.parse(trimmed)
+          switch (event.type) {
+            case "session":
+              callbacks.onSession?.(event.session_id)
+              break
+            case "chunk":
+              callbacks.onChunk?.(event.content)
+              break
+            case "done":
+              callbacks.onDone?.(event.ai_message_id, event.personality)
+              break
+            case "error":
+              callbacks.onError?.(event.error)
+              break
+          }
+        } catch (e) {
+          // ignore malformed JSON
+        }
+      }
     }
   },
 

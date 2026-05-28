@@ -64,13 +64,16 @@ def _entries(user_id):
 
     def activity(title, desc, d, s, e, color, priority, level):
         st = _activity_status(d)
+        sd = datetime.combine(d, s)
+        ed = datetime.combine(d, e)
+        if ed <= sd:
+            ed += timedelta(days=1)
         events.append(ProductivityEvent(
             user_id=user_id,
             title=title,
             description=desc,
-            event_date=d,
-            start_time=s,
-            end_time=e,
+            start_datetime=sd,
+            end_datetime=ed,
             color=color,
             priority=priority,
             productivity_level=level,
@@ -84,13 +87,16 @@ def _entries(user_id):
     def task_start(title, desc, d, s, e, color, priority, level,
                    deadline_date, deadline_time, task_group_id):
         st = _task_status(d, deadline_date)
+        sd = datetime.combine(d, s)
+        ed = datetime.combine(d, e)
+        if ed <= sd:
+            ed += timedelta(days=1)
         events.append(ProductivityEvent(
             user_id=user_id,
             title=title,
             description=desc,
-            event_date=d,
-            start_time=s,
-            end_time=e,
+            start_datetime=sd,
+            end_datetime=ed,
             color=color,
             priority=priority,
             productivity_level=level,
@@ -105,13 +111,14 @@ def _entries(user_id):
 
     def task_deadline(title, start_date, deadline_date, deadline_time, color, priority, level, task_group_id):
         st = _task_status(start_date, deadline_date)
+        sd = datetime.combine(deadline_date, deadline_time)
+        ed = sd + timedelta(minutes=30)
         events.append(ProductivityEvent(
             user_id=user_id,
             title=f"{title} Deadline",
             description="",
-            event_date=deadline_date,
-            start_time=deadline_time,
-            end_time=deadline_time,
+            start_datetime=sd,
+            end_datetime=ed,
             color=color,
             priority=priority,
             productivity_level=level,
@@ -675,5 +682,5 @@ def seed_productivity(user_id, force=False):
     print(f"  Seeded {len(entries)} productivity records:")
     print(f"    - {activity_count} activities (single-day events)")
     print(f"    - {groups} task groups ({start_records} start + {deadline_records} deadline = {task_count} task records)")
-    print(f"    - Date range: {entries[0].event_date} to {entries[-1].event_date}")
+    print(f"    - Date range: {entries[0].start_datetime.date()} to {entries[-1].start_datetime.date()}")
     return entries

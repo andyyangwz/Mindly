@@ -117,9 +117,4 @@ export const journalService = {
   async setJournalFolders(journalId, folderIds) {
     await api.post(`/journals/${journalId}/folders`, { folder_ids: folderIds });
   },
-
-  async getJournalFolders(journalId) {
-    const data = await api.get(`/journals/${journalId}/folders`);
-    return data.folder_ids || [];
-  },
 };

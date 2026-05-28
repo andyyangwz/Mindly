@@ -4,9 +4,9 @@ import { Trash2 } from "lucide-react";
 import { theme } from "../../../theme";
 import { resolveIcon } from "./IconPicker";
 import ConfirmDialog from "../../../components/ui/ConfirmDialog";
-import InfoButton from "../../../components/tutorial/InfoButton";
+import { useTutorial } from "../../../components/tutorial/TutorialContext";
 
-const circ = 2 * Math.PI * 42;
+const circ = 2 * Math.PI * 72;
 
 function getStatus(t, current, target) {
   if (target === 0) return { label: t("home.habitRelics.status.noTarget"), color: "var(--color-muted)", bg: "color-mix(in srgb, var(--color-muted) 12%, transparent)" };
@@ -19,13 +19,16 @@ function getStatus(t, current, target) {
 
 export default function UpdateProgressModal({ open, onClose, relics, onUpdate, onDeleted }) {
   const { t } = useTranslation();
+  const { tutorialId } = useTutorial();
   const [selectedId, setSelectedId] = useState(null);
   const [pendingOps, setPendingOps] = useState({});
   const [inputValue, setInputValue] = useState("1");
   const [updating, setUpdating] = useState(false);
   const [chargeAnim, setChargeAnim] = useState(false);
+  const [animTargets, setAnimTargets] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [tutorialRelic, setTutorialRelic] = useState(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -35,8 +38,34 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
       setInputValue("1");
       setUpdating(false);
       setChargeAnim(false);
+      setAnimTargets({});
     }
   }, [open]);
+
+  useEffect(() => {
+    if (tutorialId === "update-progress" || tutorialId === "habit-relics-onboarding") {
+      const relic = {
+        id: "tutorial-relic",
+        title: "Channel Practice",
+        icon: "star",
+        current_progress: 0,
+        target: 10,
+        is_equipped: true,
+        equipped_order: -1,
+      };
+      setTutorialRelic(relic);
+      if (open) {
+        setSelectedId("tutorial-relic");
+        setInputValue("1");
+        setPendingOps({
+          "tutorial-relic": { type: "add", value: 1 },
+        });
+        setTimeout(() => inputRef.current?.focus(), 50);
+      }
+    } else {
+      setTutorialRelic(null);
+    }
+  }, [tutorialId, open]);
 
   const relicList = useMemo(() => {
     const sorted = [...relics].sort((a, b) => {
@@ -47,18 +76,24 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
     return sorted;
   }, [relics]);
 
+  const displayList = useMemo(() => {
+    if (tutorialRelic) {
+      return [tutorialRelic, ...relicList];
+    }
+    return relicList;
+  }, [relicList, tutorialRelic]);
+
   const selectedRelic = useMemo(
-    () => relicList.find((g) => g.id === selectedId) || null,
-    [relicList, selectedId]
+    () => displayList.find((g) => g.id === selectedId) || null,
+    [displayList, selectedId]
   );
 
   const selectRelic = (id) => {
     setSelectedId(id);
     setInputValue("1");
-    setPendingOps((prev) => ({
-      ...prev,
+    setPendingOps({
       [id]: { type: "add", value: 1 },
-    }));
+    });
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
@@ -111,6 +146,16 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
     const entries = Object.entries(pendingOps);
     if (entries.length === 0) return;
 
+    const targets = {};
+    for (const [relicId, op] of entries) {
+      const relic = relicList.find((g) => g.id === relicId);
+      if (!relic) continue;
+      targets[relicId] = op.type === "reset"
+        ? 0
+        : Math.max(0, (relic.current_progress || 0) + op.value);
+    }
+    setAnimTargets(targets);
+
     setUpdating(true);
     setChargeAnim(true);
     setTimeout(async () => {
@@ -134,6 +179,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
       } finally {
         setUpdating(false);
         setChargeAnim(false);
+        setAnimTargets({});
       }
     }, 600);
   };
@@ -142,9 +188,13 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
 
   const selected = selectedRelic;
   const pendingCount = Object.keys(pendingOps).length;
+  const primaryOp = Object.entries(pendingOps)[0]?.[1];
 
+  const selectedDisplayProgress = selected && animTargets.hasOwnProperty(selected.id)
+    ? animTargets[selected.id]
+    : selected?.current_progress || 0;
   const selectedPct = selected && selected.target > 0
-    ? Math.min(Math.round((selected.current_progress / selected.target) * 100), 100)
+    ? Math.min(Math.round((selectedDisplayProgress / selected.target) * 100), 100)
     : 0;
   const selectedOffset = circ * (1 - selectedPct / 100);
   const selectedStatus = selected ? getStatus(t, selected.current_progress, selected.target) : null;
@@ -214,7 +264,6 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--color-dark)", margin: 0 }}>
                     {t("home.updateProgress.title")}
                   </h2>
-                  <InfoButton tutorialId="update-progress" size={12} />
                 </div>
                 <p style={{ fontSize: 11, color: "var(--color-muted)", margin: "1px 0 0" }}>
                   {relicList.length} relics available
@@ -240,17 +289,16 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
               padding: "10px 10px 10px 14px",
               display: "flex", flexDirection: "column", gap: 8,
             }}>
-              {relicList.map((goal) => {
-                const isSelected = goal.id === selectedId;
-                const pendingOp = pendingOps[goal.id];
-                const status = getStatus(t, goal.current_progress, goal.target);
-                const Icon = resolveIcon(goal.icon);
-                const pct = goal.target > 0
-                  ? Math.min(Math.round((goal.current_progress / goal.target) * 100), 100)
-                  : 0;
-                const offset = 2 * Math.PI * 14 * (1 - pct / 100);
+              {displayList.map((goal) => {
+                  const isSelected = goal.id === selectedId;
+                  const pendingOp = pendingOps[goal.id];
+                  const Icon = resolveIcon(goal.icon);
+                  const displayProgress = animTargets.hasOwnProperty(goal.id) ? animTargets[goal.id] : goal.current_progress;
+                  const pct = goal.target > 0 ? Math.min(Math.round((displayProgress / goal.target) * 100), 100) : 0;
+                  const offset = 2 * Math.PI * 14 * (1 - pct / 100);
+                  const status = getStatus(t, goal.current_progress, goal.target);
 
-                return (
+                  return (
                   <div
                     key={goal.id}
                     onClick={() => selectRelic(goal.id)}
@@ -349,7 +397,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
         </div>
 
         {/* ===== RIGHT — Enhancement Panel ===== */}
-        <div style={{
+        <div data-tutorial-target="update-progress-controls" style={{
           flex: 1,
           display: "flex", flexDirection: "column",
           zIndex: 1, position: "relative",
@@ -480,7 +528,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                         padding: "9px 12px", borderRadius: 9,
                         border: selected ? "1px solid rgba(239,68,68,0.25)" : "1px solid var(--color-border)",
                         background: selected ? "rgba(239,68,68,0.06)" : "transparent",
-                        color: selected ? "#DC2626" : "var(--color-muted)",
+                        color: selected ? "#DC2626" : "var(--color-dark)",
                         fontSize: 11, fontWeight: 600,
                         cursor: selected && !updating ? "pointer" : "not-allowed",
                         transition: "all 0.15s",
@@ -501,7 +549,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                         padding: "9px 16px", borderRadius: 9,
                         border: selected ? "1px solid rgba(239,68,68,0.3)" : "1px solid var(--color-border)",
                         background: selected ? "rgba(239,68,68,0.08)" : "transparent",
-                        color: selected ? "#DC2626" : "var(--color-muted)",
+                        color: selected ? "#DC2626" : "var(--color-dark)",
                         fontSize: 11, fontWeight: 600,
                         cursor: selected && !updating ? "pointer" : "not-allowed",
                         transition: "all 0.15s",
@@ -556,9 +604,9 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                     border: "none",
                     marginTop: 10,
                     background: pendingCount > 0 && !updating
-                      ? `linear-gradient(135deg, ${theme.primary}, ${theme.primary}dd)`
+                      ? `linear-gradient(135deg, var(--color-primary), rgba(124, 58, 237, 0.87))`
                       : "var(--color-border)",
-                    color: pendingCount > 0 && !updating ? "#fff" : "var(--color-muted)",
+                    color: pendingCount > 0 && !updating ? "#FFFFFF" : "var(--color-dark)",
                     fontSize: 13, fontWeight: 700,
                     cursor: pendingCount > 0 && !updating ? "pointer" : "not-allowed",
                     transition: "all 0.2s",
@@ -569,8 +617,12 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                 >
                   {updating
                     ? "Channeling..."
-                    : pendingCount > 0
-                      ? `Channel Energy (${pendingCount})`
+                    : pendingCount > 0 && primaryOp
+                      ? primaryOp.type === "reset"
+                        ? "Reset Progress"
+                        : primaryOp.value > 0
+                          ? `Channel Energy (${primaryOp.value})`
+                          : `Remove Energy (${Math.abs(primaryOp.value)})`
                       : "Select a relic to channel"}
                   {updating && (
                     <span style={{
@@ -620,8 +672,9 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
             setDeleteConfirm(false);
             setSelectedId(null);
           } catch {
-            setDeleting(false);
             setDeleteConfirm(false);
+          } finally {
+            setDeleting(false);
           }
         }}
         onCancel={() => setDeleteConfirm(false)}

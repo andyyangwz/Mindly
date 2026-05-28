@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Brain, Home, PenLine, Calendar, BarChart3, Plus,
-  MessageSquare, Sun, Moon, Languages, LogOut,
+  MessageSquare, Sun, Moon, LogOut,
 } from "lucide-react";
 import { theme } from "../theme";
 import { useTheme } from "../theme/ThemeProvider";

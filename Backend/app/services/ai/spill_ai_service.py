@@ -110,3 +110,20 @@ class SpillAIService:
             temperature=temperature,
             timeout=timeout,
         )
+
+    def chat_stream(self, history: list, personality: str = DEFAULT_PERSONALITY,
+                    *, current_journal_context: dict | None = None,
+                    max_tokens: int = 500, temperature: float = 0.7,
+                    timeout: int = 30):
+        """Yield content chunks from a streaming AI response.
+
+        Same interface as chat() but yields content incrementally
+        instead of returning a single string.
+        """
+        messages = self._format_messages(history, personality, current_journal_context)
+        yield from self.provider.chat_stream(
+            messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            timeout=timeout,
+        )

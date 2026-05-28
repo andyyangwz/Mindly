@@ -10,7 +10,6 @@ export default function AppLayout() {
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
-  const isSpill = location.pathname.startsWith("/app/spill")
   const { sessions, fetchSessions, renameSession, deleteSession } = useChat()
 
   useEffect(() => {

@@ -34,7 +34,8 @@
     },
     "statsGrid": {
       "tasksCompleted": "Tugas Selesai",
-      "productivity": "Produktivitas"
+      "productivity": "Produktivitas",
+      "noOngoingTask": "No On Going Task"
     },
     "weeklyOverview": {
       "title": "Ringkasan Mingguan",
@@ -531,10 +532,10 @@
   "tutorials": {
     "task-completed": {
       "title": "Penyelesaian Tugas",
-      "tooltip": "Berapa banyak tugas yang kamu selesaikan hari ini",
-      "description": "Menampilkan tugas selesai vs total tugas aktif hari ini. Sebuah tugas dihitung 'selesai' jika statusnya diatur ke Selesai. Tugas aktif mencakup semuanya kecuali yang sudah selesai sebelum hari ini.",
+      "tooltip": "Berapa banyak tugas yang sedang berlangsung dan sudah kamu selesaikan saat ini",
+      "description": "Menampilkan tugas selesai vs total tugas yang sedang berlangsung — tugas yang sedang terjadi saat ini. Sebuah tugas sedang berlangsung jika waktu mulainya sudah lewat tetapi waktu berakhirnya belum (mulai < sekarang < selesai). Rasio menunjukkan berapa banyak tugas yang sedang berlangsung sudah ditandai Selesai.",
       "steps": [
-        { "title": "Apa yang Diukur", "text": "Pembilang adalah jumlah tugas yang kamu tandai Selesai hari ini. Penyebut adalah semua tugas aktifmu — tugas yang dibuat dikurangi yang sudah Selesai sebelum hari ini." },
+        { "title": "Apa yang Diukur", "text": "Pembilang adalah berapa banyak tugas yang sedang berlangsung sudah kamu tandai Selesai. Penyebut adalah berapa banyak tugas yang sedang aktif (mulai < sekarang < selesai). Jika tidak ada tugas yang sedang berlangsung, akan muncul 'No On Going Task'." },
         { "title": "Cara Meningkatkan", "text": "Rencanakan jumlah tugas harian yang realistis. Pecah tugas besar menjadi lebih kecil untuk membangun momentum. Gunakan Kalender Produktivitas untuk menjadwalkan blok waktu fokus untuk setiap tugas." }
       ]
     },

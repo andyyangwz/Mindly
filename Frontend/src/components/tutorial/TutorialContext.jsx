@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from "react"
+import TUTORIAL_CONTENT from "./tutorialContent"
 
 const STORAGE_HINTS = "mindly_tutorial_hints"
 const STORAGE_VIEWED = "mindly_tutorial_viewed"
@@ -31,11 +32,15 @@ export function TutorialProvider({ children }) {
   const viewedTutorials = useRef(loadSet(STORAGE_VIEWED))
 
   const openTutorial = useCallback((id, config) => {
-    const el = document.querySelector(`[data-tutorial-target="${id}"]`)
-    if (!el) return
+    const content = TUTORIAL_CONTENT[id]
+    if (!content?.steps?.length) return
+    const targetId = content.steps[0].targetId || id
 
-    const rect = el.getBoundingClientRect()
-    setSpotlightRect(rect)
+    const el = document.querySelector(`[data-tutorial-target="${targetId}"]`)
+    if (el) {
+      const rect = el.getBoundingClientRect()
+      setSpotlightRect(rect)
+    }
     setTutorialId(id)
 
     viewedTutorials.current.add(id)
@@ -82,7 +87,11 @@ export function TutorialProvider({ children }) {
   useEffect(() => {
     const handler = () => {
       if (tutorialId) {
-        const el = document.querySelector(`[data-tutorial-target="${tutorialId}"]`)
+        const content = TUTORIAL_CONTENT[tutorialId]
+        const steps = content?.steps
+        const idx = Math.max(0, tutorialStep)
+        const targetId = steps?.[idx]?.targetId || steps?.[0]?.targetId || tutorialId
+        const el = document.querySelector(`[data-tutorial-target="${targetId}"]`)
         if (el) setSpotlightRect(el.getBoundingClientRect())
       }
     }
@@ -92,7 +101,7 @@ export function TutorialProvider({ children }) {
       window.removeEventListener("scroll", handler, true)
       window.removeEventListener("resize", handler)
     }
-  }, [tutorialId])
+  }, [tutorialId, tutorialStep])
 
   useEffect(() => {
     if (!tutorialId) return

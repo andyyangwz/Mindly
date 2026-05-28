@@ -4,10 +4,10 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { Loader, FolderOpen, X } from "lucide-react"
 import { useJournals } from "../../hooks/useJournals"
 import { theme } from "../../theme"
-import JournalList from "./JournalList"
-import JournalDetail from "./JournalDetail"
-import JournalForm from "./JournalForm"
-import FolderExplorer from "./FolderExplorer"
+import JournalList from "./components/JournalList"
+import JournalDetail from "./components/JournalDetail"
+import JournalForm from "./components/JournalForm"
+import FolderExplorer from "./folders/FolderExplorer"
 
 const SPILL_PERSONALITY_KEY = "mindly_spill_personality"
 
@@ -135,7 +135,7 @@ export default function JournalsPage() {
         await assignJournalFolders(created.id, folderIds)
       }
       setForm({ title: "", content: "", emojis: ["", "", ""] })
-      navigate("/app/journals")
+      navigate(`/app/journals/${created.id}`)
     }
   }
 

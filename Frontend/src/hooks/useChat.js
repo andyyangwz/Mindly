@@ -28,7 +28,6 @@ export function useChat() {
     try {
       const result = await chatService.getMessages(sessionId)
       if (reqId !== fetchMessagesIdRef.current) return
-      console.log("[useChat] Fetched messages:", result.messages.length, "messages")
       setMessages(result.messages)
     } catch (err) {
       if (reqId !== fetchMessagesIdRef.current) return
@@ -49,12 +48,6 @@ export function useChat() {
     }
   }, [])
 
-  const createSession = useCallback(async (title) => {
-    const session = await chatService.createSession(title)
-    setSessions((prev) => [session, ...prev])
-    return session
-  }, [])
-
   const renameSession = useCallback(async (id, title) => {
     const updated = await chatService.renameSession(id, title)
     setSessions((prev) => prev.map((s) => (s.id === id ? updated : s)))
@@ -66,12 +59,6 @@ export function useChat() {
     setSessions((prev) => prev.filter((s) => s.id !== id))
   }, [])
 
-  const createMessage = useCallback(async (sessionId, role, content) => {
-    const message = await chatService.createMessage(sessionId, role, content)
-    setMessages((prev) => [...prev, message])
-    return message
-  }, [])
-
   return {
     sessions,
     messages,
@@ -80,9 +67,7 @@ export function useChat() {
     fetchSessions,
     fetchMessages,
     fetchSession,
-    createSession,
     renameSession,
     deleteSession,
-    createMessage,
   }
 }

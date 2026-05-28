@@ -1,0 +1,1 @@
+export { getPersonalityAvatar } from "./personalityAvatars"

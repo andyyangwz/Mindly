@@ -36,6 +36,30 @@ async function request(endpoint, options = {}) {
   return handleResponse(response);
 }
 
+async function postRaw(endpoint, data) {
+  const url = `${config.API_BASE_URL}${endpoint}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    const error = new Error(
+      body?.error || body?.message || `Request failed: ${response.status}`
+    );
+    error.response = body;
+    error.status = response.status;
+    throw error;
+  }
+
+  return response;
+}
+
 export const api = {
   get: (url) => request(url),
 
@@ -50,4 +74,6 @@ export const api = {
     request(url, { method: "PUT", body: JSON.stringify(data) }),
 
   delete: (url) => request(url, { method: "DELETE" }),
+
+  postRaw,
 };

@@ -96,3 +96,46 @@ class GroqProvider:
 
         # Should not reach here, but fallback
         raise ValueError("Groq returned empty response after all retries")
+
+    def chat_stream(self, messages: list[dict], *, max_tokens: int = 500,
+                    temperature: float = 0.7, timeout: int = 30):
+        """Yield content chunks from a streaming chat completion.
+
+        Args:
+            messages: List of {role, content} dicts (system/user/assistant).
+            max_tokens: Maximum tokens in the response.
+            temperature: Sampling temperature (0.0–1.0).
+            timeout: Request timeout in seconds.
+
+        Yields:
+            Content strings as they arrive from the API.
+
+        Raises:
+            groq.APIError, groq.RateLimitError, groq.AuthenticationError, etc.
+        """
+        logger.info(
+            "Groq stream request: model=%s messages=%d max_tokens=%d temperature=%.1f",
+            self.model, len(messages), max_tokens, temperature,
+        )
+
+        stream = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            timeout=timeout,
+            stream=True,
+        )
+
+        total_content = ""
+        for chunk in stream:
+            if chunk.choices and len(chunk.choices) > 0:
+                delta = chunk.choices[0].delta
+                if delta and delta.content:
+                    total_content += delta.content
+                    yield delta.content
+
+        logger.info(
+            "Groq stream complete: model=%s total_chars=%d",
+            self.model, len(total_content),
+        )

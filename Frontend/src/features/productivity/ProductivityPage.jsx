@@ -4,9 +4,10 @@ import { Clock3, Lightbulb, ChevronDown, Check } from "lucide-react";
 import { theme } from "../../theme";
 import InfoButton from "../../components/tutorial/InfoButton";
 import { productivityService } from "../../services/productivityService";
-import FocusTimer from "./FocusTimer";
-import ProductivityCalendar from "./ProductivityCalendar";
-import ActivityDetailModal from "./ActivityDetailModal";
+import { STATUS_META } from "./utils/calendarConstants";
+import FocusTimer from "./timer/FocusTimer";
+import ProductivityCalendar from "./calendar/ProductivityCalendar";
+import ActivityDetailModal from "./modals/ActivityDetailModal";
 
 const d = new Date();
 const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -16,14 +17,6 @@ const priorityColor = {
   medium: theme.secondary,
   low: theme.accent,
 };
-
-const STATUS_META = {
-  "Done": { color: "#10B981", bg: "#10B98114", border: "#10B98130" },
-  "In Progress": { color: "#B45309", bg: "#B4530918", border: "#B4530940" },
-  "To Do": { color: "#6B7280", bg: "#6B728010", border: "#6B728020" },
-};
-
-const STATUS_CYCLE = ["To Do", "In Progress", "Done"];
 
 function formatDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
@@ -89,10 +82,6 @@ export default function ProductivityPage() {
     }
   }, []);
 
-  const handleDetailEdit = useCallback((event) => {
-    setDetailEvent(null);
-  }, []);
-
   const handleTaskClick = useCallback((task) => {
     setDetailEvent(task);
   }, []);
@@ -142,8 +131,8 @@ export default function ProductivityPage() {
         const tsB = b.statusChangeAt ? new Date(b.statusChangeAt).getTime() : 0;
         return tsB - tsA;
       }
-      const dateA = a.eventDate || "";
-      const dateB = b.eventDate || "";
+      const dateA = a.startDatetime ? a.startDatetime.slice(0, 10) : "";
+      const dateB = b.startDatetime ? b.startDatetime.slice(0, 10) : "";
       const cmp = dateA.localeCompare(dateB);
       if (cmp !== 0) return cmp;
       return (a.id || "").localeCompare(b.id || "");
@@ -160,7 +149,7 @@ export default function ProductivityPage() {
 
   const planItems = useMemo(() => {
     return allTasks
-      .filter(e => e.eventDate === todayStr && !e.hasDeadline && !e.isDeadlineMarker)
+      .filter(e => (e.startDatetime ? e.startDatetime.slice(0, 10) : "") === todayStr && !e.hasDeadline && !e.isDeadlineMarker)
       .sort((a, b) => {
         if (!a.startTime) return 1;
         if (!b.startTime) return -1;
@@ -304,20 +293,20 @@ export default function ProductivityPage() {
             {filteredTasks.length === 0 && !tasksLoading && (
               <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{t("productivity.page.noTasks")}</p>
             )}
-            {visibleTasks.map(t => (
-              <div key={t.id} onClick={() => handleTaskClick(t)}
+            {visibleTasks.map(task => (
+              <div key={task.id} onClick={() => handleTaskClick(task)}
                 style={{ padding: "10px 12px", borderRadius: 10, border: `1px solid ${theme.border}`, marginBottom: 6, cursor: "pointer", transition: "all 0.15s" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: theme.dark, textDecoration: "none", opacity: t.status === "Done" ? 0.6 : 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</p>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: priorityColor[t.priority] || theme.secondary, flexShrink: 0, marginLeft: 8 }} />
+                  <p style={{ fontSize: 13, fontWeight: 500, color: theme.dark, textDecoration: "none", opacity: task.status === "Done" ? 0.6 : 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.title}</p>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: priorityColor[task.priority] || theme.secondary, flexShrink: 0, marginLeft: 8 }} />
                 </div>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <span style={{ fontSize: 10, color: theme.muted, display: "flex", alignItems: "center", gap: 3 }}>
-                    <Clock3 size={10} />{t.status === "Done" && t.deadlineDate ? `${t("productivity.page.finishOn")} ${formatFinishDate(t.deadlineDate)}` : formatDate(t.eventDate)}
+                    <Clock3 size={10} />{task.status === "Done" && task.deadlineDate ? `${t("productivity.page.finishOn")} ${formatFinishDate(task.deadlineDate)}` : formatDate(task.startDatetime ? task.startDatetime.slice(0, 10) : "")}
                   </span>
-                  {STATUS_META[t.status] && (
-                    <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 6px", borderRadius: 3, background: STATUS_META[t.status].bg, color: STATUS_META[t.status].color, border: `1px solid ${STATUS_META[t.status].border}`, lineHeight: 1.4, letterSpacing: "0.01em" }}>
-                      {tStatus(t.status)}
+                  {STATUS_META[task.status] && (
+                    <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 6px", borderRadius: 3, background: STATUS_META[task.status].bg, color: STATUS_META[task.status].color, border: `1px solid ${STATUS_META[task.status].border}`, lineHeight: 1.4, letterSpacing: "0.01em" }}>
+                      {tStatus(task.status)}
                     </span>
                   )}
                 </div>

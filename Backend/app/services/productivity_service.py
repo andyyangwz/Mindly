@@ -18,7 +18,6 @@ def _parse_datetime(value):
 
 
 def _build_event(user_id, data, overrides=None):
-    has_deadline = data.get("has_deadline", False)
     kwargs = {
         "user_id": user_id,
         "title": data["title"].strip(),
@@ -27,47 +26,23 @@ def _build_event(user_id, data, overrides=None):
         "priority": data.get("priority", "medium"),
         "productivity_level": data.get("productivity_level", "neutral"),
         "status": data.get("status", "To Do"),
-        "has_deadline": has_deadline,
+        "has_deadline": data.get("has_deadline", False),
         "is_deadline_marker": False,
         "task_group_id": None,
     }
 
-    if has_deadline:
-        kwargs["event_date"] = _parse_date(data["event_date"])
-        kwargs["start_time"] = _parse_time(data["start_time"])
-        kwargs["end_time"] = _parse_time(data["end_time"])
-        sd = datetime.combine(kwargs["event_date"], kwargs["start_time"])
-        ed = datetime.combine(kwargs["event_date"], kwargs["end_time"])
-        if ed <= sd:
-            ed += timedelta(days=1)
-        kwargs["start_datetime"] = sd
-        kwargs["end_datetime"] = ed
-    else:
-        sd = _parse_datetime(data["start_datetime"])
-        ed = _parse_datetime(data["end_datetime"])
-
-        if ed <= sd:
-            raise ValueError("end_datetime must be after start_datetime")
-        if (ed - sd) > timedelta(days=2):
-            raise ValueError("Activities cannot span more than 2 days")
-
-        kwargs["start_datetime"] = sd
-        kwargs["end_datetime"] = ed
-        kwargs["event_date"] = sd.date()
-        kwargs["start_time"] = sd.time()
-        kwargs["end_time"] = ed.time()
+    sd = _parse_datetime(data["start_datetime"])
+    ed = _parse_datetime(data["end_datetime"])
+    if ed <= sd:
+        ed += timedelta(days=1)
+    if (ed - sd) > timedelta(days=2):
+        raise ValueError("Activities cannot span more than 2 days")
+    kwargs["start_datetime"] = sd
+    kwargs["end_datetime"] = ed
 
     if overrides:
         kwargs.update(overrides)
     return ProductivityEvent(**kwargs)
-
-
-def _overlaps_date(event, target_date):
-    if event.start_datetime is None or event.end_datetime is None:
-        return event.event_date == target_date
-    day_start = datetime.combine(target_date, datetime.min.time())
-    day_end = day_start + timedelta(days=1)
-    return event.start_datetime < day_end and event.end_datetime > day_start
 
 
 class ProductivityService:
@@ -134,15 +109,12 @@ class ProductivityService:
             dd = _parse_date(data["deadline_date"])
             dt = _parse_time(data["deadline_time"])
             linked_sd = datetime.combine(dd, dt)
-            linked_ed = linked_sd + timedelta(minutes=30)
+            linked_ed = linked_sd
 
             linked = ProductivityEvent(
                 user_id=user_id,
                 title=f"{data['title'].strip()} Deadline",
                 description=data.get("description", "").strip(),
-                event_date=dd,
-                start_time=dt,
-                end_time=(linked_ed.time()),
                 start_datetime=linked_sd,
                 end_datetime=linked_ed,
                 color=data.get("color", "#7C3AED"),
@@ -171,12 +143,6 @@ class ProductivityService:
             event.title = data["title"].strip()
         if "description" in data:
             event.description = data["description"].strip()
-        if "event_date" in data:
-            event.event_date = _parse_date(data["event_date"])
-        if "start_time" in data:
-            event.start_time = _parse_time(data["start_time"])
-        if "end_time" in data:
-            event.end_time = _parse_time(data["end_time"])
         if "color" in data:
             event.color = data["color"]
         if "priority" in data:
@@ -197,11 +163,10 @@ class ProductivityService:
             if "start_datetime" in data:
                 event.start_datetime = _parse_datetime(data["start_datetime"])
             if "end_datetime" in data:
-                event.end_datetime = _parse_datetime(data["end_datetime"])
-            if event.start_datetime and event.end_datetime:
-                event.event_date = event.start_datetime.date()
-                event.start_time = event.start_datetime.time()
-                event.end_time = event.end_datetime.time()
+                ed = _parse_datetime(data["end_datetime"])
+                if ed <= event.start_datetime:
+                    ed += timedelta(days=1)
+                event.end_datetime = ed
 
         result = {"event": event, "linked_event": None}
 

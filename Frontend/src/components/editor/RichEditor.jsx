@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline"
@@ -10,7 +10,6 @@ import {
   Heading2, Heading3, List, ListOrdered,
   Quote, Link, Highlighter, Undo, Redo,
 } from "lucide-react"
-import { theme } from "../../theme"
 import "./RichEditor.css"
 
 function ToolbarButton({ icon: Icon, active, onClick, title }) {
@@ -30,7 +29,7 @@ function ToolbarDivider() {
   return <div className="re-toolbar-divider" />
 }
 
-export default function RichEditor({ value, onChange, placeholder }) {
+const RichEditor = forwardRef(function RichEditor({ value, onChange, placeholder, onSelectionChange }, ref) {
   const [saved, setSaved] = useState(false)
   const savedTimer = useRef(null)
   const lastEmittedRef = useRef(value)
@@ -40,6 +39,8 @@ export default function RichEditor({ value, onChange, placeholder }) {
       StarterKit.configure({
         heading: { levels: [2, 3] },
         history: { depth: 50 },
+        link: false,
+        underline: false,
       }),
       Underline,
       LinkExtension.configure({
@@ -56,7 +57,11 @@ export default function RichEditor({ value, onChange, placeholder }) {
       const html = editor.getHTML()
       lastEmittedRef.current = html
       onChange?.(html)
+      onSelectionChange?.(!editor.state.selection.empty)
       setSaved(false)
+    },
+    onSelectionUpdate: ({ editor }) => {
+      onSelectionChange?.(!editor.state.selection.empty)
     },
     editorProps: {
       attributes: {
@@ -64,6 +69,31 @@ export default function RichEditor({ value, onChange, placeholder }) {
       },
     },
   })
+
+  useImperativeHandle(ref, () => ({
+    getEditor: () => editor,
+    hasSelection: () => editor && !editor.state.selection.empty,
+    getSelectedText: () => {
+      if (!editor || editor.state.selection.empty) return ""
+      const { from, to } = editor.state.selection
+      return editor.state.doc.textBetween(from, to, "\n")
+    },
+    getSelectedHTML: () => {
+      if (!editor || editor.state.selection.empty) return ""
+      const selection = window.getSelection()
+      if (!selection || selection.isCollapsed || !selection.rangeCount) return ""
+      const range = selection.getRangeAt(0)
+      const fragment = range.cloneContents()
+      const div = document.createElement("div")
+      div.appendChild(fragment)
+      return div.innerHTML
+    },
+    replaceSelection: (html) => {
+      if (!editor || editor.state.selection.empty) return
+      const { from, to } = editor.state.selection
+      editor.chain().focus().insertContentAt({ from, to }, html).run()
+    },
+  }), [editor])
 
   useEffect(() => {
     return () => {
@@ -138,4 +168,6 @@ export default function RichEditor({ value, onChange, placeholder }) {
       </div>
     </div>
   )
-}
+})
+
+export default RichEditor

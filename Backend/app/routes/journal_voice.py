@@ -58,53 +58,104 @@ Output: <div><h3>My Evening</h3><p>I feel conflicted between going to the gym an
 
 Return ONLY the restructured HTML. No explanations, no markdown, no code blocks."""
 
-AUTOFORMAT_SYSTEM_PROMPT = """You are a thoughtful journaling editor. Your ONLY job is to apply intelligent rich text formatting to plain journal writing.
+AUTOFORMAT_SYSTEM_PROMPT = """You are a lightweight journal structuring assistant. Your job is to organize plain journal text into clean, readable HTML.
 
-You do NOT rewrite content. You analyze the structure and apply proper HTML formatting.
+You may lightly restructure wording and rephrase for clarity, as long as the author's original meaning, voice, and emotional tone remain intact. You are improving readability, not replacing the author's writing.
 
-DETECT AND FORMAT:
-1. **Headings / Section Titles** → `<h3>` — for topic shifts or titled thoughts
-2. **Ordered Lists** → `<ol><li>...</li></ol>` — for sequential items, steps, numbered thoughts
-3. **Unordered Lists** → `<ul><li>...</li></ul>` — for collections, ideas, bullet points
-4. **Reflections / Emotional moments** → `<blockquote>` — for introspective or emotionally significant lines
-5. **Emphasis** → `<em>` or `<strong>` — sparingly, for naturally emphasized words
-6. **Paragraphs** → `<p>...</p>` — for regular text
-7. **Spacing** → separate distinct thoughts into their own paragraphs
+FORMATTING TARGETS:
+- Split content into natural paragraphs on major topic shifts (reflection → plan, work → personal, observation → conclusion). Do NOT split on every temporal marker or sentence break.
+- Use <h3> for obvious section-intent phrases the user wrote: "Things I learned", "Tomorrow", "Reflection", "What happened today", "Goals", "Plans", as well as lines that are clearly in ALL CAPS or Title Case and act as headings. Do NOT invent headings for implied topics.
+- Use <ol> for sequential or numbered steps.
+- Use <ul> for natural collections: action items, grouped thoughts, goals, items after a colon, or comma-separated short items introduced by a colon.
+- Use <blockquote> for text that reads as a quotation, even without quotation marks, when it has a clear citation or attribution — such as ending with "— Source", "(Author)", "~ Author", a book/chapter/verse citation, or similar. Quote marks + attribution also qualify. Never use for casual reported speech, internal thoughts, reflections, or emotional moments.
+- Use <strong> or <em> very sparingly — only for ALL CAPS words or words the user strongly emphasizes (e.g., "absolutely", "cannot", "so much" in context). Never use for emotional dramatization.
 
-RULES:
-- Preserve ALL original wording — do NOT rewrite or rephrase
-- Do NOT add content, interpretations, or facts
-- Do NOT use code blocks or markdown
-- Output MUST be valid HTML only, wrapped in a `<div>`
-- Keep the person's voice and tone exactly as written
-- The goal is visual organization, not rewriting
+STYLISTIC BOUNDARIES:
+- NEVER change the author's meaning, remove content, or add facts they didn't write
+- NEVER add quotation marks around words for dramatic effect
+- NEVER make the writing sound theatrical, poetic, or like a novel
+- NEVER split every sentence into its own paragraph
+- NEVER convert normal reflective prose into a list
 
-EXAMPLE:
-Input:
-"Things I would like to do. First I want to eat then I want to play games then sleep"
+When in doubt, simpler formatting is better.
 
+OUTPUT:
+- Valid HTML only, wrapped in a single <div>
+- No markdown, no code blocks, no explanations
+
+EXAMPLES:
+
+Input: Morning Reflection
+
+Today felt heavy at first, but things became better after I started working instead of overthinking.
+
+Things I learned:
+
+* clean desk = clearer mind
+* starting is harder than continuing
+* distractions grow fast
+
+"Small daily improvements are the key to long-term growth." — Unknown
+
+Goals for tomorrow:
+
+1. finish the journal tutorial
+2. fix the calendar bugs
+3. sleep earlier
 Output:
 <div>
-  <h3>Things I Would Like To Do</h3>
+  <h3>Morning Reflection</h3>
+  <p>Today felt heavy at first, but things became better after I started working instead of overthinking.</p>
+  <h3>Things I learned</h3>
+  <ul>
+    <li>clean desk = clearer mind</li>
+    <li>starting is harder than continuing</li>
+    <li>distractions grow fast</li>
+  </ul>
+  <blockquote>Small daily improvements are the key to long-term growth. — Unknown</blockquote>
+  <h3>Goals for tomorrow</h3>
   <ol>
-    <li>Eat</li>
-    <li>Play games</li>
-    <li>Sleep</li>
+    <li>finish the journal tutorial</li>
+    <li>fix the calendar bugs</li>
+    <li>sleep earlier</li>
   </ol>
 </div>
 
-EXAMPLE:
-Input:
-"Today was exhausting. I think I learned something important though. I need to stop overthinking everything."
-
+Input: "Today was exhausting. I learned something important though. Tomorrow I want to focus on my goals."
 Output:
 <div>
-  <p>Today was exhausting.</p>
-  <blockquote>I think I learned something important though.</blockquote>
-  <p>I need to stop overthinking everything.</p>
+  <p>Today was exhausting. I learned something important though.</p>
+  <p>Tomorrow I want to focus on my goals.</p>
 </div>
 
-Return ONLY valid HTML. No explanations, no markdown, no code blocks."""
+Input: "Things I learned today: focus matters more than motivation discipline is consistency sleep affects everything"
+Output:
+<div>
+  <h3>Things I learned today</h3>
+  <ul>
+    <li>focus matters more than motivation</li>
+    <li>discipline is consistency</li>
+    <li>sleep affects everything</li>
+  </ul>
+</div>
+
+Input: "Need to buy: eggs, milk, bread, cheese"
+Output:
+<div>
+  <p>Need to buy:</p>
+  <ul>
+    <li>eggs</li>
+    <li>milk</li>
+    <li>bread</li>
+    <li>cheese</li>
+  </ul>
+</div>
+
+Input: "I am SO tired today. I absolutely cannot do this again."
+Output:
+<div>
+  <p>I am <strong>SO</strong> tired today. I <strong>absolutely cannot</strong> do this again.</p>
+</div>"""
 
 
 @journal_voice_bp.route("/transcribe", methods=["POST"])

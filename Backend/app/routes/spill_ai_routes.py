@@ -7,11 +7,12 @@ Endpoints:
     POST /api/spill-ai/test          — Direct AI test (no persistence)
 """
 
+import json
 import logging
 import traceback
 import uuid
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, Response, stream_with_context
 
 from app.auth.decorators import require_auth
 from app.extensions import db
@@ -39,6 +40,67 @@ def _get_spill_service():
         raise ValueError("GROQ_API_KEY is not configured in environment")
 
     return SpillAIService(api_key, model)
+
+
+def _generate_chat_title(api_key, title_model, user_message, ai_response, user_id, session_id):
+    """Generate a concise AI title for a chat session.
+
+    Returns the title string, or None if generation fails/returns invalid text.
+    """
+    prompt = (
+        "You are a chat title generator. Given a brief conversation, "
+        "generate a concise 2-6 word topic-based title.\n\n"
+        "Rules:\n"
+        "- Summarize the main topic or intent\n"
+        "- Be concise (2-6 words)\n"
+        "- Natural and descriptive\n"
+        "- No quotation marks\n"
+        "- No generic names like 'New Chat', 'Conversation', 'Discussion'\n"
+        "- No trailing punctuation\n\n"
+        f"User: {user_message}\n"
+        f"AI: {ai_response}\n\n"
+        "Title:"
+    )
+
+    try:
+        from groq import Groq
+        client = Groq(api_key=api_key)
+        response = client.chat.completions.create(
+            model=title_model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=20,
+            temperature=0.3,
+            timeout=5,
+        )
+        title = response.choices[0].message.content.strip().strip('"').strip("'")
+
+        if not title or title.lower() in ("new chat", "conversation", "discussion", ""):
+            return None
+
+        base_title = title
+        existing = ChatSession.query.filter(
+            ChatSession.user_id == user_id,
+            ChatSession.title == title,
+            ChatSession.id != session_id,
+        ).count()
+
+        if existing > 0:
+            for i in range(2, 100):
+                candidate = f"{base_title} ({i})"
+                existing = ChatSession.query.filter(
+                    ChatSession.user_id == user_id,
+                    ChatSession.title == candidate,
+                    ChatSession.id != session_id,
+                ).count()
+                if existing == 0:
+                    return candidate
+            return base_title
+
+        return title
+
+    except Exception as e:
+        logger.warning("Chat title generation failed for session %s: %s", session_id, str(e))
+        return None
 
 
 @spill_ai_bp.route("/chat", methods=["POST"])
@@ -96,8 +158,7 @@ def chat(user_id):
             if not session:
                 return jsonify({"error": "Session not found"}), 404
         else:
-            title = message_text[:80]
-            session = ChatSession(user_id=user_id, title=title, personality_type=personality)
+            session = ChatSession(user_id=user_id, personality_type=personality)
             db.session.add(session)
             db.session.flush()
 
@@ -145,6 +206,20 @@ def chat(user_id):
             personality_mode=personality,
         )
         db.session.add(ai_msg)
+
+        if session.title == "New Chat":
+            api_key = current_app.config.get("GROQ_API_KEY", "")
+            title_model = current_app.config.get("GROQ_TITLE_MODEL", "llama-3.1-8b-instant")
+            generated_title = _generate_chat_title(
+                api_key, title_model, message_text, reply, user_id, session.id,
+            )
+            if generated_title:
+                session.title = generated_title
+                logger.info(
+                    "Generated AI title for session %s: %s",
+                    session.id, generated_title,
+                )
+
         session.updated_at = db.func.now()
         session.last_message_at = db.func.now()
 
@@ -198,6 +273,149 @@ def chat(user_id):
             "type": error_type,
             "details": error_details,
         }), 500
+
+
+@spill_ai_bp.route("/chat/stream", methods=["POST"])
+@require_auth
+def chat_stream(user_id):
+    """Streaming Spill AI chat endpoint using NDJSON.
+
+    Each line is a JSON event:
+      {"type":"session","session_id":"..."}
+      {"type":"chunk","content":"..."}
+      {"type":"done","ai_message_id":"...","personality":"..."}
+      {"type":"error","error":"..."}
+    """
+    data = request.get_json(silent=True)
+    if not data or not data.get("message", "").strip():
+        return jsonify({"error": "Message is required"}), 400
+
+    message_text = data["message"].strip()
+    session_id = data.get("session_id")
+    personality = data.get("personality", DEFAULT_PERSONALITY)
+    forwarded_journal = data.get("forwarded_journal")
+
+    if personality not in VALID_PERSONALITIES:
+        return jsonify({
+            "error": f"Invalid personality. Must be one of: {', '.join(VALID_PERSONALITIES)}",
+            "type": "ValidationError",
+        }), 400
+
+    journal_context = None
+    if forwarded_journal:
+        if not forwarded_journal.get("title") or not forwarded_journal.get("content"):
+            return jsonify({"error": "forwarded_journal requires title and content"}), 400
+        journal_context = {
+            "id": forwarded_journal.get("id"),
+            "title": forwarded_journal["title"],
+            "content": forwarded_journal["content"],
+        }
+
+    logger.info(
+        "Spill AI stream: user=%s session=%s personality=%s message_len=%d journal=%s",
+        user_id, session_id or "new", personality, len(message_text),
+        "yes" if journal_context else "no",
+    )
+
+    try:
+        spill_service = _get_spill_service()
+    except ValueError as e:
+        logger.error("Spill AI stream config error: %s", str(e))
+        return jsonify({
+            "error": "AI service is not configured",
+            "type": "ConfigurationError",
+            "details": str(e),
+        }), 500
+
+    groq_api_key = current_app.config.get("GROQ_API_KEY", "")
+    title_model = current_app.config.get("GROQ_TITLE_MODEL", "llama-3.1-8b-instant")
+
+    def generate():
+        local_session = None
+        ai_msg = None
+        try:
+            if session_id:
+                try:
+                    sid = uuid.UUID(session_id)
+                except ValueError:
+                    yield json.dumps({"type": "error", "error": "Invalid session ID"}) + "\n"
+                    return
+                local_session = ChatSession.query.filter_by(id=sid, user_id=user_id).first()
+                if not local_session:
+                    yield json.dumps({"type": "error", "error": "Session not found"}) + "\n"
+                    return
+            else:
+                local_session = ChatSession(user_id=user_id, personality_type=personality)
+                db.session.add(local_session)
+                db.session.flush()
+
+            if personality != local_session.personality_type:
+                local_session.personality_type = personality
+
+            user_msg = ChatMessage(
+                session_id=local_session.id,
+                role="user",
+                content=message_text,
+                journal_context=journal_context,
+            )
+            db.session.add(user_msg)
+            db.session.flush()
+
+            history = (
+                ChatMessage.query
+                .filter_by(session_id=local_session.id)
+                .order_by(ChatMessage.created_at)
+                .limit(MAX_CONTEXT_MESSAGES)
+                .all()
+            )
+
+            yield json.dumps({"type": "session", "session_id": str(local_session.id)}) + "\n"
+
+            full_content = ""
+            for chunk in spill_service.chat_stream(
+                history,
+                personality=local_session.personality_type,
+                current_journal_context=journal_context,
+            ):
+                full_content += chunk
+                yield json.dumps({"type": "chunk", "content": chunk}) + "\n"
+
+            ai_msg = ChatMessage(
+                session_id=local_session.id,
+                role="assistant",
+                content=full_content,
+                personality_mode=personality,
+            )
+            db.session.add(ai_msg)
+
+            if local_session.title == "New Chat":
+                generated_title = _generate_chat_title(
+                    groq_api_key, title_model, message_text, full_content,
+                    user_id, local_session.id,
+                )
+                if generated_title:
+                    local_session.title = generated_title
+
+            local_session.updated_at = db.func.now()
+            local_session.last_message_at = db.func.now()
+
+            db.session.commit()
+
+            yield json.dumps({
+                "type": "done",
+                "ai_message_id": str(ai_msg.id),
+                "personality": local_session.personality_type,
+            }) + "\n"
+
+        except Exception as e:
+            db.session.rollback()
+            logger.error(
+                "Spill AI stream error: %s: %s\n%s",
+                type(e).__name__, str(e), traceback.format_exc(),
+            )
+            yield json.dumps({"type": "error", "error": str(e)}) + "\n"
+
+    return Response(stream_with_context(generate()), mimetype="application/x-ndjson")
 
 
 @spill_ai_bp.route("/personality", methods=["POST"])

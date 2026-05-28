@@ -35,7 +35,7 @@ Current date and time for reference: {current_datetime}
 ACTIVITY fields (when type="activity"):
 - title (string): clear concise title
 - description (string or null)
-- event_date (string: YYYY-MM-DD or null)
+- start_date (string: YYYY-MM-DD or null)
 - start_time (string: HH:MM or null)
 - end_time (string: HH:MM or null)
 - productivity_level (string: one of "productive", "neutral", "unproductive" or null)
@@ -51,13 +51,13 @@ TASK fields (when type="task"):
 
 EXAMPLES:
 Input: "Gym tomorrow at 7 PM"
-Output: {{"type": "activity", "title": "Gym Session", "description": null, "event_date": "2026-05-25", "start_time": "19:00", "end_time": null, "productivity_level": "productive"}}
+Output: {{"type": "activity", "title": "Gym Session", "description": null, "start_date": "2026-05-25", "start_time": "19:00", "end_time": null, "productivity_level": "productive"}}
 
 Input: "Finish database assignment before Friday midnight"
 Output: {{"type": "task", "title": "Database Assignment", "description": null, "start_date": "2026-05-24", "start_time": null, "deadline_date": "2026-05-29", "deadline_time": "23:59", "productivity_level": "productive"}}
 
 Input: "Study later"
-Output: {{"type": "activity", "title": "Study", "description": null, "event_date": null, "start_time": null, "end_time": null, "productivity_level": null}}
+Output: {{"type": "activity", "title": "Study", "description": null, "start_date": null, "start_time": null, "end_time": null, "productivity_level": null}}
 
 Remember: JSON only. No extra text."""
 

@@ -34,7 +34,8 @@
     },
     "statsGrid": {
       "tasksCompleted": "Tasks Completed",
-      "productivity": "Productivity"
+      "productivity": "Productivity",
+      "noOngoingTask": "No On Going Task"
     },
     "weeklyOverview": {
       "title": "Weekly Overview",
@@ -531,10 +532,10 @@
   "tutorials": {
     "task-completed": {
       "title": "Task Completion",
-      "tooltip": "How many of your planned tasks you've finished today",
-      "description": "Shows completed vs total active tasks for today. A task is counted as 'completed' when its status is set to Done. Active tasks include everything except ones already done before today starts.",
+      "tooltip": "How many ongoing tasks you've already completed right now",
+      "description": "Shows completed vs total ongoing tasks — tasks that are currently happening right now. A task is ongoing if its start time has passed but its end time hasn't (start < now < end). The ratio tells you how many of those ongoing tasks have already been marked Done.",
       "steps": [
-        { "title": "What It Measures", "text": "The numerator is how many tasks you marked as Done today. The denominator is all your active tasks — created tasks minus ones that were already Done before today." },
+        { "title": "What It Measures", "text": "The numerator is how many ongoing tasks you've marked Done. The denominator is how many tasks are currently active (start < now < end). If no tasks are ongoing right now, it shows 'No On Going Task'." },
         { "title": "How to Improve", "text": "Plan realistic daily task counts. Break large tasks into smaller ones to build momentum. Use the Productivity Calendar to schedule focused time blocks for each task." }
       ]
     },

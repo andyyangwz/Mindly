@@ -1,10 +1,10 @@
 import { theme } from "../../theme"
-import HeroTitle from "./v2/HeroTitle"
-import StatsGrid from "./v2/StatsGrid"
-import WeeklyOverview from "./v2/WeeklyOverview"
-import QuickActions from "./v2/QuickActions"
-import DailyInspiration from "./v1/DailyInspiration"
-import HabitRelics from "./v1/HabitRelics"
+import HeroTitle from "./components/HeroTitle"
+import StatsGrid from "./components/StatsGrid"
+import WeeklyOverview from "./components/WeeklyOverview"
+import QuickActions from "./components/QuickActions"
+import DailyInspiration from "./components/DailyInspiration"
+import HabitRelics from "./components/HabitRelics"
 
 export default function HomePage() {
   return (

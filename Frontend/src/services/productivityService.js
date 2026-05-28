@@ -5,11 +5,10 @@ function toFrontend(e) {
     id: e.id,
     title: e.title,
     description: e.description || "",
-    eventDate: e.event_date,
-    startTime: e.start_time,
-    endTime: e.end_time,
     startDatetime: e.start_datetime || null,
     endDatetime: e.end_datetime || null,
+    startTime: e.start_datetime ? e.start_datetime.slice(11, 16) : null,
+    endTime: e.end_datetime ? e.end_datetime.slice(11, 16) : null,
     color: e.color || "#7C3AED",
     priority: e.priority || "medium",
     createdAt: e.created_at,
@@ -17,7 +16,6 @@ function toFrontend(e) {
     productivityLevel: e.productivity_level || "neutral",
     hasDeadline: e.has_deadline || false,
     isDeadlineMarker: e.is_deadline_marker || false,
-    taskGroupId: e.task_group_id || null,
     deadlineDate: e.deadline_date || null,
     deadlineTime: e.deadline_time || null,
     status: e.status || "To Do",
@@ -29,9 +27,6 @@ function toBackend(data) {
   const body = {}
   if (data.title !== undefined) body.title = data.title
   if (data.description !== undefined) body.description = data.description
-  if (data.eventDate !== undefined) body.event_date = data.eventDate
-  if (data.startTime !== undefined) body.start_time = data.startTime
-  if (data.endTime !== undefined) body.end_time = data.endTime
   if (data.color !== undefined) body.color = data.color
   if (data.priority !== undefined) body.priority = data.priority
   if (data.productivityLevel !== undefined) body.productivity_level = data.productivityLevel

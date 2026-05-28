@@ -87,6 +87,7 @@ export default function EditHabitRelicModal({ relic, onClose, onUpdated, onDelet
       onClose();
     } catch (e) {
       setErrors({ submit: e.message || t("home.editGoal.validation.deleteFailed") });
+    } finally {
       setDeleting(false);
     }
   }, [relic, onDeleted, onClose, t]);

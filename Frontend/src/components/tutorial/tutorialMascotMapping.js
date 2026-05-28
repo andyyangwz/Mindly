@@ -7,6 +7,7 @@ const TUTORIAL_MASCOTS = {
   "task-completed": excitedHi,
   "productivity-score": questioning,
   "habit-relics": excitedHi,
+  "habit-relics-onboarding": excitedHi,
   "weekly-insights": questioning,
   "home-dashboard": excitedHi,
   "writing-assistant": learning,

@@ -162,10 +162,17 @@ def update_event(user_id, event_id):
     except ValueError:
         return jsonify({"error": "Invalid event ID"}), 400
 
+    logger.info("Updating event %s (user %s): start_datetime=%s end_datetime=%s",
+                event_id, user_id, data.get("start_datetime"), data.get("end_datetime"))
+
     try:
         result = ProductivityService.update_event(eid, user_id, data)
     except ValueError as e:
+        logger.warning("Validation error updating event %s: %s", event_id, e)
         return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        logger.error("Unexpected error updating event %s: %s", event_id, e, exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
 
     if not result:
         return jsonify({"error": "Event not found"}), 404
@@ -174,6 +181,8 @@ def update_event(user_id, event_id):
     if result.get("linked_event"):
         response["linked_event"] = result["linked_event"].to_dict()
 
+    logger.info("Event %s updated successfully: start_datetime=%s end_datetime=%s",
+                event_id, result["event"].start_datetime, result["event"].end_datetime)
     return jsonify(response)
 
 

@@ -4,13 +4,13 @@ const TUTORIAL_CONTENT = {
 
   "task-completed": {
     title: "Task Completion",
-    tooltip: "How many of your planned tasks you've finished today",
+    tooltip: "How many ongoing tasks you've already completed right now",
     description:
-      "Shows completed vs total active tasks for today. A task is counted as 'completed' when its status is set to Done. Active tasks include everything except ones already done before today starts.",
+      "Shows completed vs total ongoing tasks — tasks that are currently happening right now. A task is ongoing if its start time has passed but its end time hasn't (start < now < end). The ratio tells you how many of those ongoing tasks have already been marked Done.",
     steps: [
       {
         title: "What It Measures",
-        text: "The numerator is how many tasks you marked as Done today. The denominator is all your active tasks — created tasks minus ones that were already Done before today.",
+        text: "The numerator is how many ongoing tasks you've marked Done. The denominator is how many tasks are currently active (start < now < end). If no tasks are ongoing right now, it shows 'No On Going Task'.",
       },
       {
         title: "How to Improve",
@@ -21,7 +21,7 @@ const TUTORIAL_CONTENT = {
 
   "productivity-score": {
     title: "Productivity Score",
-    tooltip: "Ratio of productive vs total tracked time today",
+    tooltip: "Calculated from today's activities only — shows Unknown if none are tracked",
     description:
       "Your productivity score is the percentage of tracked time today that you spent on Productive activities vs Unproductive ones. Only activities marked with a productivity level count toward this score.",
     steps: [
@@ -59,6 +59,55 @@ const TUTORIAL_CONTENT = {
       {
         title: "RPG Inspiration",
         text: "Think of relics as your character's equipped items. They shape who you are — one daily habit at a time.",
+      },
+    ],
+  },
+
+  "habit-relics-onboarding": {
+    title: "Habit Relic Tutorial",
+    tooltip: "A guided tour through relics — from equipping to tracking progress",
+    description:
+      "A step-by-step walkthrough of the Habit Relic system — what they are, how to manage them, and how to track your daily progress.",
+    steps: [
+      {
+        targetId: "habit-relics",
+        title: "What Are Habit Relics?",
+        text: "Habit Relics are your personal growth companions. Each one tracks a daily habit you've committed to. Equip them to your loadout, update your progress daily, and watch your consistency grow over time.",
+      },
+      {
+        targetId: "habit-relics-equipped",
+        title: "Your Equipped Relics",
+        text: "This is your active loadout — the relics you're currently nurturing. Each one shows a progress ring and current count vs target. Double-click any card to edit its name, icon, or targets.",
+      },
+      {
+        targetId: "habit-relics-actions",
+        title: "Actions & Inventory",
+        text: "Manage opens the Relic Manager where you can equip/unequip relics. + creates a new relic. Upgrade lets you add daily progress. Your unequipped relics live in the Manage screen's archive.",
+      },
+      {
+        targetId: "relic-manager-modal",
+        title: "Managing Your Relics",
+        text: "The Relic Manager lets you equip relics into your active loadout slots. Drag any relic from the archive onto an orbital node to equip it, or drag an equipped relic back to archive it.",
+      },
+      {
+        targetId: "relic-archive",
+        title: "The Relic Archive",
+        text: "Your unequipped relics live here. Use the search bar to find specific relics, or sort by name, progress, or creation date to browse. Drag a relic from here to the constellation nodes on the right to equip it.",
+      },
+      {
+        targetId: "update-progress",
+        title: "Tracking Progress",
+        text: "The Upgrade screen lets you add daily progress to any relic. Select a relic from the roster, enter how many units to add, then click Channel Energy to commit the change.",
+      },
+      {
+        targetId: "upgrade-roster",
+        title: "The Relic Roster",
+        text: "All your relics are listed here — equipped ones first, then the rest. Click any relic to select it, then use the controls on the right to add progress or reset it completely.",
+      },
+      {
+        targetId: "update-progress-controls",
+        title: "Adding Progress",
+        text: "Type a number in the input to add that many points. Use the Reset button to zero out progress. Click 'Channel Energy' to commit the change. The progress ring updates automatically.",
       },
     ],
   },
@@ -341,7 +390,7 @@ const TUTORIAL_CONTENT = {
       },
       {
         title: "Ordering the Archive",
-        targetId: "relic-archive",
+        targetId: "relic-archive-order",
         text: "Use the Order buttons to sort your archive — by Name alphabetically, by Progress (highest completion first), or by Created date. Helps you find the right relic quickly.",
       },
       {
@@ -398,8 +447,59 @@ const TUTORIAL_CONTENT = {
       },
       {
         title: "Controls & Committing",
-        targetId: "update-progress",
+        targetId: "update-progress-controls",
         text: "With a relic selected, type a number in the input to add that many points to its progress. Use the Reset button to zero it out. Click 'Channel Energy' to commit all pending changes at once.",
+      },
+    ],
+  },
+
+  // ─── JOURNAL PAGE ────────────────────────────
+
+  "journal-page": {
+    title: "Journal Page",
+    tooltip: "Learn how to browse, search, and organize journals",
+    description:
+      "Your journals are your personal space for reflection. This tutorial will guide you through browsing, searching, and organizing them.",
+    steps: [
+      {
+        title: "Journal List",
+        targetId: "journal-list-container",
+        text: "This is where all your journals are displayed. Each card shows the title, preview text, date, and any tags or statuses. Journals appear here after you create them.",
+      },
+      {
+        title: "Opening a Journal",
+        targetId: "journal-tutorial-card",
+        text: "Click any journal card to open its full detail view. The journal detail page lets you read, edit, and manage the entry.",
+      },
+      {
+        title: "Creating a Journal",
+        targetId: "journal-add-button",
+        text: "Click this button to create a new journal entry. You'll be taken to the journal editor where you can write your thoughts, add emojis, and assign folders.",
+      },
+      {
+        title: "Search by Title & Content",
+        targetId: "journal-search-input",
+        text: "Use this search bar to find journals by their title or body content. The search matches against both the title and the full text of every journal entry.",
+      },
+      {
+        title: "Search by Date",
+        targetId: "journal-date-filter",
+        text: "Journals can be filtered by date range. Click 'Date Filter' to set a from/to date range. This is separate from text search, and you can combine both.",
+      },
+      {
+        title: "Filter by Pinned & Favorite",
+        targetId: "journal-pin-fav-filter",
+        text: "Use these filters to quickly show only pinned journals or favorites. Pinned journals stay prominent in your list. Favorites help you mark your most treasured entries.",
+      },
+      {
+        title: "Search by Folder",
+        targetId: "journal-folder-filter",
+        text: "Click 'Folders' to open the Folder Explorer, where you can browse journals organized by folder. Folders help you categorize and group related entries.",
+      },
+      {
+        title: "Assigning to Folders",
+        targetId: "journal-folder-assign",
+        text: "Right-click a journal card to open the folder assignment panel. Check the boxes for the folders you want. Journals can belong to multiple folders at once.",
       },
     ],
   },

@@ -17,7 +17,7 @@ export function useTimer(initialDuration = 25 * 60) {
     initialRef.current = timeLeft;
     const tick = () => {
       const elapsed = (Date.now() - startRef.current) / 1000;
-      const remaining = Math.max(0, initialRef.current - elapsed);
+      const remaining = Math.max(0, Math.floor(initialRef.current - elapsed));
       setTimeLeft(remaining);
       rafRef.current = requestAnimationFrame(tick);
     };

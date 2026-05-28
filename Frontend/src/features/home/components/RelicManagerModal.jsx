@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { theme } from "../../../theme";
 import { resolveIcon } from "./IconPicker";
-import InfoButton from "../../../components/tutorial/InfoButton";
 
 /* ─── Constants ─────── */
 const EQUIP_RING = 2 * Math.PI * 18;
@@ -575,7 +574,6 @@ export default function RelicManagerModal({ open, onClose, relics, mode, onEquip
                   }}>
                     Archive
                   </h2>
-                  <InfoButton tutorialId="relic-archive" size={12} />
                 </div>
                 <p style={{ fontSize: 12, color: "var(--color-muted)", margin: "2px 0 0" }}>
                   {unequipped.length} relics in vault
@@ -617,7 +615,7 @@ export default function RelicManagerModal({ open, onClose, relics, mode, onEquip
 
           {/* sort */}
           {unequipped.length > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "0 12px 8px", flexShrink: 0 }}>
+            <div data-tutorial-target="relic-archive-order" style={{ display: "flex", alignItems: "center", gap: 6, padding: "0 12px 8px", flexShrink: 0 }}>
               <span style={{ fontSize: 11, color: "var(--color-muted)", fontWeight: 500, whiteSpace: "nowrap" }}>
                 Order by:
               </span>
