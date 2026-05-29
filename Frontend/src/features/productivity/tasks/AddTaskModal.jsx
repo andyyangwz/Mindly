@@ -5,6 +5,7 @@ import { theme } from "../../../theme"
 import { Portal } from "../../../utils/portal"
 import {
   ACTIVITY_COLORS,
+  COLOR_NAME_MAP,
   PRIORITY_LABELS,
   toDateStr,
 } from "../utils/calendarConstants"
@@ -40,9 +41,9 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
         description: voiceAutofill.description || "",
         startDate: voiceAutofill.start_date || "",
         startTime: voiceAutofill.start_time || "",
-        deadlineDate: voiceAutofill.deadline_date || "",
-        deadlineTime: voiceAutofill.deadline_time || "",
-        color: "#7C3AED",
+        deadlineDate: voiceAutofill.end_date || "",
+        deadlineTime: voiceAutofill.end_time || "",
+        color: COLOR_NAME_MAP[voiceAutofill.color?.toLowerCase()] || "#7C3AED",
         priority: "medium",
         productivityLevel: voiceAutofill.productivity_level || null,
       })
@@ -52,8 +53,8 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
         description: editingActivity.description || "",
         startDate: editingActivity.startDatetime ? editingActivity.startDatetime.slice(0, 10) : "",
         startTime: editingActivity.startTime || "",
-        deadlineDate: editingActivity.deadlineDate || "",
-        deadlineTime: editingActivity.deadlineTime || "",
+        deadlineDate: editingActivity.endDatetime ? editingActivity.endDatetime.slice(0, 10) : "",
+        deadlineTime: editingActivity.endTime || "",
         color: editingActivity.color || "#7C3AED",
         priority: editingActivity.priority || "medium",
         productivityLevel: editingActivity.productivityLevel || null,
@@ -105,21 +106,16 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
     if (!validate()) return
     setSaving(true)
     try {
-      const [sh, sm] = form.startTime.split(":").map(Number)
-      const eh = (sh + 1) % 24
-      const endTime = `${String(eh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`
       await onSave({
         title: form.title.trim(),
         description: form.description.trim(),
         startDatetime: `${form.startDate}T${form.startTime}`,
-        endDatetime: `${form.startDate}T${endTime}`,
+        endDatetime: `${form.deadlineDate}T${form.deadlineTime}`,
         color: form.color,
         priority: form.priority,
         productivityLevel: null,
-        status: "To Do",
+        status: editingActivity?.status || "To Do",
         hasDeadline: true,
-        deadlineDate: form.deadlineDate,
-        deadlineTime: form.deadlineTime,
       })
       onClose()
     } catch (err) {

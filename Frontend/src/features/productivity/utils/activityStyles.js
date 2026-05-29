@@ -19,19 +19,9 @@ const VARIANTS = {
     hoverShadow: (color) => `0 2px 10px ${color}35, 0 1px 3px rgba(0,0,0,0.06)`,
   },
 
-  deadlineMarker: {
-    label: "Deadline marker",
-    background: (color) => `${color}08`,
-    borderLeft: (color) => `3px dashed ${color}`,
-    border: (color) => `1.5px dashed ${color}50`,
-    titleColor: (color) => color,
-    hoverBackground: (color) => `${color}16`,
-    hoverShadow: (color) => `0 2px 10px ${color}35, 0 1px 3px rgba(0,0,0,0.06)`,
-  },
 }
 
 export function getVariant(event) {
-  if (event.isDeadlineMarker) return "deadlineMarker"
   if (event.hasDeadline) return "deadlineTask"
   return "normal"
 }

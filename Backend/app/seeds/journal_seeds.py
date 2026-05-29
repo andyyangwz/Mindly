@@ -1,138 +1,372 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.extensions import db
+from app.models.user import User
 from app.models.journal import Journal
+from app.models.folder import Folder, JournalFolder
+
+SEED_USER_EMAIL = "andyang561@gmail.com"
 
 
-def _entries(user_id):
-    return [
-        Journal(
-            user_id=user_id,
-            title="Finally cracked that DP problem",
-            content="Spent the entire afternoon wrestling with a dynamic programming problem for my algorithms class. The kind where you stare at the screen for hours and nothing makes sense, then suddenly it just clicks.\n\nThe trick was realizing it's not about solving the whole thing at once — you break it down, find the subproblems, and build up from there. Sounds obvious in hindsight but man, the moment when the solution finally emerged was pure dopamine.\n\nAlso went for a run to celebrate. 5k in 24 minutes — not my best but felt great after sitting all day.",
-            emojis=["💻", "🏃"],
-            is_favorite=True,
-            is_pinned=False,
-            ai_enabled=True,
-            created_at=datetime(2026, 5, 3, 22, 30),
-            updated_at=datetime(2026, 5, 3, 22, 30),
-        ),
-        Journal(
-            user_id=user_id,
-            title="Why do social events drain me so much",
-            content="Went to a house party tonight with some friends. It was fun for the first hour but by hour two I was completely drained. Ended up sitting on the couch pretending to check my phone just to have an excuse not to talk.\n\nI feel guilty about it because everyone was having a great time and I just wanted to go home. Is this normal? I like my friends, I like going out sometimes, but it takes so much energy.\n\nMaybe I'm just an introvert who needs alone time to recharge. Need to stop feeling bad about leaving early.",
-            emojis=["🎉", "😴"],
-            is_favorite=False,
-            is_pinned=False,
-            ai_enabled=False,
-            created_at=datetime(2026, 5, 6, 23, 15),
-            updated_at=datetime(2026, 5, 7, 10, 0),
-        ),
-        Journal(
-            user_id=user_id,
-            title="Group project stress is real",
-            content="Our database systems group project is due in 2 weeks and one of our teammates hasn't done anything. We divided the work weeks ago and he keeps saying 'I'll do it this weekend' but nothing ever comes.\n\nHad a tense group chat tonight. Sam finally called him out and now it's awkward. I hate confrontation but I'm also tired of carrying other people's weight.\n\nOn the bright side, my part of the frontend is looking solid. Got the charts rendering with real data from Alex's API. If worst comes to worst, we can redistribute the work and pull it off.",
-            emojis=["👥", "😤"],
-            is_favorite=False,
-            is_pinned=True,
-            ai_enabled=True,
-            created_at=datetime(2026, 5, 8, 21, 45),
-            updated_at=datetime(2026, 5, 8, 21, 45),
-        ),
-        Journal(
-            user_id=user_id,
-            title="It's 1 AM and I can't stop thinking",
-            content="Lying in bed and my brain won't shut up. Thinking about whether I'm doing enough. Everyone around me seems so sure about what they want — internships, research, grad school. I'm just here trying to pass my classes.\n\nBut then I think: who actually has it figured out at 20? Probably nobody. Social media makes it look like everyone's building startups and publishing papers but real life is mostly just... figuring things out as you go.\n\nI don't know. Maybe I'm overthinking again. Mom always says I inherited her anxiety. Going to put on some rain sounds and try to sleep.",
-            emojis=["🌙", "🤔"],
-            is_favorite=False,
-            is_pinned=True,
-            ai_enabled=False,
-            created_at=datetime(2026, 5, 10, 1, 12),
-            updated_at=datetime(2026, 5, 11, 9, 30),
-        ),
-        Journal(
-            user_id=user_id,
-            title="New bench PR today",
-            content="85kg for 5 reps. Three months ago I could barely do 60kg. Progress feels slow when you're in it every day but looking back, the difference is huge.\n\nCurrent routine is working well:\n- Push day: bench, OHP, incline, triceps\n- Pull day: deadlifts, rows, pull-ups, biceps\n- Leg day: squats, RDLs, lunges\n- Cardio: 2x week running\n\nDiet is still the weak point. Been tracking macros for two weeks and I'm consistently under on protein. Need to meal prep better.",
-            emojis=["💪", "🏋️"],
-            is_favorite=True,
-            is_pinned=False,
-            ai_enabled=True,
-            created_at=datetime(2026, 5, 12, 19, 0),
-            updated_at=datetime(2026, 5, 12, 19, 0),
-        ),
-        Journal(
-            user_id=user_id,
-            title="I think I'm burning out",
-            content="Skipped two classes today. Didn't even mean to — I just couldn't get out of bed. Lay there staring at the ceiling for an hour before I finally grabbed my phone and emailed myself out of the morning lecture.\n\nI've been running on caffeine and spite for weeks. Three assignments due, a group project, exam prep, trying to maintain a social life and go to the gym... something had to give.\n\nThe worst part is the guilt. I know I should be studying but my brain just won't cooperate. I keep reading the same paragraph over and over.\n\nGoing to take tomorrow off properly. No guilt, no trying to be productive. Just rest.",
-            emojis=["😞", "🛏️"],
-            is_favorite=True,
-            is_pinned=False,
-            ai_enabled=False,
-            created_at=datetime(2026, 5, 14, 15, 30),
-            updated_at=datetime(2026, 5, 14, 22, 0),
-        ),
-        Journal(
-            user_id=user_id,
-            title="That AI talk rewired my brain",
-            content="Went to a guest lecture on neural architecture search today and I can't stop thinking about it. The speaker was a researcher from DeepMind and the way he explained how they're using RL to design neural networks was mind-blowing.\n\nIt made me realize how much I actually love this stuff. Sometimes I get so caught up in grades and deadlines that I forget why I chose CS in the first place. Days like today remind me.\n\nAlso talked to the speaker after the talk and he said something that stuck with me: 'The best time to start research is now, not when you feel ready.' I'm going to email Prof. Chen about the research assistant position tomorrow.",
-            emojis=["🧠", "🚀"],
-            is_favorite=False,
-            is_pinned=False,
-            ai_enabled=True,
-            created_at=datetime(2026, 5, 16, 20, 45),
-            updated_at=datetime(2026, 5, 16, 20, 45),
-        ),
-        Journal(
-            user_id=user_id,
-            title="What am I even doing with my life",
-            content="Scrolling through LinkedIn and everyone from high school has internships at Google, Meta, startups. And I'm here with no internship lined up, no research, just some half-finished side projects.\n\nI know comparison is the thief of joy but it's hard not to feel behind. Applied to like 15 internships and got 3 rejections so far. The rest are ghosting me.\n\nBut then I remind myself that I'm only a sophomore. I have time. And my GPA is solid, I have projects I can show, I'm learning. The path isn't linear.\n\nStill. Some days the imposter syndrome hits hard.",
-            emojis=["📱", "😰"],
-            is_favorite=False,
-            is_pinned=False,
-            ai_enabled=False,
-            created_at=datetime(2026, 5, 18, 23, 0),
-            updated_at=datetime(2026, 5, 19, 8, 0),
-        ),
-        Journal(
-            user_id=user_id,
-            title="Everything clicked today",
-            content="Had one of those rare days where everything just works.\n\nWoke up at 6:30 naturally (no alarm!), got a solid study session in before class, aced my linear algebra quiz, had a great gym session, and made real progress on the group project frontend.\n\nThe key difference? I planned yesterday evening. Wrote down exactly what I wanted to accomplish today and when. No ambiguity, no 'I'll figure it out in the morning.'\n\nAlso tried a new recipe for dinner — teriyaki chicken with broccoli and rice. Turned out surprisingly good. Maybe I should cook more often.",
-            emojis=["✅", "🔥"],
-            is_favorite=True,
-            is_pinned=False,
-            ai_enabled=False,
-            created_at=datetime(2026, 5, 20, 21, 15),
-            updated_at=datetime(2026, 5, 20, 21, 15),
-        ),
-        Journal(
-            user_id=user_id,
-            title="Planning next semester — feeling excited",
-            content="Just registered for next semester's classes:\n- Machine Learning (finally!)\n- Computer Vision\n- Software Engineering\n- Technical Writing elective\n- Advanced Algorithms\n\nIt's going to be a heavy workload but I'm genuinely excited. ML and CV are what I want to specialize in. I've been self-studying on and off but having structured courses will force me to go deep.\n\nAlso planning to apply for summer research with Prof. Chen. He works on computer vision for medical imaging which sounds fascinating. Going to draft an email this weekend.\n\nFor the first time in a while, I actually feel like I have direction. Not just surviving the semester but building toward something.",
-            emojis=["📚", "🎯"],
-            is_favorite=False,
-            is_pinned=True,
-            ai_enabled=True,
-            created_at=datetime(2026, 5, 22, 20, 0),
-            updated_at=datetime(2026, 5, 22, 20, 0),
-        ),
+def seed_user():
+    user = User.query.filter_by(email=SEED_USER_EMAIL).first()
+    if user:
+        return user
+    user = User(
+        first_name="Andy",
+        last_name="Yang",
+        username="andyyang561",
+        email=SEED_USER_EMAIL,
+        password_hash=None,
+        verified_at=datetime.now(timezone.utc),
+    )
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+
+FOLDERS = [
+    {"name": "Daily Log", "emoji": "📓"},
+    {"name": "University", "emoji": "🎓"},
+    {"name": "Projects", "emoji": "💻"},
+    {"name": "Personal Growth", "emoji": "🌱"},
+]
+
+
+def seed_folders(user_id):
+    folder_map = {}
+    for f in FOLDERS:
+        folder = Folder.query.filter_by(user_id=user_id, name=f["name"]).first()
+        if not folder:
+            folder = Folder(user_id=user_id, name=f["name"], emoji=f["emoji"])
+            db.session.add(folder)
+            db.session.commit()
+        folder_map[f["name"]] = folder
+    return folder_map
+
+
+def seed_journals(user_id, folder_map):
+    journals_data = [
+        {
+            "title": "Finally shipped the auth refactor",
+            "content": (
+                "After three days of wrestling with JWT token rotation and refresh token invalidation logic, it's finally done.\n\n"
+                "The biggest headache was the race condition between concurrent API calls when a token was about to expire — "
+                "both requests would try to refresh at the same time and the second one would get a stale token. "
+                "Fixed it with a simple mutex on the client side, but it took me forever to even reproduce it.\n\n"
+                "Things I learned:\n"
+                "- Never trust the client's clock for token expiry\n"
+                "- Always handle the edge case where two refresh attempts overlap\n"
+                "- Write integration tests BEFORE refactoring, not after\n\n"
+                "Feels good to have this behind me. The codebase is genuinely cleaner now — removed about 200 lines of dead code. 🚀"
+            ),
+            "emojis": ["🚀", "✅"],
+            "is_pinned": True,
+            "is_favorite": False,
+            "folder_names": ["Projects"],
+            "created_at": datetime(2026, 5, 26, 14, 30, 0),
+        },
+        {
+            "title": "Burned out after the hackathon",
+            "content": (
+                "I'm so tired. Slept maybe 10 hours total across Friday-Sunday. My brain feels like static.\n\n"
+                "The project turned out okay — we built a decent MVP and the judges liked it. "
+                "But I keep wondering if the sleep deprivation was worth it for a participation trophy. 😴\n\n"
+                "Going to bed at 9pm tonight. No phone. No laptop. Just sleep."
+            ),
+            "emojis": ["😴"],
+            "is_pinned": False,
+            "is_favorite": False,
+            "folder_names": [],
+            "created_at": datetime(2026, 5, 24, 22, 15, 0),
+        },
+        {
+            "title": "Thinking about what I want after graduation",
+            "content": (
+                "Been lying awake the past few nights wondering if I'm on the right path.\n\n"
+                "The tech industry feels so unstable right now. Layoffs everywhere. Everyone says \"just follow your passion\" "
+                "but what if your passion is just… building things? Not changing the world, not founding a startup, not becoming a staff engineer at FAANG.\n\n"
+                "I sometimes miss when coding was just fun. Before LeetCode. Before system design interviews. Before every project had to be a portfolio piece.\n\n"
+                "Maybe the answer is to:\n"
+                "- Keep my skills sharp\n"
+                "- Work on things I actually care about\n"
+                "- Not tie my identity to my job title\n\n"
+                "I don't know. Writing this out helps a little. I'll figure it out eventually."
+            ),
+            "emojis": [],
+            "is_pinned": False,
+            "is_favorite": True,
+            "folder_names": ["Personal Growth"],
+            "created_at": datetime(2026, 5, 20, 23, 45, 0),
+        },
+        {
+            "title": "Normal Tuesday",
+            "content": (
+                "Woke up late again. Grabbed coffee from the shop on campus. "
+                "Lectures were fine — OS in the morning, Networks after lunch. "
+                "Fell asleep during Networks for like 10 minutes. Nobody noticed. Or maybe they did and just didn't say anything.\n\n"
+                "Spent the evening working on the databases assignment. "
+                "Normal day. Nothing special. Kind of nice actually."
+            ),
+            "emojis": [],
+            "is_pinned": False,
+            "is_favorite": False,
+            "folder_names": ["Daily Log"],
+            "created_at": datetime(2026, 5, 18, 20, 0, 0),
+        },
+        {
+            "title": "Deep work session actually worked",
+            "content": (
+                "Tried something different today. Put my phone in another room, closed all browser tabs except what I needed, "
+                "and did four 25-minute pomodoros with 5-minute breaks.\n\n"
+                "Got more done in 2 hours than I usually do in a full afternoon. The key was:\n"
+                "- No phone within arm's reach\n"
+                "- A specific goal for each pomodoro (not just \"work on project\")\n"
+                "- Short enough sessions that I didn't burn out\n\n"
+                "Why haven't I been doing this all semester? 🍅🔥\n\n"
+                "Going to try making this a daily habit. The hard part is starting the first session — once I'm in, I'm in."
+            ),
+            "emojis": ["🍅", "🔥"],
+            "is_pinned": True,
+            "is_favorite": True,
+            "folder_names": ["Personal Growth"],
+            "created_at": datetime(2026, 5, 22, 16, 0, 0),
+        },
+        {
+            "title": "Fight with roommate",
+            "content": (
+                "Had a stupid argument with Mike tonight. He left his dishes in the sink for the third day in a row "
+                "and I snapped at him. He said I was being controlling. I said he was being inconsiderate. "
+                "It escalated from there.\n\n"
+                "I hate confrontation. It drains me completely. Now I'm sitting in my room with that heavy chest feeling "
+                "and I can't focus on anything.\n\n"
+                "We'll probably be fine by tomorrow. We always are. But I wish I handled it better — "
+                "could have brought it up calmly instead of letting it build up until I exploded over dishes.\n\n"
+                "Note to self: speak up earlier, speak softer."
+            ),
+            "emojis": [],
+            "is_pinned": False,
+            "is_favorite": True,
+            "folder_names": [],
+            "created_at": datetime(2026, 5, 15, 22, 30, 0),
+        },
+        {
+            "title": "Grateful for my friends",
+            "content": (
+                "Today was one of those days where everything reminded me how lucky I am.\n\n"
+                "Sarah brought me bubble tea when I was stressed about the assignment. "
+                "Alex stayed on a late-night call helping me debug a stupid semaphore issue "
+                "even though he had an exam the next morning.\n\n"
+                "I don't say thank you enough. Life feels a lot less heavy when you have people who show up for you. ❤️\n\n"
+                "Going to be better about showing up for them too."
+            ),
+            "emojis": ["❤️", "🙏"],
+            "is_pinned": False,
+            "is_favorite": True,
+            "folder_names": [],
+            "created_at": datetime(2026, 5, 25, 21, 0, 0),
+        },
+        {
+            "title": "Sleep schedule is broken again",
+            "content": (
+                "It's 3:47 AM and I'm writing this instead of sleeping.\n\n"
+                "This keeps happening. I tell myself I'll sleep early, then I end up doomscrolling or "
+                "\"just one more episode\" or suddenly feeling motivated to code at midnight.\n\n"
+                "Tomorrow (today?) I have a 9 AM lecture. I'm going to be a zombie.\n\n"
+                "I should probably delete TikTok."
+            ),
+            "emojis": [],
+            "is_pinned": True,
+            "is_favorite": False,
+            "folder_names": ["Daily Log"],
+            "created_at": datetime(2026, 4, 30, 3, 47, 0),
+        },
+        {
+            "title": "Reading Sapiens — mind blown",
+            "content": (
+                "Finally got around to reading Yuval Noah Harari's Sapiens and I can't put it down.\n\n"
+                "The idea that large-scale human cooperation is fundamentally based on shared fictions — "
+                "money, nations, laws, corporations — is simultaneously obvious and earth-shattering. "
+                "We built civilization on collective belief.\n\n"
+                "Some passages that really stuck with me:\n\n"
+                "> \"There are no gods in the universe, no nations, no money, no human rights, no laws, and no justice outside the common imagination of human beings.\"\n\n"
+                "It makes me look at everything differently. The apps we build, the companies we work for, "
+                "the degrees we chase — it's all stories we agree to believe in together.\n\n"
+                "Not in a nihilistic way though. More like… if we can collectively imagine something, "
+                "we can collectively reimagine it. That feels empowering somehow. 📖\n\n"
+                "Halfway through. Already ordered Homo Deus."
+            ),
+            "emojis": ["📖"],
+            "is_pinned": False,
+            "is_favorite": True,
+            "folder_names": ["Personal Growth"],
+            "created_at": datetime(2026, 5, 10, 19, 30, 0),
+        },
+        {
+            "title": "Progress on the side project",
+            "content": (
+                "Spent the weekend building out the notification system for the habit tracker app. "
+                "It's coming together.\n\n"
+                "What got done:\n"
+                "- Push notification service using Firebase\n"
+                "- Custom notification preferences per habit\n"
+                "- Daily reminder scheduling\n"
+                "- Quiet hours mode\n\n"
+                "Hit a weird bug where notifications would fire twice on Android. "
+                "Turns out I was registering two separate Firebase instances because of a lazy import cycle. "
+                "Spent 3 hours debugging something that was literally one line fix. ⚙️\n\n"
+                "The app is actually usable now. Not ready for production but I've been dogfooding it for a week. "
+                "There's something special about using something you built yourself."
+            ),
+            "emojis": ["⚙️"],
+            "is_pinned": True,
+            "is_favorite": True,
+            "folder_names": ["Projects"],
+            "created_at": datetime(2026, 5, 5, 17, 0, 0),
+        },
+        {
+            "title": "Imposter syndrome hitting hard",
+            "content": (
+                "Looked at some of my classmates' projects today and immediately felt like I'm falling behind.\n\n"
+                "One guy built a full Kubernetes deployment pipeline. Another shipped a mobile app with 10k+ downloads. "
+                "And I'm here proud that I finally figured out how to write a proper SQL join.\n\n"
+                "I know comparison is the thief of joy. I know everyone moves at their own pace. "
+                "But knowing that intellectually and feeling it emotionally are two very different things.\n\n"
+                "The rational part of me says:\n"
+                "- I'm learning steadily\n"
+                "- I understand fundamentals deeply\n"
+                "- I ship working code\n\n"
+                "The irrational part says everyone is going to figure out I don't belong here.\n\n"
+                "Going to try to use this as motivation instead of letting it paralyze me."
+            ),
+            "emojis": [],
+            "is_pinned": False,
+            "is_favorite": False,
+            "folder_names": [],
+            "created_at": datetime(2026, 4, 28, 21, 15, 0),
+        },
+        {
+            "title": "Great conversation with Prof. Chen",
+            "content": (
+                "Stayed after class to ask Prof. Chen about research opportunities and ended up talking for almost an hour.\n\n"
+                "She told me about her work on distributed systems for IoT networks and it's genuinely fascinating. "
+                "The problem of coordinating thousands of resource-constrained devices with intermittent connectivity "
+                "is way more complex than I ever imagined.\n\n"
+                "She invited me to sit in on her research group meetings. I think I'm actually going to do it. 🎓\n\n"
+                "Key takeaways:\n"
+                "- Research is mostly failing, but the failures teach you more than successes\n"
+                "- The best problems are the ones nobody has solved yet\n"
+                "- Don't wait until you feel ready — start before you're ready\n\n"
+                "Feeling inspired. This is why I chose this field. 💡"
+            ),
+            "emojis": ["🎓", "💡"],
+            "is_pinned": False,
+            "is_favorite": True,
+            "folder_names": ["University"],
+            "created_at": datetime(2026, 4, 22, 15, 0, 0),
+        },
+        {
+            "title": "Weekend hiking trip",
+            "content": (
+                "Went hiking with the group up to Mount Diablo. Left at 6 AM, got back at 7 PM. "
+                "My legs are screaming but my mind is quiet in the best way.\n\n"
+                "There's something about being in nature that resets something in my brain. "
+                "No notifications. No deadlines. Just trail, trees, and sky.\n\n"
+                "We stopped at the summit around noon and you could see the entire bay. "
+                "The city felt like a tiny toy model from up there. Perspective, I guess. 🌲⛰️\n\n"
+                "We should do this more often. Make it a monthly thing."
+            ),
+            "emojis": ["🌲", "⛰️"],
+            "is_pinned": False,
+            "is_favorite": False,
+            "folder_names": ["Daily Log"],
+            "created_at": datetime(2026, 5, 12, 20, 0, 0),
+        },
+        {
+            "title": "Habit tracker progress — 2 week streak!",
+            "content": (
+                "Hit the 14-day mark on both meditation and reading habits today. Never thought I'd actually stick with them.\n\n"
+                "Meditation: 10 minutes every morning. Some days it feels transformative, "
+                "most days it feels like sitting still doing nothing. But I'm showing up.\n\n"
+                "Reading: 20 pages before bed instead of phone scrolling. Finished two books already this month.\n\n"
+                "The key was making it so easy I couldn't say no:\n"
+                "- Meditation mat stays out on the floor\n"
+                "- Book stays on my nightstand\n"
+                "- Phone charger stays in the living room\n\n"
+                "Small systems beat big willpower every time."
+            ),
+            "emojis": [],
+            "is_pinned": True,
+            "is_favorite": False,
+            "folder_names": ["Personal Growth"],
+            "created_at": datetime(2026, 5, 8, 8, 30, 0),
+        },
+        {
+            "title": "AI feels like it's changing everything",
+            "content": (
+                "Been thinking a lot about AI and what it means for the kind of work I want to do.\n\n"
+                "I used AI to help debug a tricky race condition today and it solved it in 30 seconds — "
+                "something that would have taken me hours to trace through. It's an incredible tool.\n\n"
+                "But it also makes me wonder:\n\n"
+                "1. What happens to junior developers if AI can do 80% of what an entry-level engineer does?\n"
+                "2. How do you build deep expertise if you always reach for AI instead of struggling through the problem yourself?\n"
+                "3. Will the nature of software engineering shift from \"writing code\" to \"curating AI output\"?\n\n"
+                "I don't think AI will replace engineers entirely. But I think the engineers who use AI effectively "
+                "will replace those who don't.\n\n"
+                "The plan:\n"
+                "- Use AI as a force multiplier, not a crutch\n"
+                "- Still learn fundamentals deeply\n"
+                "- Focus on problems that require human judgment\n\n"
+                "It's an exciting time to be in this field. Also a terrifying one. Maybe both can be true."
+            ),
+            "emojis": [],
+            "is_pinned": False,
+            "is_favorite": True,
+            "folder_names": [],
+            "created_at": datetime(2026, 4, 15, 20, 45, 0),
+        },
     ]
 
+    created = 0
+    for jd in journals_data:
+        folder_names = jd.pop("folder_names")
+        journal = Journal(
+            user_id=user_id,
+            title=jd["title"],
+            content=jd["content"],
+            emojis=jd["emojis"],
+            is_favorite=jd["is_favorite"],
+            is_pinned=jd["is_pinned"],
+            created_at=jd["created_at"],
+            updated_at=jd["created_at"],
+        )
+        db.session.add(journal)
+        db.session.flush()
 
-def seed_journals(user_id, force=False):
-    existing = Journal.query.filter_by(user_id=user_id).count()
-    if existing > 0:
-        if force:
-            Journal.query.filter_by(user_id=user_id).delete()
-            db.session.commit()
-        else:
-            raise RuntimeError(
-                f"User {user_id} already has {existing} journal entries. "
-                "Use --force to delete existing entries and re-seed."
-            )
+        for fname in folder_names:
+            folder = folder_map.get(fname)
+            if folder:
+                db.session.add(JournalFolder(journal_id=journal.id, folder_id=folder.id))
+        created += 1
 
-    entries = _entries(user_id)
-    for e in entries:
-        db.session.add(e)
     db.session.commit()
-    return entries
+    return created
+
+
+def seed_journals_all():
+    user = seed_user()
+    folder_map = seed_folders(user.id)
+    count = seed_journals(user.id, folder_map)
+    return user, count
+
+
+def run():
+    from app import create_app
+    app = create_app()
+    with app.app_context():
+        user, count = seed_journals_all()
+        print(f"Seeded {count} journals for {user.email}")
+
+
+if __name__ == "__main__":
+    run()

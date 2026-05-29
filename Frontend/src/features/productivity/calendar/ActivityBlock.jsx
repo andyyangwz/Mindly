@@ -9,7 +9,6 @@ import { Portal } from "../../../utils/portal"
 const TYPE_META = {
   normal: null,
   deadlineTask: { icon: "\u25B6", color: "#6366F1" },
-  deadlineMarker: { icon: "\u23F0", color: "#DC2626" },
 }
 
 const LEVEL_META = {
@@ -19,11 +18,7 @@ const LEVEL_META = {
 }
 
 function displayTitle(activity) {
-  const title = activity.title
-  if (activity.isDeadlineMarker && title.endsWith(" Deadline")) {
-    return title.slice(0, -9)
-  }
-  return title
+  return activity.title
 }
 
 function formatDisplayTime(timeStr) {
@@ -48,8 +43,8 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
   const [statusUpdated, setStatusUpdated] = useState(false)
   const { t } = useTranslation()
   const { startTime, endTime, segmentStart, segmentEnd, status, hasDeadline } = activity
-  const displayStart = segmentStart && segmentStart.length > 5 ? segmentStart.split("T")[1] : segmentStart || startTime
-  const displayEnd = segmentEnd && segmentEnd.length > 5 ? segmentEnd.split("T")[1] : segmentEnd || endTime
+  const displayStart = startTime || (segmentStart && segmentStart.length > 5 ? segmentStart.split("T")[1] : segmentStart)
+  const displayEnd = endTime || (segmentEnd && segmentEnd.length > 5 ? segmentEnd.split("T")[1] : segmentEnd)
   const height = style?.height || 60
   const top = style?.top || 0
   const isCompact = height < 32
@@ -143,7 +138,7 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
   const handleInlineKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault()
-      onInlineSave?.(inlineTitle)
+      e.currentTarget.blur()
     } else if (e.key === "Escape") {
       e.preventDefault()
       onInlineCancel?.()
@@ -274,9 +269,7 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
 
             {typeInfo && !isMini && (
               <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: `${typeInfo.color}18`, color: typeInfo.color, lineHeight: 1.3, flexShrink: 0 }}>
-                {isDone && activity.isDeadlineMarker && activity.deadlineDate
-                  ? `Finish on ${formatDeadlineDate(activity.deadlineDate)}`
-                  : es.variantKey === "deadlineTask" ? "Start" : "Deadline"}
+                {isDone ? `Finish on ${formatDeadlineDate(activity.endDatetime ? activity.endDatetime.slice(0, 10) : "")}` : "Deadline"}
               </span>
             )}
 

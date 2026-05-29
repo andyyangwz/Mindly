@@ -4,7 +4,7 @@ import { theme } from "../../../theme"
 import { Portal } from "../../../utils/portal"
 import { config } from "../../../config"
 
-export default function VoiceRecorderModal({ open, onClose, onResult }) {
+export default function VoiceRecorderModal({ open, onClose, onResult, referenceDate }) {
   const [phase, setPhase] = useState("idle")
   const [timer, setTimer] = useState(0)
   const [error, setError] = useState(null)
@@ -139,8 +139,15 @@ export default function VoiceRecorderModal({ open, onClose, onResult }) {
       const formData = new FormData()
       formData.append("audio", blob, "recording.webm")
 
+      let url = `${config.API_BASE_URL}/voice/process`
+      if (referenceDate) {
+        const y = referenceDate.getFullYear()
+        const m = String(referenceDate.getMonth() + 1).padStart(2, "0")
+        const d = String(referenceDate.getDate()).padStart(2, "0")
+        url += `?reference_date=${encodeURIComponent(`${y}-${m}-${d}`)}`
+      }
       const token = localStorage.getItem("mindly-token")
-      const res = await fetch(`${config.API_BASE_URL}/voice/process`, {
+      const res = await fetch(url, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,

@@ -5,6 +5,7 @@ import { theme } from "../../../theme"
 import { Portal } from "../../../utils/portal"
 import {
   ACTIVITY_COLORS,
+  COLOR_NAME_MAP,
   PRIORITY_LABELS,
   PRODUCTIVITY_LEVELS,
   PRODUCTIVITY_LEVEL_COLORS,
@@ -46,7 +47,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
         endDate: ed,
         startTime: voiceAutofill.start_time || "",
         endTime: voiceAutofill.end_time || "",
-        color: "#7C3AED",
+        color: COLOR_NAME_MAP[voiceAutofill.color?.toLowerCase()] || "#7C3AED",
         priority: "medium",
         productivityLevel: voiceAutofill.productivity_level || "neutral",
       })
@@ -114,7 +115,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
         color: form.color,
         priority: form.priority,
         productivityLevel: form.productivityLevel,
-        status: "To Do",
+        status: editingActivity?.status || "To Do",
         hasDeadline: false,
       })
       onClose()

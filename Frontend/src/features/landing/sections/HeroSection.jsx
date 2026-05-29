@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Brain, ChevronDown } from "lucide-react"
-import mascot from "../../../assets/mascot_images/excited_hi.png"
 
 export default function HeroSection() {
   const [mounted, setMounted] = useState(false)
@@ -45,34 +44,6 @@ export default function HeroSection() {
           pointerEvents: "none",
         }}
       />
-
-      {/* Mascot */}
-      <motion.div
-        initial={{ opacity: 0, x: -30 }}
-        animate={mounted ? { opacity: 1, x: 0 } : {}}
-        transition={{ duration: 0.8, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        style={{
-          position: "absolute",
-          left: 0,
-          bottom: 40,
-          width: 280,
-          height: 280,
-          pointerEvents: "none",
-        }}
-      >
-        <motion.img
-          src={mascot}
-          alt="Mascot"
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            transform: "scaleX(-1)",
-          }}
-        />
-      </motion.div>
 
       {/* Icon */}
       <motion.div

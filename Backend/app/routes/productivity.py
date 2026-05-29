@@ -120,11 +120,7 @@ def create_event(user_id):
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
-    response = {"event": result["event"].to_dict()}
-    if result.get("linked_event"):
-        response["linked_event"] = result["linked_event"].to_dict()
-
-    return jsonify(response), 201
+    return jsonify({"event": result["event"].to_dict()}), 201
 
 
 @productivity_bp.route("/sync-status", methods=["POST"])
@@ -177,13 +173,9 @@ def update_event(user_id, event_id):
     if not result:
         return jsonify({"error": "Event not found"}), 404
 
-    response = {"event": result["event"].to_dict()}
-    if result.get("linked_event"):
-        response["linked_event"] = result["linked_event"].to_dict()
-
     logger.info("Event %s updated successfully: start_datetime=%s end_datetime=%s",
                 event_id, result["event"].start_datetime, result["event"].end_datetime)
-    return jsonify(response)
+    return jsonify({"event": result["event"].to_dict()})
 
 
 @productivity_bp.route("/<event_id>", methods=["DELETE"])

@@ -149,7 +149,7 @@ export default function ProductivityPage() {
 
   const planItems = useMemo(() => {
     return allTasks
-      .filter(e => (e.startDatetime ? e.startDatetime.slice(0, 10) : "") === todayStr && !e.hasDeadline && !e.isDeadlineMarker)
+      .filter(e => (e.startDatetime ? e.startDatetime.slice(0, 10) : "") === todayStr && !e.hasDeadline)
       .sort((a, b) => {
         if (!a.startTime) return 1;
         if (!b.startTime) return -1;
@@ -302,7 +302,7 @@ export default function ProductivityPage() {
                 </div>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <span style={{ fontSize: 10, color: theme.muted, display: "flex", alignItems: "center", gap: 3 }}>
-                    <Clock3 size={10} />{task.status === "Done" && task.deadlineDate ? `${t("productivity.page.finishOn")} ${formatFinishDate(task.deadlineDate)}` : formatDate(task.startDatetime ? task.startDatetime.slice(0, 10) : "")}
+                    <Clock3 size={10} />{task.status === "Done" && task.endDatetime ? `${t("productivity.page.finishOn")} ${formatFinishDate(task.endDatetime.slice(0, 10))}` : formatDate(task.startDatetime ? task.startDatetime.slice(0, 10) : "")}
                   </span>
                   {STATUS_META[task.status] && (
                     <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 6px", borderRadius: 3, background: STATUS_META[task.status].bg, color: STATUS_META[task.status].color, border: `1px solid ${STATUS_META[task.status].border}`, lineHeight: 1.4, letterSpacing: "0.01em" }}>

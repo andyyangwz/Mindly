@@ -73,9 +73,7 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
                 background: `${viewingActivity.color}20`,
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
               }}>
-                {viewingActivity.isDeadlineMarker ? (
-                  <Flag size={22} color="#DC2626" />
-                ) : viewingActivity.hasDeadline ? (
+                {viewingActivity.hasDeadline ? (
                   <Play size={22} color="#6366F1" />
                 ) : (
                   <Clock size={22} color={viewingActivity.color} />
@@ -86,9 +84,7 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
                   {viewingActivity.title}
                 </h2>
                 <span style={{ fontSize: 11, color: viewingActivity.color, fontWeight: 500 }}>
-                  {viewingActivity.isDeadlineMarker ? (
-                    <>{t("productivity.event.due")} {formatDateTime(viewingActivity.startDatetime, viewingActivity.startTime)}</>
-                  ) : viewingActivity.hasDeadline ? (
+                  {viewingActivity.hasDeadline ? (
                     <>{t("productivity.event.task")}</>
                   ) : viewingActivity.startTime ? (
                     <>{formatDateTime(viewingActivity.startDatetime, viewingActivity.startTime)} &ndash; {viewingActivity.startDatetime && viewingActivity.endDatetime && viewingActivity.startDatetime.slice(0, 10) !== viewingActivity.endDatetime.slice(0, 10) ? formatDateTime(viewingActivity.endDatetime, viewingActivity.endTime) : formatTime(viewingActivity.endTime)}</>
@@ -138,13 +134,7 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
               {t("productivity.event.priorityLabel", { priority: t(`productivity.eventForm.priority_${viewingActivity.priority}`) })}
             </span>
 
-            {viewingActivity.isDeadlineMarker && (
-              <span style={{ fontSize: 11, background: "rgba(220,38,38,0.1)", color: "#EF4444", borderRadius: 20, padding: "5px 14px", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
-                <Flag size={11} /> {t("productivity.event.deadline")}
-              </span>
-            )}
-
-            {viewingActivity.hasDeadline && !viewingActivity.isDeadlineMarker && (
+            {viewingActivity.hasDeadline && (
               <span style={{ fontSize: 11, background: "rgba(99,102,241,0.1)", color: "#6366F1", borderRadius: 20, padding: "5px 14px", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
                 <Play size={11} fill="#6366F1" /> {t("productivity.event.taskStart")}
               </span>
@@ -159,7 +149,7 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
           )}
 
           {/* Task time range */}
-          {viewingActivity.hasDeadline && !viewingActivity.isDeadlineMarker && (
+          {viewingActivity.hasDeadline && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "#6366F108", borderRadius: 10, border: "1px solid #6366F120" }}>
                 <Play size={14} color="#6366F1" />
@@ -172,7 +162,7 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
                 <Flag size={14} color="#DC2626" />
                 <div>
                   <span style={{ fontSize: 10, fontWeight: 600, color: "#DC2626", textTransform: "uppercase", letterSpacing: "0.04em" }}>{t("productivity.event.endDeadline")}</span>
-                  <p style={{ fontSize: 13, color: theme.dark, fontWeight: 500, margin: 0 }}>{formatDateTime(viewingActivity.deadlineDate, viewingActivity.deadlineTime)}</p>
+                  <p style={{ fontSize: 13, color: theme.dark, fontWeight: 500, margin: 0 }}>{formatDateTime(viewingActivity.endDatetime, viewingActivity.endTime)}</p>
                 </div>
               </div>
             </div>

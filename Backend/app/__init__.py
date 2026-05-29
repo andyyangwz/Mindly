@@ -72,9 +72,6 @@ def create_app(config_class=Config):
     else:
         print(f"  ⚠ Groq AI NOT configured — set GROQ_API_KEY in .env")
 
-    from .cli import seed_command
-    app.cli.add_command(seed_command)
-
     print("=" * 60)
     return app
 

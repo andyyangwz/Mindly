@@ -11,12 +11,9 @@ class ChatSession(db.Model):
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"), nullable=False, index=True)
     title = db.Column(db.String(255), default="New Chat")
     personality_type = db.Column(db.String(30), default="empathetic")
-    is_pinned = db.Column(db.Boolean, default=False)
-    is_archived = db.Column(db.Boolean, default=False)
-    is_favorite = db.Column(db.Boolean, default=False)
+    last_message_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
-    last_message_at = db.Column(db.DateTime, nullable=True)
 
     messages = db.relationship(
         "ChatMessage",
@@ -32,9 +29,6 @@ class ChatSession(db.Model):
             "user_id": str(self.user_id),
             "title": self.title,
             "personality_type": self.personality_type or "empathetic",
-            "is_pinned": self.is_pinned,
-            "is_archived": self.is_archived,
-            "is_favorite": self.is_favorite,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "last_message_at": self.last_message_at.isoformat() if self.last_message_at else None,

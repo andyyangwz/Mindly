@@ -5,7 +5,7 @@ import { HOUR_HEIGHT, TIME_COL_WIDTH, formatHour, isSameDay, layoutEvents } from
 
 const HOURS = Array.from({ length: 25 }, (_, i) => i)
 const MIN_BLOCK_HEIGHT = 15
-const SNAP_MINUTES = 5
+const SNAP_MINUTES = 1
 const DRAG_THRESHOLD_PX = 5
 
 function calcScrollTarget(date, containerHeight) {
@@ -23,7 +23,7 @@ function posFromEvent(gridEl, clientY) {
   const y = clientY - rect.top + gridEl.scrollTop
   const totalMinutes = (y / HOUR_HEIGHT) * 60
   const clampedMinutes = Math.max(0, Math.min(24 * 60, Math.round(totalMinutes)))
-  const snappedMinutes = Math.round(clampedMinutes / 5) * 5
+  const snappedMinutes = Math.round(clampedMinutes / SNAP_MINUTES) * SNAP_MINUTES
   const hour = Math.floor(snappedMinutes / 60)
   const minute = snappedMinutes % 60
   const start = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
@@ -106,22 +106,11 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
       const merged = activities.map((act) => {
         const override = dragOverrides?.[act.id]
         if (override) {
-          console.log("[laidOut] override applied", {
-            id: act.id,
-            title: act.title,
-            old: { startTime: act.startTime, endTime: act.endTime, segmentStart: act.segmentStart },
-            new: override,
-            mergedStartTime: override.startTime,
-            mergedEndTime: override.endTime,
-          })
           return { ...act, ...override }
         }
         return act
       })
-      console.log("[laidOut] merged count:", merged.length, "overrides:", Object.keys(dragOverrides))
       const result = layoutEvents(merged, canvasWidth)
-      console.log("[laidOut] result count:", result.length,
-        result.map(r => ({ id: r.event.id, title: r.event.title, top: r.style.top, height: r.style.height, startTime: r.event.startTime })))
       return result
     },
     [activities, canvasWidth, dragOverrides]
@@ -175,23 +164,6 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
     const startMin = timeToMinutes(act.startTime)
     const endMin = timeToMinutes(act.endTime)
 
-    console.log("[handlePointerDown] starting interaction", {
-      id: act.id,
-      title: act.title,
-      type: resizeTop ? "resizingTop" : resizeBottom ? "resizingBottom" : "dragging",
-      originY: e.clientY,
-      startMin,
-      endMin,
-      startTime: act.startTime,
-      endTime: act.endTime,
-      segmentStart: act.segmentStart,
-      segmentEnd: act.segmentEnd,
-      startDatetime: act.startDatetime,
-      endDatetime: act.endDatetime,
-      hasDeadline: act.hasDeadline,
-      isSegmented: act.isSegmented,
-    })
-
     // Determine interaction type
     let type = "dragging"
     if (resizeTop) type = "resizingTop"
@@ -226,14 +198,14 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
       let newStartMin, newEndMin
 
       if (ix.type === "dragging") {
-        newStartMin = snapMinutes(ix.originStartMin + deltaMin)
-        newEndMin = snapMinutes(ix.originEndMin + deltaMin)
+        newStartMin = ix.originStartMin + deltaMin
+        newEndMin = ix.originEndMin + deltaMin
       } else if (ix.type === "resizingTop") {
-        newStartMin = snapMinutes(ix.originStartMin + deltaMin)
+        newStartMin = ix.originStartMin + deltaMin
         newEndMin = ix.originEndMin
       } else {
         newStartMin = ix.originStartMin
-        newEndMin = snapMinutes(ix.originEndMin + deltaMin)
+        newEndMin = Math.min(24 * 60 - 1, ix.originEndMin + deltaMin)
       }
 
       // Clamp start, allow end to overflow past midnight
@@ -244,19 +216,6 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
 
       const newStart = minutesToTime(newStartMin)
       const newEnd = minutesToTime(newEndMin)
-
-      console.log("[handleMove]", {
-        id: ix.activityId,
-        type: ix.type,
-        deltaY,
-        deltaMin,
-        originStartMin: ix.originStartMin,
-        originEndMin: ix.originEndMin,
-        newStartMin,
-        newEndMin,
-        newStart,
-        newEnd,
-      })
 
       me.preventDefault()
       onDragUpdateRef.current?.(ix.activityId, newStart, newEnd)
@@ -275,7 +234,6 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
 
       // Ignore sub-threshold movements
       if (Math.abs(deltaY) < DRAG_THRESHOLD_PX) {
-        console.log("[handleUp] sub-threshold, cancel")
         onDragUpdateRef.current?.(ix.activityId, null, null)
         ixRef.current = null
         return
@@ -291,7 +249,7 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
         newEndMin = ix.originEndMin
       } else {
         newStartMin = ix.originStartMin
-        newEndMin = snapMinutes(ix.originEndMin + deltaMin)
+        newEndMin = Math.min(24 * 60 - 1, snapMinutes(ix.originEndMin + deltaMin))
       }
 
       newStartMin = Math.max(0, newStartMin)
@@ -302,24 +260,10 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
       const newStartTime = ix.type === "dragging" ? overflowMinutesToTime(newStartMin) : minutesToTime(newStartMin)
       const newEndTime = overflowMinutesToTime(newEndMin)
 
-      console.log("[handleUp] commit", {
-        type: ix.type,
-        id: ix.activityId,
-        deltaY,
-        deltaMin,
-        oldStartTime,
-        oldEndTime,
-        newStartTime,
-        newEndTime,
-        originStartMin: ix.originStartMin,
-        originEndMin: ix.originEndMin,
-        newStartMin,
-        newEndMin,
-      })
-
       if (newStartMin !== ix.originStartMin || newEndMin !== ix.originEndMin) {
         if (ix.type === "dragging") {
-          onDragEndRef.current?.(ix.activityId, oldStartTime, oldEndTime, newStartTime, newEndTime)
+          const rawDeltaMin = newStartMin - ix.originStartMin
+          onDragEndRef.current?.(ix.activityId, oldStartTime, oldEndTime, newStartTime, newEndTime, rawDeltaMin)
         } else {
           onResizeRef.current?.(ix.activity, oldStartTime, oldEndTime, newStartTime, newEndTime)
         }

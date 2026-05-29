@@ -21,7 +21,6 @@ const BASE_EVENTS = [
     productivityLevel: "productive",
     status: "Done",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-2",
@@ -36,7 +35,6 @@ const BASE_EVENTS = [
     productivityLevel: "productive",
     status: "In Progress",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-9",
@@ -51,7 +49,6 @@ const BASE_EVENTS = [
     productivityLevel: "productive",
     status: "To Do",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-11",
@@ -66,7 +63,6 @@ const BASE_EVENTS = [
     productivityLevel: "obligation",
     status: "Done",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-3",
@@ -81,7 +77,6 @@ const BASE_EVENTS = [
     productivityLevel: "obligation",
     status: "To Do",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-4",
@@ -96,7 +91,6 @@ const BASE_EVENTS = [
     productivityLevel: "neutral",
     status: "To Do",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-5",
@@ -111,7 +105,6 @@ const BASE_EVENTS = [
     productivityLevel: "productive",
     status: "To Do",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-6",
@@ -126,7 +119,6 @@ const BASE_EVENTS = [
     productivityLevel: "productive",
     status: "To Do",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-12",
@@ -141,7 +133,6 @@ const BASE_EVENTS = [
     productivityLevel: "obligation",
     status: "To Do",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-10",
@@ -156,7 +147,6 @@ const BASE_EVENTS = [
     productivityLevel: "productive",
     status: "To Do",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-7",
@@ -171,7 +161,6 @@ const BASE_EVENTS = [
     productivityLevel: "productive",
     status: "To Do",
     hasDeadline: false,
-    isDeadlineMarker: false,
   },
   {
     id: "showcase-8",
@@ -186,7 +175,6 @@ const BASE_EVENTS = [
     productivityLevel: "obligation",
     status: "To Do",
     hasDeadline: false,
-    isDeadlineMarker: true,
   },
 ]
 

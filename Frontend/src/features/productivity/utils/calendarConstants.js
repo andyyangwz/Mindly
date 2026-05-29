@@ -147,6 +147,17 @@ export const ACTIVITY_COLORS = [
   { label: "Teal", value: "#14B8A6" },
 ]
 
+export const COLOR_NAME_MAP = {
+  purple: "#7C3AED",
+  blue: "#3B82F6",
+  green: "#10B981",
+  yellow: "#F59E0B",
+  orange: "#F97316",
+  red: "#EF4444",
+  pink: "#EC4899",
+  teal: "#14B8A6",
+}
+
 export const PRIORITY_LABELS = {
   low: "Low",
   medium: "Medium",

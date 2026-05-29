@@ -31,25 +31,19 @@ export function useProductivity() {
   }, [])
 
   const createActivity = useCallback(async (data) => {
-    const result = await productivityService.create(data)
+    const event = await productivityService.create(data)
     setActivities((prev) => {
-      const updated = [result.event]
-      if (result.linkedEvent) updated.push(result.linkedEvent)
-      return [...prev, ...updated].sort((a, b) => a.startTime.localeCompare(b.startTime))
+      return [...prev, event].sort((a, b) => a.startTime.localeCompare(b.startTime))
     })
-    return result
+    return event
   }, [])
 
   const updateActivity = useCallback(async (id, data) => {
-    const result = await productivityService.update(id, data)
+    const event = await productivityService.update(id, data)
     setActivities((prev) => {
-      let updated = prev.map((e) => (e.id === id ? result.event : e))
-      if (result.linkedEvent) {
-        updated = updated.map((e) => (e.id === result.linkedEvent.id ? result.linkedEvent : e))
-      }
-      return updated.sort((a, b) => a.startTime.localeCompare(b.startTime))
+      return prev.map((e) => (e.id === id ? event : e))
     })
-    return result
+    return event
   }, [])
 
   const deleteActivity = useCallback(async (id) => {

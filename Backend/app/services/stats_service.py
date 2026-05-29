@@ -26,7 +26,6 @@ class StatsService:
 
         all_tasks = ProductivityEvent.query.filter(
             ProductivityEvent.user_id == user_id,
-            ProductivityEvent.is_deadline_marker == False,
             or_(
                 and_(
                     ProductivityEvent.start_datetime <= now,
@@ -98,14 +97,13 @@ class StatsService:
             ProductivityEvent.status == "Done",
             ProductivityEvent.status_change_at >= start_dt,
             ProductivityEvent.status_change_at <= end_dt,
-            ProductivityEvent.is_deadline_marker == False,
         ).all()
 
         tasks_by_day = defaultdict(set)
         for ev in completed_tasks:
             if ev.status_change_at:
                 day = ev.status_change_at.date()
-                tasks_by_day[day].add(ev.task_group_id)
+                tasks_by_day[day].add(ev.id)
 
         done_events = ProductivityEvent.query.filter(
             ProductivityEvent.user_id == user_id,

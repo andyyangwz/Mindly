@@ -15,9 +15,6 @@ function toFrontend(e) {
     updatedAt: e.updated_at,
     productivityLevel: e.productivity_level || "neutral",
     hasDeadline: e.has_deadline || false,
-    isDeadlineMarker: e.is_deadline_marker || false,
-    deadlineDate: e.deadline_date || null,
-    deadlineTime: e.deadline_time || null,
     status: e.status || "To Do",
     statusChangeAt: e.status_change_at || null,
   }
@@ -33,8 +30,6 @@ function toBackend(data) {
   if (data.startDatetime !== undefined) body.start_datetime = data.startDatetime
   if (data.endDatetime !== undefined) body.end_datetime = data.endDatetime
   if (data.hasDeadline !== undefined) body.has_deadline = data.hasDeadline
-  if (data.deadlineDate !== undefined) body.deadline_date = data.deadlineDate
-  if (data.deadlineTime !== undefined) body.deadline_time = data.deadlineTime
   if (data.status !== undefined) body.status = data.status
   return body
 }
@@ -53,19 +48,13 @@ export const productivityService = {
   async create(data) {
     const body = toBackend(data)
     const result = await api.post("/productivity", body)
-    return {
-      event: toFrontend(result.event),
-      linkedEvent: result.linked_event ? toFrontend(result.linked_event) : null,
-    }
+    return toFrontend(result.event)
   },
 
   async update(id, data) {
     const body = toBackend(data)
     const result = await api.put(`/productivity/${id}`, body)
-    return {
-      event: toFrontend(result.event),
-      linkedEvent: result.linked_event ? toFrontend(result.linked_event) : null,
-    }
+    return toFrontend(result.event)
   },
 
   async delete(id) {

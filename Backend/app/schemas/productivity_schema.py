@@ -40,23 +40,6 @@ def validate_event_data(data, require_all=True):
                 except (ValueError, TypeError):
                     errors[ed_key] = "Invalid format (use YYYY-MM-DDTHH:MM)"
 
-    if data.get("has_deadline"):
-        if not data.get("deadline_date"):
-            errors["deadline_date"] = "Deadline date is required when has_deadline is true"
-        else:
-            try:
-                datetime.strptime(data["deadline_date"], "%Y-%m-%d").date()
-            except (ValueError, TypeError):
-                errors["deadline_date"] = "Invalid date format (use YYYY-MM-DD)"
-
-        if not data.get("deadline_time"):
-            errors["deadline_time"] = "Deadline time is required when has_deadline is true"
-        else:
-            try:
-                datetime.strptime(data["deadline_time"], "%H:%M").time()
-            except (ValueError, TypeError):
-                errors["deadline_time"] = "Invalid time format (use HH:MM)"
-
     if "priority" in data and data["priority"] not in VALID_PRIORITIES:
         errors["priority"] = f"Priority must be one of: {', '.join(sorted(VALID_PRIORITIES))}"
 
@@ -68,8 +51,6 @@ def validate_event_data(data, require_all=True):
         if val not in VALID_PRODUCTIVITY_LEVELS:
             levels = ", ".join(VALID_PRODUCTIVITY_LEVELS.keys())
             errors["productivity_level"] = f"Must be one of: {levels}"
-        elif data.get("has_deadline") and val == "unproductive":
-            errors["productivity_level"] = "Deadline tasks cannot have productivity level 'Unproductive'"
 
     if "status" in data and data["status"] not in VALID_STATUSES:
         errors["status"] = f"Status must be one of: {', '.join(sorted(VALID_STATUSES))}"

@@ -22,8 +22,21 @@ import {
   clearSegmentCache,
 } from "../utils/segmentActivity"
 
+const STORAGE_KEY = "productivity_calendar_date"
+
+function loadSavedDate() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const d = new Date(saved + "T00:00:00")
+      if (!isNaN(d.getTime())) return d
+    }
+  } catch {}
+  return new Date()
+}
+
 export default function ProductivityCalendar({ onActivityUpdated }) {
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(loadSavedDate)
   const [interactionMode, setInteractionMode] = useState("fixed")
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [editingActivity, setEditingActivity] = useState(null)
@@ -47,17 +60,16 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   const demoActivity = useMemo(() => {
     const dateStr = toDateStr(currentDate)
     return {
-      id: "tutorial-demo",
-      title: "Sample Activity",
+      id: `inline-${Date.now()}`,
+      title: "",
+      description: "",
       startDatetime: `${dateStr}T${tutorialBlock.startTime}`,
       endDatetime: `${dateStr}T${tutorialBlock.endTime}`,
-      startTime: tutorialBlock.startTime,
-      endTime: tutorialBlock.endTime,
-      color: theme.primary || "#7C3AED",
+      color: "#7C3AED",
       priority: "medium",
+      productivityLevel: "neutral",
       hasDeadline: false,
-      isDeadlineMarker: false,
-      status: tutorialBlock.status,
+      status: "To Do",
     }
   }, [currentDate, tutorialBlock])
 
@@ -72,6 +84,12 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
       requestAnimationFrame(() => updateSpotlightTarget("demo-activity-block"))
     }
   }, [isTutorialDemoMode, updateSpotlightTarget])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, toDateStr(currentDate))
+    } catch {}
+  }, [currentDate])
 
   const [isSyncing, setIsSyncing] = useState(false)
   const [localActivities, setLocalActivities] = useState([])
@@ -159,13 +177,18 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   const handleUndo = useCallback(async () => {
     const entry = undo()
     if (!entry) return
-    applyHistoryEntry(entry, "undo")
-    const { type, prev } = entry
+    const { type, prev, next } = entry
     if (type === "create") {
-      await deleteActivity(entry.next.id)
+      applyHistoryEntry(entry, "undo")
+      await deleteActivity(next.id)
     } else if (type === "delete") {
-      await createActivity(prev)
+      applyHistoryEntry(entry, "undo")
+      const created = await createActivity(prev)
+      setLocalActivities((acts) =>
+        acts.map((e) => (e.id === prev.id ? created : e))
+      )
     } else if (type === "move" || type === "resize" || type === "edit") {
+      applyHistoryEntry(entry, "undo")
       await updateActivity(prev.id, prev)
     }
     onActivityUpdated?.()
@@ -174,13 +197,18 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   const handleRedo = useCallback(async () => {
     const entry = redo()
     if (!entry) return
-    applyHistoryEntry(entry, "redo")
     const { type, prev, next } = entry
     if (type === "create") {
-      await createActivity(next)
+      applyHistoryEntry(entry, "redo")
+      const created = await createActivity(next)
+      setLocalActivities((acts) =>
+        acts.map((e) => (e.id === next.id ? created : e))
+      )
     } else if (type === "delete") {
+      applyHistoryEntry(entry, "redo")
       await deleteActivity(prev.id)
     } else if (type === "move" || type === "resize" || type === "edit") {
+      applyHistoryEntry(entry, "redo")
       await updateActivity(next.id, next)
     }
     onActivityUpdated?.()
@@ -255,6 +283,8 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
           }
           if (startDt && endDt) {
             payload = { ...data, startDatetime: startDt, endDatetime: endDt }
+            payload.startTime = startDt.slice(11)
+            payload.endTime = endDt.slice(11)
           }
         }
 
@@ -263,8 +293,20 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
           prevActivities.map((e) => (e.id === editingActivity.id ? next : e))
         )
         record({ type: "edit", prev: prevSnapshot, next })
-        await updateActivity(editingActivity.id, payload)
-        setUseRealData(true)
+
+        try {
+          const result = await updateActivity(editingActivity.id, payload)
+          if (result?.event) {
+            setLocalActivities((prevActivities) =>
+              prevActivities.map((e) => (e.id === editingActivity.id ? result.event : e))
+            )
+          }
+          setUseRealData(true)
+        } catch (err) {
+          setLocalActivities((prevActivities) =>
+            prevActivities.map((e) => (e.id === editingActivity.id ? prevSnapshot : e))
+          )
+        }
       } else {
         let payload = { ...data }
         if (!data.hasDeadline) {
@@ -278,10 +320,9 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
             payload = { ...data, startDatetime: startDt, endDatetime: endDt }
           }
         }
-        const next = { id: `new-${Date.now()}`, ...payload }
-        setLocalActivities((prevActivities) => [...prevActivities, next])
-        record({ type: "create", prev: null, next: { ...next } })
-        await createActivity(payload)
+        const created = await createActivity(payload)
+        setLocalActivities((prevActivities) => [...prevActivities, created])
+        record({ type: "create", prev: null, next: { ...created } })
         setUseRealData(true)
       }
       setActivityFormOpen(false)
@@ -319,7 +360,6 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
       setTutorialBlock(prev => ({ ...prev, startTime: newStartTime, endTime: newEndTime }))
       return
     }
-    console.log("[Resize] activity:", activity.id, activity.title, "old:", oldStartTime, oldEndTime, "new:", newStartTime, newEndTime)
     clearSegmentCache()
     const prev = { ...activity, startTime: oldStartTime, endTime: oldEndTime }
     const next = { ...activity, startTime: newStartTime, endTime: newEndTime }
@@ -356,16 +396,13 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     next.startDatetime = stripSeconds(next.startDatetime)
     next.endDatetime = stripSeconds(next.endDatetime)
 
-    console.log("[Resize] optimistic update, next:", { startDatetime: next.startDatetime, endDatetime: next.endDatetime })
     setLocalActivities((prevActivities) =>
       prevActivities.map((e) => (e.id === activity.id ? next : e))
     )
     record({ type: "resize", prev, next })
     try {
       const payload = { startDatetime: next.startDatetime, endDatetime: next.endDatetime }
-      console.log("[Resize] sending to API:", payload)
       const result = await updateActivity(activity.id, payload)
-      console.log("[Resize] API response:", result)
       if (result?.event) {
         setLocalActivities((prevActivities) =>
           prevActivities.map((e) => (e.id === activity.id ? result.event : e))
@@ -380,7 +417,7 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     }
   }, [updateActivity, record, onActivityUpdated, isTutorialDemoMode])
 
-  const handleDragEnd = useCallback(async (id, oldStartTime, oldEndTime, newStartTime, newEndTime) => {
+  const handleDragEnd = useCallback(async (id, oldStartTime, oldEndTime, newStartTime, newEndTime, rawDeltaMin) => {
     if (!newStartTime) return
     if (isTutorialDemoMode && id === "tutorial-demo") {
       setDragOverrides((prev) => {
@@ -391,24 +428,26 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
       setTutorialBlock(prev => ({ ...prev, startTime: newStartTime, endTime: newEndTime }))
       return
     }
-    console.log("[Drag] id:", id, "old:", oldStartTime, oldEndTime, "new:", newStartTime, newEndTime)
     clearSegmentCache()
     const prev = localActivitiesRef.current.find((e) => e.id === id)
     if (!prev) {
       console.warn("[Drag] prev not found in localActivitiesRef — aborting commit, id:", id)
       return
     }
-    console.log("[Drag] prev found:", { title: prev.title, startDatetime: prev.startDatetime, endDatetime: prev.endDatetime, startTime: prev.startTime, endTime: prev.endTime })
     const prevSnapshot = { ...prev, startTime: oldStartTime, endTime: oldEndTime }
     const next = { ...prev, startTime: newStartTime, endTime: newEndTime }
     if (prev.startDatetime && prev.endDatetime) {
-      const toMin = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
-      const oldStartMin = toMin(oldStartTime)
-      const newStartMin = toMin(newStartTime)
-      let deltaMin = newStartMin - oldStartMin
-      if (deltaMin < -12 * 60) deltaMin += 24 * 60
-      if (deltaMin > 12 * 60) deltaMin -= 24 * 60
-      console.log("[Drag] deltaMin:", deltaMin, "oldStartMin:", oldStartMin, "newStartMin:", newStartMin)
+      let deltaMin
+      if (rawDeltaMin !== undefined) {
+        deltaMin = rawDeltaMin
+      } else {
+        const toMin = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+        const oldStartMin = toMin(oldStartTime)
+        const newStartMin = toMin(newStartTime)
+        deltaMin = newStartMin - oldStartMin
+        if (deltaMin < -12 * 60) deltaMin += 24 * 60
+        if (deltaMin > 12 * 60) deltaMin -= 24 * 60
+      }
       const oldSd = new Date(prev.startDatetime)
       const oldEd = new Date(prev.endDatetime)
       const newSd = new Date(oldSd.getTime() + deltaMin * 60000)
@@ -430,16 +469,13 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     next.startDatetime = stripSeconds(next.startDatetime)
     next.endDatetime = stripSeconds(next.endDatetime)
 
-    console.log("[Drag] optimistic update, next:", { startDatetime: next.startDatetime, endDatetime: next.endDatetime })
     setLocalActivities((prevActivities) =>
       prevActivities.map((e) => (e.id === id ? next : e))
     )
     record({ type: "move", prev: prevSnapshot, next })
     try {
       const payload = { startDatetime: next.startDatetime, endDatetime: next.endDatetime }
-      console.log("[Drag] sending to API:", payload)
       const result = await updateActivity(id, payload)
-      console.log("[Drag] API response:", result)
       if (result?.event) {
         setLocalActivities((prevActivities) =>
           prevActivities.map((e) => (e.id === id ? result.event : e))
@@ -542,12 +578,12 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
       }
       payload.startDatetime = startDt
       payload.endDatetime = endDt
-      const result = await createActivity(payload)
-      const next = result.event || { id: draft.id, title: title.trim(), ...draft, productivityLevel, priority }
+      const created = await createActivity(payload)
+      const next = created
       setLocalActivities((prevActivities) => [...prevActivities, next])
       record({ type: "create", prev: null, next })
       setUseRealData(true)
-      requestAnimationFrame(() => setInlineDraft(null))
+      setInlineDraft(null)
       onActivityUpdated?.()
     } catch {
       setInlineDraft(null)
@@ -594,9 +630,16 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   }, [])
 
   const handleVoiceResult = useCallback((parsed) => {
-    setVoiceAutofill(parsed)
+    const result = { ...parsed }
+    if (!result.start_date) {
+      result.start_date = toDateStr(currentDate)
+    }
+    if (result.type === "task" && !result.end_date) {
+      result.end_date = toDateStr(currentDate)
+    }
+    setVoiceAutofill(result)
     requestAnimationFrame(() => {
-      if (parsed.type === "activity") {
+      if (result.type === "activity") {
         setSelectedSlot(null)
         setEditingActivity(null)
         setActivityFormOpen(true)
@@ -606,7 +649,7 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
         setTaskFormOpen(true)
       }
     })
-  }, [])
+  }, [currentDate])
 
   const handleAutoSync = useCallback(async () => {
     setIsSyncing(true)
@@ -718,6 +761,7 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
         open={voiceOpen}
         onClose={() => setVoiceOpen(false)}
         onResult={handleVoiceResult}
+        referenceDate={currentDate}
       />
 
       {ctxMenu && (

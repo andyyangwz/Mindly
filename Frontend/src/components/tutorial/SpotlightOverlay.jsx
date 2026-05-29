@@ -7,6 +7,9 @@ import TUTORIAL_CONTENT, { getLocalizedTutorialContent } from "./tutorialContent
 import { getTutorialMascot } from "./tutorialMascotMapping"
 import { theme } from "../../theme"
 
+const SPOTLIGHT_PADDING = 12
+const SPOTLIGHT_RADIUS = 16
+
 function getCardPosition(rect, cardW, cardH) {
   const gap = 16
   const margin = 16
@@ -40,6 +43,22 @@ function getCardPosition(rect, cardW, cardH) {
   return { top, left: leftPos }
 }
 
+function createRoundedRectPath(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2)
+  return [
+    `M ${x + r} ${y}`,
+    `L ${x + w - r} ${y}`,
+    `Q ${x + w} ${y} ${x + w} ${y + r}`,
+    `L ${x + w} ${y + h - r}`,
+    `Q ${x + w} ${y + h} ${x + w - r} ${y + h}`,
+    `L ${x + r} ${y + h}`,
+    `Q ${x} ${y + h} ${x} ${y + h - r}`,
+    `L ${x} ${y + r}`,
+    `Q ${x} ${y} ${x + r} ${y}`,
+    "Z",
+  ].join(" ")
+}
+
 export default function SpotlightOverlay() {
   const { tutorialId, spotlightRect, closeTutorial, updateSpotlightTarget, setTutorialStep } = useTutorial()
   const [step, setStep] = useState(0)
@@ -57,10 +76,9 @@ export default function SpotlightOverlay() {
   const isMultiStep = content && content.steps && content.steps.length > 1
   const currentStep = content?.steps?.[step] || null
 
-  // Sync tutorialStep to step when a tutorial opens
   useEffect(() => {
     if (tutorialId) setTutorialStep(step)
-  }, [tutorialId]) // eslint-disable-line
+  }, [tutorialId])
 
   const goToStep = useCallback((newStep) => {
     setStep(newStep)
@@ -80,6 +98,53 @@ export default function SpotlightOverlay() {
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) handleClose()
   }
+
+  // ─── Scroll lock when tutorial active ───
+  useEffect(() => {
+    if (tutorialId) {
+      const prev = document.body.style.overflow
+      const prevPos = document.body.style.position
+      const prevTop = document.body.style.top
+      const scrollY = window.scrollY
+      document.body.style.position = "fixed"
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.overflow = "hidden"
+      document.body.style.width = "100%"
+      return () => {
+        document.body.style.position = prevPos
+        document.body.style.top = prevTop
+        document.body.style.overflow = prev
+        document.body.style.width = ""
+        window.scrollTo(0, scrollY)
+      }
+    }
+  }, [tutorialId])
+
+  // ─── Elevate the target element ───
+  useEffect(() => {
+    const id = "tutorial-target-elevation"
+    if (!currentStep?.targetId) {
+      document.getElementById(id)?.remove()
+      return
+    }
+    const el = document.querySelector(`[data-tutorial-target="${currentStep.targetId}"]`)
+    if (!el) return
+    el.setAttribute("data-tutorial-active", "")
+
+    let prevBoxShadow = el.style.boxShadow
+    let prevFilter = el.style.filter
+    let prevTransition = el.style.transition
+
+    el.style.transition = "all 0.35s ease"
+    el.style.filter = "brightness(1.06)"
+
+    return () => {
+      el.removeAttribute("data-tutorial-active")
+      el.style.filter = prevFilter
+      el.style.transition = prevTransition
+      document.getElementById(id)?.remove()
+    }
+  }, [currentStep?.targetId])
 
   useEffect(() => {
     if (!cardRef.current || !spotlightRect) return
@@ -122,67 +187,99 @@ export default function SpotlightOverlay() {
 
   const dotColor = theme.primary
 
+  // Spotlight padded rect (slightly larger than target for breathing room)
+  const sp = SPOTLIGHT_PADDING
+  const sr = SPOTLIGHT_RADIUS
+  const sx = spotlightRect.left - sp
+  const sy = spotlightRect.top - sp
+  const sw = spotlightRect.width + sp * 2
+  const sh = spotlightRect.height + sp * 2
+
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+
+  // build the clip-path: full viewport outer rect, then subtract the target rect
+  const clipPath = `path("M 0 0 H ${vw} V ${vh} H 0 Z M ${createRoundedRectPath(sx, sy, sw, sh, sr)}")`
+
+  const isOpen = tutorialId && !!spotlightRect
+
   return (
     <>
-      {/* Dark backdrop */}
+      {/* Prevent pointer events on the main content behind (except card) */}
+      {isOpen && (
+        <style>{`
+          [data-tutorial-active] {
+            box-shadow: 0 4px 28px rgba(0,0,0,0.12), 0 0 0 3px rgba(255,255,255,0.18) !important;
+          }
+        `}</style>
+      )}
+
+      {/* Backdrop + blur + cutout */}
       <div
         onClick={handleBackdropClick}
         style={{
           position: "fixed",
           inset: 0,
           zIndex: 9998,
-          background: "rgba(0,0,0,0.45)",
+          background: "rgba(0,0,0,0.30)",
+          backdropFilter: "blur(3px)",
+          WebkitBackdropFilter: "blur(3px)",
+          clipPath,
           opacity: closing ? 0 : 1,
-          transition: "opacity 0.25s ease",
+          transition: "opacity 0.35s ease, clip-path 0.35s ease",
+          pointerEvents: "auto",
         }}
       />
 
-      {/* Spotlight aperture — cuts hole in dark overlay */}
+      {/* Soft radial glow behind the spotlight target */}
       <div
         style={{
           position: "fixed",
-          top: spotlightRect.top,
-          left: spotlightRect.left,
-          width: spotlightRect.width,
-          height: spotlightRect.height,
-          boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
-          borderRadius: 14,
-          zIndex: 9999,
+          top: spotlightRect.top - 40,
+          left: spotlightRect.left - 40,
+          width: spotlightRect.width + 80,
+          height: spotlightRect.height + 80,
+          borderRadius: "50%",
+          background: `radial-gradient(circle at center, ${theme.primary}18 0%, ${theme.primary}08 40%, transparent 70%)`,
+          zIndex: 9997,
           pointerEvents: "none",
-          transition: "all 0.3s ease",
+          opacity: closing ? 0 : 1,
+          transition: "opacity 0.5s ease, all 0.35s ease",
         }}
       />
 
-      {/* Bright overlay on spotlighted area to make it pop */}
+      {/* Spotlight glow ring — larger, softer */}
       <div
         style={{
           position: "fixed",
-          top: spotlightRect.top,
-          left: spotlightRect.left,
-          width: spotlightRect.width,
-          height: spotlightRect.height,
-          borderRadius: 14,
-          background: "rgba(255,255,255,0.05)",
+          top: sy - 6,
+          left: sx - 6,
+          width: sw + 12,
+          height: sh + 12,
+          borderRadius: sr + 6,
+          border: `1.5px solid ${theme.primary}55`,
+          boxShadow: `0 0 64px ${theme.primary}44, 0 0 0 1px rgba(255,255,255,0.08)`,
           zIndex: 10000,
           pointerEvents: "none",
-          transition: "all 0.3s ease",
+          opacity: closing ? 0 : 1,
+          transition: "opacity 0.4s ease, all 0.35s ease",
         }}
       />
 
-      {/* Glow ring around spotlight */}
+      {/* Bright overlay on target area — compensates for backdrop dim */}
       <div
         style={{
           position: "fixed",
-          top: spotlightRect.top - 3,
-          left: spotlightRect.left - 3,
-          width: spotlightRect.width + 6,
-          height: spotlightRect.height + 6,
-          borderRadius: 16,
-          border: `2px solid ${theme.primary}88`,
-          boxShadow: `0 0 48px ${theme.primary}66, 0 0 0 1px rgba(255,255,255,0.15)`,
+          top: sx,
+          left: sy,
+          width: sw,
+          height: sh,
+          borderRadius: sr,
+          background: "rgba(255,255,255,0.06)",
           zIndex: 10001,
           pointerEvents: "none",
-          transition: "all 0.3s ease",
+          opacity: closing ? 0 : 1,
+          transition: "opacity 0.35s ease, all 0.35s ease",
         }}
       />
 
@@ -193,21 +290,25 @@ export default function SpotlightOverlay() {
           position: "fixed",
           top: cardPos.top,
           left: cardPos.left,
-          zIndex: 10000,
+          zIndex: 10002,
           width: 340,
           maxWidth: "calc(100vw - 32px)",
           overflow: "visible",
           opacity: positioned ? (closing ? 0 : 1) : 0,
-          transform: positioned ? (closing ? "translateY(8px)" : "translateY(0)") : "translateY(8px)",
-          transition: "opacity 0.25s ease, transform 0.25s ease",
+          transform: positioned
+            ? closing
+              ? "translateY(8px) scale(0.98)"
+              : "translateY(0) scale(1)"
+            : "translateY(12px) scale(0.96)",
+          transition: "opacity 0.3s ease, transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         }}
       >
         <div
           style={{
             background: "var(--color-card, white)",
             borderRadius: 16,
-            border: `1px solid ${theme.border}`,
-            boxShadow: `0 16px 48px rgba(0,0,0,0.15), 0 0 0 1px ${theme.primary}11`,
+            border: `1px solid ${theme.primary}33`,
+            boxShadow: `0 20px 60px rgba(0,0,0,0.18), 0 0 0 1px ${theme.primary}22, 0 8px 32px ${theme.primary}15`,
             padding: "24px 24px 20px",
             maxHeight: "calc(100vh - 40px)",
             overflowY: "auto",
@@ -253,11 +354,11 @@ export default function SpotlightOverlay() {
                 <div
                   key={i}
                   style={{
-                    width: i === step ? 18 : 6,
+                    width: i === step ? 22 : 6,
                     height: 6,
                     borderRadius: 3,
                     background: i === step ? dotColor : theme.border,
-                    transition: "all 0.3s ease",
+                    transition: "all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
                   }}
                 />
               ))}
@@ -391,7 +492,7 @@ export default function SpotlightOverlay() {
               width: 100,
               height: "auto",
               pointerEvents: "none",
-              zIndex: 10001,
+              zIndex: 10003,
               filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.12))",
               objectFit: "contain",
             }}

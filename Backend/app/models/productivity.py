@@ -14,40 +14,30 @@ class ProductivityEvent(db.Model):
     end_datetime = db.Column(db.DateTime, nullable=False)
     color = db.Column(db.String(7), default="#7C3AED")
     priority = db.Column(db.String(10), default="medium")
-    created_at = db.Column(db.DateTime, default=db.func.now())
-    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
-
     productivity_level = db.Column(db.String(20), default="neutral")
     has_deadline = db.Column(db.Boolean, default=False, nullable=False)
-    is_deadline_marker = db.Column(db.Boolean, default=False, nullable=False)
-    task_group_id = db.Column(UUID(as_uuid=True), nullable=True, index=True)
-    deadline_date = db.Column(db.Date, nullable=True)
-    deadline_time = db.Column(db.Time, nullable=True)
     status = db.Column(db.String(20), default="To Do", nullable=False)
     status_change_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
     VALID_LEVELS = set(VALID_PRODUCTIVITY_LEVELS.keys())
     VALID_STATUSES = VALID_STATUSES
 
     def to_dict(self, plan=False):
-        d = {
+        return {
             "id": str(self.id),
             "user_id": str(self.user_id),
             "title": self.title,
             "description": self.description or "",
-            "color": self.color,
-            "priority": self.priority,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-            "productivity_level": self.productivity_level,
-            "has_deadline": self.has_deadline,
-            "is_deadline_marker": self.is_deadline_marker,
-            "task_group_id": str(self.task_group_id) if self.task_group_id else None,
             "start_datetime": self.start_datetime.isoformat() if self.start_datetime else None,
             "end_datetime": self.end_datetime.isoformat() if self.end_datetime else None,
-            "deadline_date": self.deadline_date.isoformat() if self.deadline_date else None,
-            "deadline_time": self.deadline_time.strftime("%H:%M") if self.deadline_time else None,
+            "color": self.color,
+            "priority": self.priority,
+            "productivity_level": self.productivity_level,
+            "has_deadline": self.has_deadline,
             "status": self.status,
             "status_change_at": self.status_change_at.isoformat() if self.status_change_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
-        return d

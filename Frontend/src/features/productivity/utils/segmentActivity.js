@@ -20,9 +20,9 @@ export function getDaySegment(activity, dateStr) {
   if (ed <= target || sd >= nextDay) return null
 
   const startsOnDay = sd >= target && sd < nextDay
-  const endsOnDay = ed > target && ed <= nextDay
+  const endsOnDay = ed > target && ed < nextDay
   const startsBefore = sd < target
-  const endsAfter = ed > nextDay
+  const endsAfter = ed >= nextDay
 
   const dayStart = dateStr + "T00:00"
   const dayEnd = dateStr + "T23:59"
@@ -34,6 +34,8 @@ export function getDaySegment(activity, dateStr) {
     ...activity,
     segmentStart,
     segmentEnd,
+    startTime: startsBefore ? undefined : activity.startTime,
+    endTime: endsAfter ? undefined : activity.endTime,
     isCrossDay: startsBefore || endsAfter,
     continuesPrev: startsBefore,
     continuesNext: endsAfter,
