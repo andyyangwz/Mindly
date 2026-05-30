@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Clock3, Lightbulb, ChevronDown, Check } from "lucide-react";
+import { Clock3, ChevronDown, Check } from "lucide-react";
 import { theme } from "../../theme";
-import InfoButton from "../../components/tutorial/InfoButton";
 import { productivityService } from "../../services/productivityService";
 import { STATUS_META } from "./utils/calendarConstants";
 import FocusTimer from "./timer/FocusTimer";
 import ProductivityCalendar from "./calendar/ProductivityCalendar";
+import AIPlanningAssistant from "./components/AIPlanningAssistant";
 import ActivityDetailModal from "./modals/ActivityDetailModal";
 
 const d = new Date();
@@ -152,11 +152,6 @@ export default function ProductivityPage() {
     ? filteredTasks.slice(0, donePage * DONE_PAGE_SIZE)
     : filteredTasks;
 
-  const suggestions = [
-    t("productivity.suggestions.morningTasks"),
-    t("productivity.suggestions.lighterSchedule", { day: t("common.days.thursdayFull") }),
-  ];
-
   const planItems = useMemo(() => {
     return allTasks
       .filter(e => (e.startDatetime ? e.startDatetime.slice(0, 10) : "") === todayStr && !e.hasDeadline)
@@ -215,45 +210,8 @@ export default function ProductivityPage() {
 
       <ProductivityCalendar ref={calendarRef} onActivityUpdated={fetchAllTasks} calendarRefreshKey={calendarRefreshKey} />
 
-      <div style={{
-        background: `linear-gradient(135deg, ${theme.bg}, var(--color-card, white))`,
-        borderRadius: 16,
-        border: `1px solid ${theme.border}`,
-        padding: "18px 20px",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-          <div style={{
-            width: 32, height: 32, background: `color-mix(in srgb, ${theme.primary} 22%, transparent)`,
-            borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <Lightbulb size={16} color={theme.primaryText} />
-          </div>
-          <h3 style={{           fontSize: 12, fontWeight: 600, color: theme.dark, display: "inline-flex", alignItems: "center", gap: 6 }}>
-            {t("productivity.page.smartSuggestions")}
-            <InfoButton tutorialId="smart-suggestions" />
-          </h3>
-        </div>
-        {suggestions.map((s, i) => (
-          <div key={i} style={{
-            display: "flex", gap: 10, padding: "12px 14px",
-            background: "var(--color-card, white)", borderRadius: 12,
-            border: `1px solid ${theme.border}`, marginBottom: 10,
-          }}>
-            <div style={{
-              width: 6, height: 6, borderRadius: "50%",
-              background: theme.secondary, flexShrink: 0, marginTop: 6,
-            }} />
-            <p style={{ fontSize: 13, color: theme.dark, lineHeight: 1.5 }}>{s}</p>
-          </div>
-        ))}
-        <button style={{
-          width: "100%", padding: "11px",
-          background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
-          color: "white", border: "none", borderRadius: 12,
-          fontSize: 13, fontWeight: 500, cursor: "pointer", marginTop: 4,
-        }}>
-          {t("productivity.page.optimize")}
-        </button>
+      <div style={{ marginTop: 20 }}>
+        <AIPlanningAssistant />
       </div>
 
       <div id="overview-cards" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, marginTop: 24, alignItems: "start" }}>
