@@ -35,7 +35,7 @@ function loadSavedDate() {
   return new Date()
 }
 
-const ProductivityCalendar = forwardRef(function ProductivityCalendar({ onActivityUpdated, calendarRefreshKey }, ref) {
+const ProductivityCalendar = forwardRef(function ProductivityCalendar({ onActivityUpdated, calendarRefreshKey, onQuickAdd }, ref) {
 
 useImperativeHandle(ref, () => ({
   editActivity(activity) {
@@ -72,7 +72,7 @@ useImperativeHandle(ref, () => ({
   const isTutorialDemoMode = demoModeStep4 || demoModeStep5
   const isStep4 = demoModeStep4
 
-  const [tutorialBlock, setTutorialBlock] = useState({ startTime: "00:00", endTime: "01:00", status: "To Do", visible: true })
+  const [tutorialBlock, setTutorialBlock] = useState({ startTime: "00:00", endTime: "02:30", status: "To Do", visible: true })
 
   const demoActivity = useMemo(() => {
     const dateStr = toDateStr(currentDate)
@@ -778,6 +778,7 @@ useImperativeHandle(ref, () => ({
         onAddActivity={handleAddActivity}
         onAddTask={handleAddTask}
         onVoice={handleVoice}
+        onQuickAdd={onQuickAdd}
         interactionMode={interactionMode}
         onModeChange={setInteractionMode}
         onAutoSync={handleAutoSync}

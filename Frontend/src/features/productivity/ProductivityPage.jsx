@@ -7,6 +7,7 @@ import { STATUS_META } from "./utils/calendarConstants";
 import FocusTimer from "./timer/FocusTimer";
 import ProductivityCalendar from "./calendar/ProductivityCalendar";
 import AIPlanningAssistant from "./components/AIPlanningAssistant";
+import QuickAddModal from "./components/QuickAddModal";
 import ActivityDetailModal from "./modals/ActivityDetailModal";
 
 const d = new Date();
@@ -39,6 +40,7 @@ export default function ProductivityPage() {
   const doneScrollRef = useRef(null);
   const calendarRef = useRef(null);
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
 
   const DONE_PAGE_SIZE = 10;
 
@@ -208,9 +210,9 @@ export default function ProductivityPage() {
         {t("productivity.page.viewPlanAndTasks")}
       </button>
 
-      <ProductivityCalendar ref={calendarRef} onActivityUpdated={fetchAllTasks} calendarRefreshKey={calendarRefreshKey} />
+      <ProductivityCalendar ref={calendarRef} onActivityUpdated={fetchAllTasks} calendarRefreshKey={calendarRefreshKey} onQuickAdd={() => setQuickAddOpen(true)} />
 
-      <div style={{ marginTop: 20 }}>
+      <div style={{ marginTop: 12 }}>
         <AIPlanningAssistant />
       </div>
 
@@ -288,6 +290,8 @@ export default function ProductivityPage() {
 
         <FocusTimer />
       </div>
+
+      <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
 
       <ActivityDetailModal
         activity={detailEvent}

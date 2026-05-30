@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { Plus, ChevronLeft, ChevronRight, Undo, Redo, Waves, Target, Mic, Lock, Move, RefreshCw } from "lucide-react"
+import { Plus, ChevronLeft, ChevronRight, Undo, Redo, Waves, Target, Mic, Lock, Move, RefreshCw, Zap } from "lucide-react"
 import { theme } from "../../../theme"
 import InfoButton from "../../../components/tutorial/InfoButton"
 import { isSameDay, toDateStr } from "../utils/calendarConstants"
@@ -87,7 +87,7 @@ function MonthPicker({ currentMonth, onSelect, onClose }) {
   )
 }
 
-export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRedo, canUndo, canRedo, onAddActivity, onAddTask, onVoice, showTutorial = true, interactionMode, onModeChange, onAutoSync }) {
+export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRedo, canUndo, canRedo, onAddActivity, onAddTask, onVoice, onQuickAdd, showTutorial = true, interactionMode, onModeChange, onAutoSync }) {
   const { t } = useTranslation()
   const { tutorialStep } = useTutorial()
   const [showMonthPicker, setShowMonthPicker] = useState(false)
@@ -653,6 +653,30 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>Use Voice</span>
                     <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>Speak your plan</span>
+                  </div>
+                </button>
+                <div style={{ height: 1, background: theme.border, margin: "4px 0" }} />
+                <button
+                  onClick={() => { setShowCreateMenu(false); onQuickAdd?.() }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    width: "100%", padding: "10px 12px", border: "none",
+                    background: "transparent", borderRadius: 8, cursor: "pointer",
+                    transition: "background 0.1s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#F59E0B0C" }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+                >
+                  <span style={{
+                    width: 26, height: 26, borderRadius: 8,
+                    background: "#F59E0B14",
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  }}>
+                    <Zap size={14} color="#F59E0B" />
+                  </span>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>Quick Add</span>
+                    <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>Reusable templates</span>
                   </div>
                 </button>
               </div>
