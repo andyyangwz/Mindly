@@ -24,12 +24,19 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
   const [pendingOps, setPendingOps] = useState({});
   const [inputValue, setInputValue] = useState("1");
   const [updating, setUpdating] = useState(false);
-  const [chargeAnim, setChargeAnim] = useState(false);
   const [animTargets, setAnimTargets] = useState({});
+  const [animPhase, setAnimPhase] = useState(null);
+  const [animStage, setAnimStage] = useState(null);
+  const [animParticles, setAnimParticles] = useState([]);
+  const [animProgress, setAnimProgress] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [tutorialRelic, setTutorialRelic] = useState(null);
   const inputRef = useRef(null);
+  const countFrameRef = useRef(null);
+  const rightPanelRef = useRef(null);
+  const orbWrapRef = useRef(null);
+  const travelAnimRef = useRef(null);
 
   useEffect(() => {
     if (open) {
@@ -37,10 +44,20 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
       setPendingOps({});
       setInputValue("1");
       setUpdating(false);
-      setChargeAnim(false);
       setAnimTargets({});
+      setAnimPhase(null);
+      setAnimStage(null);
+      setAnimParticles([]);
+      setAnimProgress(null);
     }
   }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (countFrameRef.current) cancelAnimationFrame(countFrameRef.current);
+      if (travelAnimRef.current) cancelAnimationFrame(travelAnimRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (tutorialId === "update-progress" || tutorialId === "habit-relics-onboarding") {
@@ -142,6 +159,51 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
     }
   };
 
+  function startCountUp(from, to, relicId) {
+    if (countFrameRef.current) cancelAnimationFrame(countFrameRef.current);
+    const duration = 700;
+    const startTime = performance.now();
+    function frame(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const value = Math.round(from + (to - from) * eased);
+      setAnimProgress({ relicId, value });
+      if (t < 1) {
+        countFrameRef.current = requestAnimationFrame(frame);
+      }
+    }
+    countFrameRef.current = requestAnimationFrame(frame);
+  }
+
+  function spawnParticles(phase) {
+    let particles;
+    if (phase === "channel") {
+      particles = Array.from({ length: 6 }, (_, i) => ({
+        id: `p-${Date.now()}-${i}`, delay: 0.06 + i * 0.06, duration: 0.7 + Math.random() * 0.3,
+        size: 3 + Math.random() * 3, opacity: 0.5 + Math.random() * 0.3,
+        left: (Math.random() - 0.5) * 50,
+      }));
+    } else if (phase === "remove") {
+      particles = Array.from({ length: 4 }, (_, i) => ({
+        id: `p-${Date.now()}-${i}`, delay: 0.1 + i * 0.08, duration: 0.6 + Math.random() * 0.3,
+        size: 3 + Math.random() * 3, opacity: 0.4 + Math.random() * 0.3,
+        x: (Math.random() - 0.5) * 60,
+      }));
+    } else {
+      particles = Array.from({ length: 8 }, (_, i) => {
+        const angle = (i / 8) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+        const dist = 40 + Math.random() * 40;
+        return {
+          id: `p-${Date.now()}-${i}`, delay: 0.05 * i, duration: 0.5 + Math.random() * 0.3,
+          size: 2 + Math.random() * 3, opacity: 0.5 + Math.random() * 0.3,
+          x: Math.cos(angle) * dist, y: Math.sin(angle) * dist,
+        };
+      });
+    }
+    setAnimParticles(particles);
+  }
+
   const handleUpdate = async () => {
     const entries = Object.entries(pendingOps);
     if (entries.length === 0) return;
@@ -157,7 +219,16 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
     setAnimTargets(targets);
 
     setUpdating(true);
-    setChargeAnim(true);
+    const op = entries[0][1];
+    const phase = op.type === "reset" ? "reset" : op.value > 0 ? "channel" : "remove";
+    setAnimPhase(phase);
+    spawnParticles(phase);
+
+    const firstRelic = relicList.find(g => g.id === entries[0][0]);
+    if (firstRelic) {
+      startCountUp(firstRelic.current_progress || 0, targets[entries[0][0]], entries[0][0]);
+    }
+
     setTimeout(async () => {
       try {
         for (const [relicId, op] of entries) {
@@ -175,13 +246,14 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
         setSelectedId(null);
         setInputValue("1");
       } catch {
-        // error handled by hook
       } finally {
         setUpdating(false);
-        setChargeAnim(false);
+        setAnimPhase(null);
+        setAnimParticles([]);
+        setAnimProgress(null);
         setAnimTargets({});
       }
-    }, 600);
+    }, 800);
   };
 
   if (!open) return null;
@@ -190,9 +262,10 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
   const pendingCount = Object.keys(pendingOps).length;
   const primaryOp = Object.entries(pendingOps)[0]?.[1];
 
-  const selectedDisplayProgress = selected && animTargets.hasOwnProperty(selected.id)
-    ? animTargets[selected.id]
-    : selected?.current_progress || 0;
+  const animVal = animProgress != null && animProgress.relicId === selected?.id ? animProgress.value : null;
+  const selectedDisplayProgress = animVal !== null
+    ? animVal
+    : (animTargets.hasOwnProperty(selected?.id) ? animTargets[selected.id] : selected?.current_progress || 0);
   const selectedPct = selected && selected.target > 0
     ? Math.min(Math.round((selectedDisplayProgress / selected.target) * 100), 100)
     : 0;
@@ -214,9 +287,19 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
       <style>{`
         @keyframes upFadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes upSlideUp { from { opacity: 0; transform: translateY(30px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes energyPulse { 0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.15); } 50% { box-shadow: 0 0 50px rgba(139,92,246,0.3); } }
+        @keyframes energyPulse { 0%, 100% { filter: drop-shadow(0 0 20px rgba(139,92,246,0.15)); } 50% { filter: drop-shadow(0 0 50px rgba(139,92,246,0.3)); } }
         @keyframes orbFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes chargeBurst { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.15); opacity: 0.8; box-shadow: 0 0 80px rgba(139,92,246,0.5); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes particleChannel { 0% { transform: translate(0, 0) scale(0.2); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(0, -35px) scale(0.1); opacity: 0; } }
+        @keyframes particleRemove { 0% { transform: translate(0, 0) scale(0.8); opacity: 0.7; } 100% { transform: translate(var(--x), 50px) scale(0.05); opacity: 0; } }
+        @keyframes particleReset { 0% { transform: translate(0, 0) scale(1); opacity: 0.8; } 100% { transform: translate(var(--x), var(--y)) scale(0.05); opacity: 0; } }
+        @keyframes rippleReset { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(2.5); opacity: 0; } }
+        @keyframes iconPulseChannel { 0% { transform: scale(1); } 30% { transform: scale(1.06); } 60% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        @keyframes iconPulseRemove { 0% { transform: scale(1); } 30% { transform: scale(0.95); } 60% { transform: scale(0.98); } 100% { transform: scale(1); } }
+        @keyframes glowChannel { 0% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.08); opacity: 0.7; } 100% { transform: scale(1); opacity: 0.3; } }
+        @keyframes glowRemove { 0% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(0.9); opacity: 0.08; } 100% { transform: scale(1); opacity: 0.3; } }
+        @keyframes coreGlow { 0% { transform: scale(0.4); opacity: 0; } 30% { opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
+        @keyframes coreDrain { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(0.2); opacity: 0; } }
       `}</style>
 
       <div
@@ -293,7 +376,10 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                   const isSelected = goal.id === selectedId;
                   const pendingOp = pendingOps[goal.id];
                   const Icon = resolveIcon(goal.icon);
-                  const displayProgress = animTargets.hasOwnProperty(goal.id) ? animTargets[goal.id] : goal.current_progress;
+                  const useAnim = animProgress != null && animProgress.relicId === goal.id;
+                  const displayProgress = useAnim
+                    ? animProgress.value
+                    : (animTargets.hasOwnProperty(goal.id) ? animTargets[goal.id] : goal.current_progress);
                   const pct = goal.target > 0 ? Math.min(Math.round((displayProgress / goal.target) * 100), 100) : 0;
                   const offset = 2 * Math.PI * 14 * (1 - pct / 100);
                   const status = getStatus(t, goal.current_progress, goal.target);
@@ -330,7 +416,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                         <circle cx={17} cy={17} r={14} stroke="var(--color-border)" strokeWidth="3" fill="none" />
                         <circle cx={17} cy={17} r={14} stroke={theme.primary} strokeWidth="3" fill="none" strokeLinecap="round"
                           strokeDasharray={`${2 * Math.PI * 14}`} strokeDashoffset={offset}
-                          style={{ transition: "stroke-dashoffset 0.6s" }} />
+                          style={{ transition: useAnim ? "none" : "stroke-dashoffset 0.6s" }} />
                       </svg>
                       <div style={{
                         position: "absolute", inset: 0,
@@ -362,7 +448,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
                         <span style={{ fontSize: 10, fontWeight: 600, color: "var(--color-muted)" }}>
-                          {goal.current_progress}/{goal.target}
+                          {displayProgress}/{goal.target}
                         </span>
                         <span style={{
                           fontSize: 8, padding: "1px 4px", borderRadius: 3,
@@ -413,8 +499,8 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                 overflow: "hidden",
               }}>
                 {/* Ambient particles */}
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} style={{
+                {!animPhase && [...Array(4)].map((_, i) => (
+                  <div key={`ambient-${i}`} style={{
                     position: "absolute",
                     width: 3 + Math.random() * 4, height: 3 + Math.random() * 4,
                     borderRadius: "50%",
@@ -429,15 +515,83 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                 {/* Large relic orb */}
                 <div style={{
                   position: "relative", width: 180, height: 180,
-                  animation: chargeAnim ? "chargeBurst 0.6s ease" : "orbFloat 4s ease-in-out infinite",
+                  animation: animPhase === "channel"
+                    ? "iconPulseChannel 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                    : animPhase === "remove"
+                      ? "iconPulseRemove 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                      : "orbFloat 4s ease-in-out infinite",
                 }}>
                   {/* Outer glow */}
                   <div style={{
                     position: "absolute", top: -20, left: -20, width: 220, height: 220,
                     borderRadius: "50%",
                     background: "linear-gradient(135deg, rgba(139,92,246,0.06), rgba(59,130,246,0.03))",
-                    animation: chargeAnim ? "none" : "energyPulse 3s ease-in-out infinite",
+                    animation: animPhase === "channel"
+                      ? "glowChannel 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                      : animPhase === "remove"
+                        ? "glowRemove 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                        : "energyPulse 3s ease-in-out infinite",
                   }} />
+
+                  {/* Reset ripple */}
+                  {animPhase === "reset" && (
+                    <div style={{
+                      position: "absolute", top: 0, left: 0, width: 180, height: 180,
+                      borderRadius: "50%",
+                      border: "1.5px solid rgba(139,92,246,0.25)",
+                      animation: "rippleReset 0.7s cubic-bezier(0.2, 0, 0.2, 1) forwards",
+                      pointerEvents: "none",
+                    }} />
+                  )}
+
+                  {/* Energy absorption/drain glow */}
+                  {animPhase === "channel" && (
+                    <div style={{
+                      position: "absolute", top: 40, left: 40, width: 100, height: 100,
+                      borderRadius: "50%",
+                      background: "radial-gradient(circle, rgba(139,92,246,0.35), transparent 70%)",
+                      animation: "coreGlow 0.8s ease-out forwards",
+                      pointerEvents: "none",
+                    }} />
+                  )}
+                  {animPhase === "remove" && (
+                    <div style={{
+                      position: "absolute", top: 40, left: 40, width: 100, height: 100,
+                      borderRadius: "50%",
+                      background: "radial-gradient(circle, rgba(139,92,246,0.25), transparent 70%)",
+                      animation: "coreDrain 0.7s ease-out forwards",
+                      pointerEvents: "none",
+                    }} />
+                  )}
+
+                  {/* Action particles */}
+                  {(animParticles || []).map((p) => {
+                    const pStyle = {
+                      position: "absolute",
+                      borderRadius: "50%",
+                      background: `rgba(139,92,246,${p.opacity})`,
+                      boxShadow: `0 0 ${p.size * 2}px rgba(139,92,246,0.3)`,
+                      pointerEvents: "none",
+                      width: p.size, height: p.size,
+                    };
+                    if (animPhase === "channel") {
+                      pStyle.animation = `particleChannel ${p.duration}s cubic-bezier(0.4, 0, 1, 1) ${p.delay}s forwards`;
+                      pStyle.left = `calc(50% + ${p.left || 0}px)`;
+                      pStyle.top = "calc(50% + 35px)";
+                    } else if (animPhase === "remove") {
+                      pStyle.animation = `particleRemove ${p.duration}s cubic-bezier(0, 0, 0.2, 1) ${p.delay}s forwards`;
+                      pStyle.left = "50%";
+                      pStyle.top = "50%";
+                      pStyle["--x"] = `${p.x}px`;
+                    } else if (animPhase === "reset") {
+                      pStyle.animation = `particleReset ${p.duration}s cubic-bezier(0.2, 0, 0.2, 1) ${p.delay}s forwards`;
+                      pStyle.left = "50%";
+                      pStyle.top = "50%";
+                      pStyle["--x"] = `${p.x}px`;
+                      pStyle["--y"] = `${p.y}px`;
+                    }
+                    return <div key={p.id} style={pStyle} />;
+                  })}
 
                   {/* Energy ring */}
                   <svg width={180} height={180} style={{ position: "absolute", animation: "relicEnergy 8s linear infinite" }}>
@@ -456,7 +610,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                     <circle cx={90} cy={90} r={72} fill="none" stroke="var(--color-border)" strokeWidth="3.5" />
                     <circle cx={90} cy={90} r={72} fill="none" stroke={theme.primary} strokeWidth="3.5"
                       strokeLinecap="round" strokeDasharray={`${circ}`} strokeDashoffset={selectedOffset}
-                      style={{ transition: "stroke-dashoffset 0.6s ease" }} />
+                      style={{ transition: animProgress ? "none" : "stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)" }} />
                   </svg>
 
                   {/* Icon core */}
@@ -465,7 +619,8 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                     top: 50, left: 50, width: 80, height: 80,
                     borderRadius: "50%",
                     background: "var(--color-card)",
-                    boxShadow: "0 0 40px rgba(139,92,246,0.1), inset 0 0 20px rgba(139,92,246,0.04)",
+                    boxShadow: "inset 0 0 20px rgba(139,92,246,0.04)",
+                    filter: "drop-shadow(0 0 40px rgba(139,92,246,0.1))",
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
                     {(() => {
@@ -492,7 +647,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                       {selectedStatus.label}
                     </span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: "var(--color-muted)" }}>
-                      {selected.current_progress} / {selected.target}
+                      {selectedDisplayProgress} / {selected.target}
                     </span>
                   </div>
                   <p style={{
@@ -513,6 +668,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                 padding: "16px 20px 20px",
                 borderTop: "1px solid var(--color-border, rgba(0,0,0,0.06))",
                 flexShrink: 0,
+                position: "relative",
               }}>
                 <div style={{
                   background: `color-mix(in srgb, ${theme.primary} 6%, transparent)`,

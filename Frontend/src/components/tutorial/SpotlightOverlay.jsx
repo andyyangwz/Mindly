@@ -7,8 +7,8 @@ import TUTORIAL_CONTENT, { getLocalizedTutorialContent } from "./tutorialContent
 import { getTutorialMascot } from "./tutorialMascotMapping"
 import { theme } from "../../theme"
 
-const SPOTLIGHT_PADDING = 12
-const SPOTLIGHT_RADIUS = 16
+const SPOTLIGHT_PADDING = 16
+const SPOTLIGHT_RADIUS = 14
 
 function getCardPosition(rect, cardW, cardH) {
   const gap = 16
@@ -43,7 +43,7 @@ function getCardPosition(rect, cardW, cardH) {
   return { top, left: leftPos }
 }
 
-function createRoundedRectPath(x, y, w, h, r) {
+function createCutoutPath(x, y, w, h, r) {
   r = Math.min(r, w / 2, h / 2)
   return [
     `M ${x + r} ${y}`,
@@ -120,31 +120,23 @@ export default function SpotlightOverlay() {
     }
   }, [tutorialId])
 
-  // ─── Elevate the target element ───
+  // ─── Keyboard navigation: Left/Right arrows for back/next ───
   useEffect(() => {
-    const id = "tutorial-target-elevation"
-    if (!currentStep?.targetId) {
-      document.getElementById(id)?.remove()
-      return
+    if (!tutorialId || !content) return
+    const handler = (e) => {
+      if (e.key === "ArrowLeft" && step > 0) {
+        e.preventDefault()
+        goToStep(step - 1)
+      } else if (e.key === "ArrowRight" && step < content.steps.length - 1) {
+        e.preventDefault()
+        goToStep(step + 1)
+      }
     }
-    const el = document.querySelector(`[data-tutorial-target="${currentStep.targetId}"]`)
-    if (!el) return
-    el.setAttribute("data-tutorial-active", "")
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [tutorialId, content, step, goToStep])
 
-    let prevBoxShadow = el.style.boxShadow
-    let prevFilter = el.style.filter
-    let prevTransition = el.style.transition
-
-    el.style.transition = "all 0.35s ease"
-    el.style.filter = "brightness(1.06)"
-
-    return () => {
-      el.removeAttribute("data-tutorial-active")
-      el.style.filter = prevFilter
-      el.style.transition = prevTransition
-      document.getElementById(id)?.remove()
-    }
-  }, [currentStep?.targetId])
+  // ─── The target element is NEVER modified ───
 
   useEffect(() => {
     if (!cardRef.current || !spotlightRect) return
@@ -160,8 +152,8 @@ export default function SpotlightOverlay() {
   const retrySpotlight = useCallback((targetId, attempt = 0) => {
     if (attempt > 10) return
     const el = document.querySelector(`[data-tutorial-target="${targetId}"]`)
-    if (el) {
-      updateSpotlightTarget(targetId)
+      if (el) {
+      updateSpotlightTarget(targetId, true)
     } else {
       requestAnimationFrame(() => retrySpotlight(targetId, attempt + 1))
     }
@@ -170,7 +162,7 @@ export default function SpotlightOverlay() {
   useEffect(() => {
     if (!currentStep?.targetId) return
     retrySpotlight(currentStep.targetId)
-  }, [step, currentStep?.targetId, retrySpotlight])
+  }, [currentStep?.targetId, retrySpotlight])
 
   if (!tutorialId || !content || !spotlightRect) {
     if (visible) {
@@ -187,99 +179,97 @@ export default function SpotlightOverlay() {
 
   const dotColor = theme.primary
 
-  // Spotlight padded rect (slightly larger than target for breathing room)
   const sp = SPOTLIGHT_PADDING
   const sr = SPOTLIGHT_RADIUS
-  const sx = spotlightRect.left - sp
-  const sy = spotlightRect.top - sp
+  const stepOffsetX = currentStep?.spotlightOffsetX ?? 0
+  const stepOffsetY = currentStep?.spotlightOffsetY ?? 0
+  const sx = spotlightRect.left - sp + stepOffsetX
+  const sy = spotlightRect.top - sp + stepOffsetY
   const sw = spotlightRect.width + sp * 2
   const sh = spotlightRect.height + sp * 2
 
   const vw = window.innerWidth
   const vh = window.innerHeight
 
-  // build the clip-path: full viewport outer rect, then subtract the target rect
-  const clipPath = `path("M 0 0 H ${vw} V ${vh} H 0 Z M ${createRoundedRectPath(sx, sy, sw, sh, sr)}")`
-
-  const isOpen = tutorialId && !!spotlightRect
+  // SVG mask with internal `<mask>` — renders black everywhere with a transparent hole for the cutout
+  const maskSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vw} ${vh}" width="${vw}" height="${vh}">
+  <defs>
+    <mask id="m">
+      <rect width="${vw}" height="${vh}" fill="white"/>
+      <path d="${createCutoutPath(sx, sy, sw, sh, sr)}" fill="black"/>
+    </mask>
+  </defs>
+  <rect width="${vw}" height="${vh}" fill="black" mask="url(#m)"/>
+</svg>`
+  const maskImage = `url("data:image/svg+xml,${encodeURIComponent(maskSvg)}")`
 
   return (
     <>
-      {/* Prevent pointer events on the main content behind (except card) */}
-      {isOpen && (
-        <style>{`
-          [data-tutorial-active] {
-            box-shadow: 0 4px 28px rgba(0,0,0,0.12), 0 0 0 3px rgba(255,255,255,0.18) !important;
-          }
-        `}</style>
-      )}
+      <style>{`
+        @keyframes spotlightIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes glowPulse {
+          0%, 100% { opacity: 0.45; }
+          50% { opacity: 1; }
+        }
+      `}</style>
 
-      {/* Backdrop + blur + cutout */}
+      {/* Fullscreen dark overlay with mask cutout — target shows through as a real hole */}
       <div
         onClick={handleBackdropClick}
         style={{
           position: "fixed",
           inset: 0,
           zIndex: 9998,
-          background: "rgba(0,0,0,0.30)",
-          backdropFilter: "blur(3px)",
-          WebkitBackdropFilter: "blur(3px)",
-          clipPath,
-          opacity: closing ? 0 : 1,
-          transition: "opacity 0.35s ease, clip-path 0.35s ease",
-          pointerEvents: "auto",
+          background: "rgba(0,0,0,0.80)",
+          WebkitMaskImage: maskImage,
+          maskImage,
+          WebkitMaskSize: `${vw}px ${vh}px`,
+          maskSize: `${vw}px ${vh}px`,
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          cursor: "pointer",
+          animation: "spotlightIn 0.3s ease both",
         }}
       />
 
-      {/* Soft radial glow behind the spotlight target */}
+      {/* Outer glow — pulsing intensity */}
       <div
         style={{
           position: "fixed",
-          top: spotlightRect.top - 40,
-          left: spotlightRect.left - 40,
-          width: spotlightRect.width + 80,
-          height: spotlightRect.height + 80,
-          borderRadius: "50%",
-          background: `radial-gradient(circle at center, ${theme.primary}18 0%, ${theme.primary}08 40%, transparent 70%)`,
-          zIndex: 9997,
+          top: sy - 8,
+          left: sx - 8,
+          width: sw + 16,
+          height: sh + 16,
+          borderRadius: sr + 8,
+          boxShadow: [
+            `0 0 30px 8px ${theme.primary}55`,
+            `0 0 60px 20px ${theme.primary}30`,
+            `0 0 120px 50px ${theme.primary}15`,
+          ].join(", "),
+          zIndex: 9999,
           pointerEvents: "none",
-          opacity: closing ? 0 : 1,
-          transition: "opacity 0.5s ease, all 0.35s ease",
+          animation: "glowPulse 2.5s ease-in-out infinite",
+          transition: "top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease",
         }}
       />
 
-      {/* Spotlight glow ring — larger, softer */}
+      {/* Edge ring — clean visible boundary around the cutout */}
       <div
         style={{
           position: "fixed",
-          top: sy - 6,
-          left: sx - 6,
-          width: sw + 12,
-          height: sh + 12,
-          borderRadius: sr + 6,
-          border: `1.5px solid ${theme.primary}55`,
-          boxShadow: `0 0 64px ${theme.primary}44, 0 0 0 1px rgba(255,255,255,0.08)`,
-          zIndex: 10000,
+          top: sy - 1,
+          left: sx - 1,
+          width: sw + 2,
+          height: sh + 2,
+          borderRadius: sr + 1,
+          border: "1.5px solid rgba(255,255,255,0.3)",
+          boxShadow: "0 0 0 1px rgba(0,0,0,0.35)",
+          zIndex: 9999,
           pointerEvents: "none",
-          opacity: closing ? 0 : 1,
-          transition: "opacity 0.4s ease, all 0.35s ease",
-        }}
-      />
-
-      {/* Bright overlay on target area — compensates for backdrop dim */}
-      <div
-        style={{
-          position: "fixed",
-          top: sx,
-          left: sy,
-          width: sw,
-          height: sh,
-          borderRadius: sr,
-          background: "rgba(255,255,255,0.06)",
-          zIndex: 10001,
-          pointerEvents: "none",
-          opacity: closing ? 0 : 1,
-          transition: "opacity 0.35s ease, all 0.35s ease",
+          transition: "top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease",
         }}
       />
 
@@ -294,6 +284,8 @@ export default function SpotlightOverlay() {
           width: 340,
           maxWidth: "calc(100vw - 32px)",
           overflow: "visible",
+          borderRadius: 16,
+          boxShadow: "0 24px 80px 16px rgba(0,0,0,0.45)",
           opacity: positioned ? (closing ? 0 : 1) : 0,
           transform: positioned
             ? closing
@@ -308,7 +300,6 @@ export default function SpotlightOverlay() {
             background: "var(--color-card, white)",
             borderRadius: 16,
             border: `1px solid ${theme.primary}33`,
-            boxShadow: `0 20px 60px rgba(0,0,0,0.18), 0 0 0 1px ${theme.primary}22, 0 8px 32px ${theme.primary}15`,
             padding: "24px 24px 20px",
             maxHeight: "calc(100vh - 40px)",
             overflowY: "auto",
@@ -479,9 +470,9 @@ export default function SpotlightOverlay() {
           <motion.img
             src={getTutorialMascot(tutorialId)}
             alt=""
-            animate={{ y: [0, -5, 0] }}
+            animate={{ y: [0, -8, 0] }}
             transition={{
-              duration: 3.5,
+              duration: 4,
               repeat: Infinity,
               ease: "easeInOut",
             }}
@@ -493,7 +484,7 @@ export default function SpotlightOverlay() {
               height: "auto",
               pointerEvents: "none",
               zIndex: 10003,
-              filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.12))",
+              filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.30)) drop-shadow(0 24px 64px rgba(0,0,0,0.20))",
               objectFit: "contain",
             }}
           />

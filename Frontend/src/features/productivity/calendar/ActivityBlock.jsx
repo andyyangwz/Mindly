@@ -2,7 +2,7 @@ import { memo, useCallback, useRef, useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import i18n from "../../../i18n"
 import { getActivityStyles } from "../utils/activityStyles"
-import { STATUS_META } from "../utils/calendarConstants"
+import { STATUS_META, formatDateRange } from "../utils/calendarConstants"
 import { theme } from "../../../theme"
 import { Portal } from "../../../utils/portal"
 
@@ -56,6 +56,7 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
   const isCrossDaySeg = activity.isSegmented
   const continuesPrev = !isCrossDaySeg ? false : activity.continuesPrev
   const continuesNext = !isCrossDaySeg ? false : activity.continuesNext
+  const isTaskMarker = activity._isTaskMarker
 
   const [statusMenu, setStatusMenu] = useState(null)
   const [menuPos, setMenuPos] = useState({ right: 0, top: 0 })
@@ -174,7 +175,7 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
           width: displayWidth,
           borderRadius: 6,
           padding: isMini ? "2px 5px" : isCompact ? "3px 8px" : "4px 10px",
-          cursor: isCrossDaySeg ? "default" : interactionMode === "fixed" ? "pointer" : "grab",
+          cursor: isTaskMarker ? "pointer" : (isCrossDaySeg ? "default" : interactionMode === "fixed" ? "pointer" : "grab"),
           overflow: "hidden",
           transition: "box-shadow 0.15s, background 0.15s",
           zIndex: 5,
@@ -224,7 +225,7 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
         <div
           style={{
             fontSize: isMini ? 9 : isCompact ? 10 : 11,
-            fontWeight: 600,
+            fontWeight: isTaskMarker ? 500 : 600,
             color: es.titleColor,
             lineHeight: isMini ? 1.3 : 1.4,
             display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
@@ -234,7 +235,7 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
             <span style={{ display: "flex", alignItems: "center", gap: 3, minWidth: 0, flex: 1, overflow: "hidden" }}>
               {typeInfo && (
                 <span style={{ fontSize: isMini ? 8 : 9, opacity: 0.7, flexShrink: 0, whiteSpace: "nowrap" }}>
-                  {typeInfo.icon}
+                  {isTaskMarker ? (activity._taskRole === "deadline" ? "\uD83C\uDFC1" : "\uD83D\uDEA9") : typeInfo.icon}
                 </span>
               )}
               {isInlineEditing ? (
@@ -268,8 +269,8 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
             </span>
 
             {typeInfo && !isMini && (
-              <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: `${typeInfo.color}18`, color: typeInfo.color, lineHeight: 1.3, flexShrink: 0 }}>
-                {isDone ? `Finish on ${formatDeadlineDate(activity.endDatetime ? activity.endDatetime.slice(0, 10) : "")}` : "Deadline"}
+              <span style={{ fontSize: 8, fontWeight: isTaskMarker ? 500 : 600, padding: "1px 5px", borderRadius: 3, background: `${typeInfo.color}18`, color: typeInfo.color, lineHeight: 1.3, flexShrink: 0 }}>
+                {isTaskMarker ? formatDateRange(activity.startDatetime, activity.endDatetime) : (isDone ? `Finish on ${formatDeadlineDate(activity.endDatetime ? activity.endDatetime.slice(0, 10) : "")}` : "Deadline")}
               </span>
             )}
 

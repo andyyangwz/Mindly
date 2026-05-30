@@ -30,6 +30,7 @@ export function TutorialProvider({ children }) {
 
   const dismissedHints = useRef(loadSet(STORAGE_HINTS))
   const viewedTutorials = useRef(loadSet(STORAGE_VIEWED))
+  const rectCache = useRef({})
 
   const openTutorial = useCallback((id, config) => {
     const content = TUTORIAL_CONTENT[id]
@@ -47,9 +48,25 @@ export function TutorialProvider({ children }) {
     saveSet(STORAGE_VIEWED, viewedTutorials.current)
   }, [])
 
-  const updateSpotlightTarget = useCallback((targetId) => {
+  const clearRectCache = useCallback((targetId) => {
+    if (targetId) {
+      delete rectCache.current[targetId]
+    } else {
+      rectCache.current = {}
+    }
+  }, [])
+
+  const updateSpotlightTarget = useCallback((targetId, force) => {
+    if (!force && rectCache.current[targetId]) {
+      setSpotlightRect(rectCache.current[targetId])
+      return
+    }
     const el = document.querySelector(`[data-tutorial-target="${targetId}"]`)
-    if (el) setSpotlightRect(el.getBoundingClientRect())
+    if (el) {
+      const rect = el.getBoundingClientRect()
+      rectCache.current[targetId] = rect
+      setSpotlightRect(rect)
+    }
   }, [])
 
   const closeTutorial = useCallback(() => {
@@ -122,6 +139,7 @@ export function TutorialProvider({ children }) {
         openTutorial,
         closeTutorial,
         updateSpotlightTarget,
+        clearRectCache,
         setTutorialStep,
         isHintDismissed,
         dismissHint,

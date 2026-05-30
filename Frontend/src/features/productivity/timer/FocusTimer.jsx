@@ -3,13 +3,30 @@ import { useTranslation } from "react-i18next";
 import { Play, Pause, Square } from "lucide-react";
 import { theme } from "../../../theme";
 import { useTimer } from "../../../hooks/useTimer";
+import { useTheme } from "../../../theme/ThemeProvider";
+
+const FOCUS_DURATION_KEY = "mindly-focus-duration";
+
+function loadFocusDuration() {
+  try {
+    const saved = localStorage.getItem(FOCUS_DURATION_KEY);
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
+  } catch {}
+  return null;
+}
 
 export default function FocusTimer() {
   const { t } = useTranslation();
+  const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === "dark";
   const [session, setSession] = useState("focus");
   const durations = { focus: 25 * 60, short: 5 * 60, long: 15 * 60 };
-  const { timeLeft, setTimeLeft, running, setRunning, display } = useTimer(durations[session]);
-  const [originalDuration, setOriginalDuration] = useState(durations[session]);
+  const initDuration = loadFocusDuration() ?? durations[session];
+  const { timeLeft, setTimeLeft, running, setRunning, display } = useTimer(initDuration);
+  const [originalDuration, setOriginalDuration] = useState(initDuration);
   const percent = timeLeft / originalDuration * 100;
 
   const [focusMode, setFocusMode] = useState("idle");
@@ -43,6 +60,12 @@ export default function FocusTimer() {
       inputRef.current.setSelectionRange(len, len);
     }
   }, [editing]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(FOCUS_DURATION_KEY, String(originalDuration));
+    } catch {}
+  }, [originalDuration]);
 
   const handleReset = () => {
     setRunning(false);
@@ -97,6 +120,10 @@ export default function FocusTimer() {
   const stopFocus = () => {
     setRunning(false);
     setFocusMode("exiting");
+  };
+
+  const startFromOverlay = () => {
+    setRunning(true);
   };
 
   const QUICK_TIMES = ["01:00", "05:00", "15:00", "30:00", "60:00", "90:00"];
@@ -214,7 +241,10 @@ export default function FocusTimer() {
         <div
           ref={cardRef}
           style={{
-            background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
+            background: isDarkMode
+              ? "linear-gradient(135deg, #5B21B6, #7C3AED)"
+              : `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
+
             borderRadius: 16,
             padding: "14px 16px 26px",
             transition: "opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -257,7 +287,9 @@ export default function FocusTimer() {
             position: "fixed",
             inset: 0,
             zIndex: 9999,
-            background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
+            background: isDarkMode
+              ? "linear-gradient(135deg, #5B21B6, #7C3AED)"
+              : `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -274,7 +306,7 @@ export default function FocusTimer() {
             {timerContent(true)}
             <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
               <button
-                onClick={stopFocus}
+                onClick={running ? stopFocus : startFromOverlay}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -292,8 +324,8 @@ export default function FocusTimer() {
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.3)" }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.2)" }}
               >
-                <Square size={16} fill="white" />
-                {t("productivity.focusTimer.stop")}
+                {running ? <Square size={16} fill="white" /> : <Play size={16} fill="white" />}
+                {running ? t("productivity.focusTimer.stop") : t("productivity.focusTimer.start")}
               </button>
               <button
                 onClick={handleReset}

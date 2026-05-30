@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef, forwardRef, useImperativeHandle } from "react"
 import { useTranslation } from "react-i18next"
 import { useSearchParams } from "react-router-dom"
 
@@ -35,7 +35,24 @@ function loadSavedDate() {
   return new Date()
 }
 
-export default function ProductivityCalendar({ onActivityUpdated }) {
+const ProductivityCalendar = forwardRef(function ProductivityCalendar({ onActivityUpdated, calendarRefreshKey }, ref) {
+
+useImperativeHandle(ref, () => ({
+  editActivity(activity) {
+    setEditingActivity(activity)
+    setSelectedSlot(null)
+    if (activity.hasDeadline) {
+      setTaskFormOpen(true)
+    } else {
+      setActivityFormOpen(true)
+    }
+  },
+  viewActivity(activity) {
+    setViewingActivity(activity)
+  },
+}))
+
+
   const [currentDate, setCurrentDate] = useState(loadSavedDate)
   const [interactionMode, setInteractionMode] = useState("fixed")
   const [selectedSlot, setSelectedSlot] = useState(null)
@@ -55,14 +72,14 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
   const isTutorialDemoMode = demoModeStep4 || demoModeStep5
   const isStep4 = demoModeStep4
 
-  const [tutorialBlock, setTutorialBlock] = useState({ startTime: "12:00", endTime: "13:00", status: "To Do", visible: true })
+  const [tutorialBlock, setTutorialBlock] = useState({ startTime: "00:00", endTime: "01:00", status: "To Do", visible: true })
 
   const demoActivity = useMemo(() => {
     const dateStr = toDateStr(currentDate)
     return {
-      id: `inline-${Date.now()}`,
-      title: "",
-      description: "",
+      id: "tutorial-demo",
+      title: "Demo Activity",
+      description: "Try moving or resizing me",
       startDatetime: `${dateStr}T${tutorialBlock.startTime}`,
       endDatetime: `${dateStr}T${tutorialBlock.endTime}`,
       color: "#7C3AED",
@@ -81,9 +98,23 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
 
   useEffect(() => {
     if (isTutorialDemoMode) {
-      requestAnimationFrame(() => updateSpotlightTarget("demo-activity-block"))
+      const timer = setTimeout(() => {
+        updateSpotlightTarget("demo-activity-block", true)
+      }, 100)
+      return () => clearTimeout(timer)
     }
   }, [isTutorialDemoMode, updateSpotlightTarget])
+
+  useEffect(() => {
+    if (isTutorialDemoMode) {
+      const grid = document.querySelector("[data-calendar-grid]")
+      if (grid) {
+        const targetPx = 0
+        const centerOffset = grid.clientHeight * 0.35
+        grid.scrollTop = Math.max(0, targetPx - centerOffset)
+      }
+    }
+  }, [isTutorialDemoMode])
 
   useEffect(() => {
     try {
@@ -249,16 +280,40 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     clearSegmentCache()
     const segmented = []
     for (const act of base) {
-      const seg = getCachedDaySegment(act, dateStr)
-      if (!seg) continue
-      segmented.push({
-        ...seg,
-        isSegmented: seg.isCrossDay,
-      })
+      if (act.hasDeadline) {
+        const startDate = act.startDatetime?.slice(0, 10)
+        const endDate = act.endDatetime?.slice(0, 10)
+        if (startDate === dateStr) {
+          segmented.push(createTaskMarker(act, "start"))
+        }
+        if (endDate === dateStr) {
+          segmented.push(createTaskMarker(act, "deadline"))
+        }
+      } else {
+        const seg = getCachedDaySegment(act, dateStr)
+        if (!seg) continue
+        segmented.push({
+          ...seg,
+          isSegmented: seg.isCrossDay,
+        })
+      }
     }
     if (inlineDraft) segmented.push(inlineDraft)
     return segmented
   }, [useRealData, localActivities, inlineDraft, currentDate, isTutorialDemoMode, tutorialBlock, demoActivity])
+
+  function createTaskMarker(activity, role) {
+    const dt = role === "start" ? activity.startDatetime : activity.endDatetime
+    const { startTime: _s, endTime: _e, ...rest } = activity
+    return {
+      ...rest,
+      segmentStart: dt?.slice(0, 16) || "",
+      segmentEnd: dt?.slice(0, 16) || "",
+      _isTaskMarker: true,
+      _taskRole: role,
+      isSegmented: false,
+    }
+  }
 
   const handleActivityViewDetails = useCallback((activity) => {
     setCtxMenu(null)
@@ -274,18 +329,16 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
         const prevSnapshot = { ...prev }
 
         let payload = { ...data }
-        if (!editingActivity.hasDeadline) {
-          let startDt = data.startDatetime || editingActivity.startDatetime
-          let endDt = data.endDatetime || editingActivity.endDatetime
-          if ((!startDt || !endDt) && data.startDate && data.endDate && data.startTime && data.endTime) {
-            startDt = `${data.startDate}T${data.startTime}`
-            endDt = `${data.endDate}T${data.endTime}`
-          }
-          if (startDt && endDt) {
-            payload = { ...data, startDatetime: startDt, endDatetime: endDt }
-            payload.startTime = startDt.slice(11)
-            payload.endTime = endDt.slice(11)
-          }
+        let startDt = data.startDatetime || editingActivity.startDatetime
+        let endDt = data.endDatetime || editingActivity.endDatetime
+        if ((!startDt || !endDt) && data.startDate && data.endDate && data.startTime && data.endTime) {
+          startDt = `${data.startDate}T${data.startTime}`
+          endDt = `${data.endDate}T${data.endTime}`
+        }
+        if (startDt && endDt) {
+          payload = { ...data, startDatetime: startDt, endDatetime: endDt }
+          payload.startTime = startDt.slice(11)
+          payload.endTime = endDt.slice(11)
         }
 
         const next = { ...prev, ...payload }
@@ -296,9 +349,9 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
 
         try {
           const result = await updateActivity(editingActivity.id, payload)
-          if (result?.event) {
+          if (result) {
             setLocalActivities((prevActivities) =>
-              prevActivities.map((e) => (e.id === editingActivity.id ? result.event : e))
+              prevActivities.map((e) => (e.id === editingActivity.id ? result : e))
             )
           }
           setUseRealData(true)
@@ -403,9 +456,9 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     try {
       const payload = { startDatetime: next.startDatetime, endDatetime: next.endDatetime }
       const result = await updateActivity(activity.id, payload)
-      if (result?.event) {
+      if (result) {
         setLocalActivities((prevActivities) =>
-          prevActivities.map((e) => (e.id === activity.id ? result.event : e))
+          prevActivities.map((e) => (e.id === activity.id ? result : e))
         )
       }
       onActivityUpdated?.()
@@ -476,9 +529,9 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     try {
       const payload = { startDatetime: next.startDatetime, endDatetime: next.endDatetime }
       const result = await updateActivity(id, payload)
-      if (result?.event) {
+      if (result) {
         setLocalActivities((prevActivities) =>
-          prevActivities.map((e) => (e.id === id ? result.event : e))
+          prevActivities.map((e) => (e.id === id ? result : e))
         )
       }
       onActivityUpdated?.()
@@ -612,6 +665,18 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
     return () => document.removeEventListener("keydown", handler)
   }, [])
 
+  useEffect(() => {
+    if (calendarRefreshKey == null) return
+    const navId = ++navCountRef.current
+    setLocalActivities([])
+    setUseRealData(false)
+    fetchActivities(currentDate).then((events) => {
+      if (navCountRef.current !== navId) return
+      setLocalActivities(events)
+      setUseRealData(true)
+    })
+  }, [calendarRefreshKey, currentDate, fetchActivities])
+
   const handleAddActivity = useCallback(() => {
     setEditingActivity(null)
     setSelectedSlot({ date: currentDate })
@@ -735,7 +800,7 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
             onStatusChange={handleStatusChange}
             interactionMode={interactionMode}
             isSyncing={isSyncing}
-            scrollToHour={isTutorialDemoMode ? 12 : null}
+            scrollToHour={null}
           />
       </div>
 
@@ -789,4 +854,6 @@ export default function ProductivityCalendar({ onActivityUpdated }) {
       />
     </div>
   )
-}
+})
+
+export default ProductivityCalendar

@@ -5,6 +5,7 @@ import { theme } from "../../../theme"
 import EmojiPicker from "../../../components/ui/EmojiPicker"
 import RichEditor from "../../../components/editor/RichEditor"
 import InfoButton from "../../../components/tutorial/InfoButton"
+import { useTutorial } from "../../../components/tutorial/TutorialContext"
 import { config } from "../../../config"
 
 function stripHtml(html) {
@@ -32,6 +33,14 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack, fol
   const [emojiLoading, setEmojiLoading] = useState(false)
   const [emojiAnimating, setEmojiAnimating] = useState(false)
   const [hasSelection, setHasSelection] = useState(false)
+  const { tutorialId, tutorialStep } = useTutorial()
+
+  // When voice-journaling tutorial is at step "Transcribe" or beyond, show recorded state
+  useEffect(() => {
+    if (tutorialId === "voice-journaling" && tutorialStep >= 1) {
+      setVoicePhase("recorded")
+    }
+  }, [tutorialId, tutorialStep])
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
   const streamRef = useRef(null)

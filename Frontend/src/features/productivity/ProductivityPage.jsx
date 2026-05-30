@@ -37,6 +37,8 @@ export default function ProductivityPage() {
   const [donePage, setDonePage] = useState(1);
   const [doneLoading, setDoneLoading] = useState(false);
   const doneScrollRef = useRef(null);
+  const calendarRef = useRef(null);
+  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
 
   const DONE_PAGE_SIZE = 10;
 
@@ -69,6 +71,7 @@ export default function ProductivityPage() {
         prev.map(t => (t.id === event.id ? { ...t, status: newStatus } : t))
       );
       setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, status: newStatus } : prev);
+      setCalendarRefreshKey(k => k + 1);
     } catch {
     }
   }, []);
@@ -78,12 +81,18 @@ export default function ProductivityPage() {
       await productivityService.delete(id);
       setAllTasks(prev => prev.filter(t => t.id !== id));
       setDetailEvent(null);
+      setCalendarRefreshKey(k => k + 1);
     } catch {
     }
   }, []);
 
   const handleTaskClick = useCallback((task) => {
     setDetailEvent(task);
+  }, []);
+
+  const handleDetailEdit = useCallback((activity) => {
+    setDetailEvent(null);
+    calendarRef.current?.editActivity(activity);
   }, []);
 
   useEffect(() => {
@@ -113,6 +122,7 @@ export default function ProductivityPage() {
       setAllTasks(prev =>
         prev.map(t => (t.id === item.id ? { ...t, status: nextStatus } : t))
       );
+      setCalendarRefreshKey(k => k + 1);
     } catch {
     }
   }, []);
@@ -203,7 +213,7 @@ export default function ProductivityPage() {
         {t("productivity.page.viewPlanAndTasks")}
       </button>
 
-      <ProductivityCalendar onActivityUpdated={fetchAllTasks} />
+      <ProductivityCalendar ref={calendarRef} onActivityUpdated={fetchAllTasks} calendarRefreshKey={calendarRefreshKey} />
 
       <div style={{
         background: `linear-gradient(135deg, ${theme.bg}, var(--color-card, white))`,
@@ -326,6 +336,7 @@ export default function ProductivityPage() {
         open={!!detailEvent}
         onClose={() => setDetailEvent(null)}
         onStatusChange={handleDetailStatusChange}
+        onEdit={handleDetailEdit}
         onDelete={handleDetailDelete}
       />
     </div>

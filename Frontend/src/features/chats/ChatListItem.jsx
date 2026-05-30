@@ -5,7 +5,7 @@ import { theme } from "../../theme"
 import ContextMenu from "../../components/ui/ContextMenu"
 import ConfirmDialog from "../../components/ui/ConfirmDialog"
 
-const ChatListItem = memo(function ChatListItem({ chat, active, onSelect, onRename, onDelete }) {
+const ChatListItem = memo(function ChatListItem({ chat, active, newSessionId, onSelect, onRename, onDelete }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 })
@@ -14,7 +14,32 @@ const ChatListItem = memo(function ChatListItem({ chat, active, onSelect, onRena
   const [deleted, setDeleted] = useState(false)
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState("")
+  const [revealCount, setRevealCount] = useState(null)
+  const animRef = useRef(null)
   const inputRef = useRef(null)
+
+  const isNew = chat.id === newSessionId && newSessionId
+
+  useEffect(() => {
+    if (isNew && chat.title) {
+      const total = chat.title.length
+      const duration = Math.min(total * 60, 700)
+      const startTime = performance.now()
+      let killed = false
+      function frame(now) {
+        if (killed) return
+        const elapsed = now - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        const eased = 1 - Math.pow(1 - progress, 3)
+        setRevealCount(Math.min(Math.floor(eased * total), total))
+        if (progress < 1) animRef.current = requestAnimationFrame(frame)
+      }
+      animRef.current = requestAnimationFrame(frame)
+      return () => { killed = true; if (animRef.current) cancelAnimationFrame(animRef.current) }
+    } else {
+      setRevealCount(null)
+    }
+  }, [isNew, chat.title])
 
   useEffect(() => {
     if (isRenaming && inputRef.current) {
@@ -116,7 +141,7 @@ const ChatListItem = memo(function ChatListItem({ chat, active, onSelect, onRena
             whiteSpace: "nowrap",
             margin: 0,
             lineHeight: "22px",
-          }}>{chat.title}</p>
+          }}>{revealCount !== null ? chat.title?.slice(0, revealCount) : chat.title}</p>
         )}
       </div>
 

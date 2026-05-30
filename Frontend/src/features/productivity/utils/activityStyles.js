@@ -13,7 +13,7 @@ const VARIANTS = {
     label: "Task (with deadline)",
     background: (color) => `${color}0A`,
     borderLeft: (color) => `3px solid ${color}`,
-    border: (color) => `1.5px solid ${color}40`,
+    border: (color) => `1.5px dashed ${color}40`,
     titleColor: (color) => color,
     hoverBackground: (color) => `${color}18`,
     hoverShadow: (color) => `0 2px 10px ${color}35, 0 1px 3px rgba(0,0,0,0.06)`,

@@ -46,7 +46,7 @@ def validate_event_data(data, require_all=True):
     if "color" in data and data["color"] not in VALID_COLORS:
         errors["color"] = "Invalid color value"
 
-    if "productivity_level" in data:
+    if "productivity_level" in data and data["productivity_level"] is not None:
         val = data["productivity_level"]
         if val not in VALID_PRODUCTIVITY_LEVELS:
             levels = ", ".join(VALID_PRODUCTIVITY_LEVELS.keys())

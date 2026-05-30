@@ -158,7 +158,7 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
     // Find the activity from laidOut (normalize ID type — dataset returns string)
     const entry = laidOut.find(l => String(l.event.id) === activityId)
     if (!entry) return
-    if (entry.event.isSegmented) return
+    if (entry.event.isSegmented || entry.event._isTaskMarker) return
 
     const act = entry.event
     const startMin = timeToMinutes(act.startTime)
@@ -314,6 +314,7 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
   return (
     <div
       ref={gridRef}
+      data-calendar-grid
       tabIndex={0}
       onKeyDown={handleKeyDown}
       style={{

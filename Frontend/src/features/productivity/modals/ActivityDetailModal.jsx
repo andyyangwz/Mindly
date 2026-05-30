@@ -10,7 +10,7 @@ function formatDateTime(datetimeStr, timeStr) {
   const datePart = datetimeStr.length >= 10
     ? new Date(datetimeStr.slice(0, 10) + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     : datetimeStr
-  const timePart = timeStr ? formatTime(timeStr) : ""
+  const timePart = timeStr ? formatTime(timeStr) : (datetimeStr ? formatTime(datetimeStr.slice(11, 16)) : "")
   return timePart ? `${datePart} ${timePart}` : datePart
 }
 
@@ -86,10 +86,8 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
                 <span style={{ fontSize: 11, color: viewingActivity.color, fontWeight: 500 }}>
                   {viewingActivity.hasDeadline ? (
                     <>{t("productivity.event.task")}</>
-                  ) : viewingActivity.startTime ? (
-                    <>{formatDateTime(viewingActivity.startDatetime, viewingActivity.startTime)} &ndash; {viewingActivity.startDatetime && viewingActivity.endDatetime && viewingActivity.startDatetime.slice(0, 10) !== viewingActivity.endDatetime.slice(0, 10) ? formatDateTime(viewingActivity.endDatetime, viewingActivity.endTime) : formatTime(viewingActivity.endTime)}</>
                   ) : viewingActivity.startDatetime ? (
-                    <>{new Date(viewingActivity.startDatetime.slice(0, 10) + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</>
+                    <>{formatDateTime(viewingActivity.startDatetime, viewingActivity.startTime)} &ndash; {viewingActivity.startDatetime && viewingActivity.endDatetime && viewingActivity.startDatetime.slice(0, 10) !== viewingActivity.endDatetime.slice(0, 10) ? formatDateTime(viewingActivity.endDatetime, viewingActivity.endTime) : formatTime(viewingActivity.endTime)}</>
                   ) : null}
                 </span>
               </div>

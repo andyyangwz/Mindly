@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Brain, Home, PenLine, Calendar, BarChart3, Plus,
-  MessageSquare, Sun, Moon, LogOut,
+  MessageSquare, Sun, Moon, Monitor, LogOut,
 } from "lucide-react";
 import { theme } from "../theme";
 import { useTheme } from "../theme/ThemeProvider";
@@ -25,15 +25,16 @@ function ThemeSwitcher({ currentTheme, onSelect }) {
     <div
       style={{
         display: "flex",
-        gap: 4,
+        gap: 3,
         background: theme.bg,
-        borderRadius: 10,
-        padding: 3,
+        borderRadius: 8,
+        padding: 2,
       }}
     >
       {[
         { value: "light", icon: Sun, label: t("nav.light") },
         { value: "dark", icon: Moon, label: t("nav.dark") },
+        { value: "system", icon: Monitor, label: t("nav.system") },
       ].map(({ value, icon: Icon, label }) => {
         const active = currentTheme === value;
         return (
@@ -45,20 +46,20 @@ function ThemeSwitcher({ currentTheme, onSelect }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 6,
-              padding: "7px 12px",
-              borderRadius: 8,
+              gap: 4,
+              padding: "5px 8px",
+              borderRadius: 7,
               border: "none",
               cursor: "pointer",
               background: active ? "var(--color-card, white)" : "transparent",
               color: active ? theme.primaryText : theme.muted,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: active ? 600 : 500,
               transition: "all 0.15s",
-              boxShadow: active ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+              boxShadow: active ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
             }}
           >
-            <Icon size={14} />
+            <Icon size={12} />
             {label}
           </button>
         );
@@ -75,10 +76,10 @@ function LanguageSwitcher() {
     <div
       style={{
         display: "flex",
-        gap: 4,
+        gap: 3,
         background: theme.bg,
-        borderRadius: 10,
-        padding: 3,
+        borderRadius: 8,
+        padding: 2,
       }}
     >
       {[
@@ -95,20 +96,20 @@ function LanguageSwitcher() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 6,
-              padding: "7px 12px",
-              borderRadius: 8,
+              gap: 4,
+              padding: "5px 8px",
+              borderRadius: 7,
               border: "none",
               cursor: "pointer",
               background: active ? "var(--color-card, white)" : "transparent",
               color: active ? theme.primaryText : theme.muted,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: active ? 600 : 500,
               transition: "all 0.15s",
-              boxShadow: active ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+              boxShadow: active ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
             }}
           >
-            {value === "en" ? "🇬🇧" : "🇮🇩"}
+            {value === "en" ? "\uD83C\uDDEC\uD83C\uDDE7" : "\uD83C\uDDEE\uD83C\uDDE9"}
             {label}
           </button>
         );
@@ -117,7 +118,7 @@ function LanguageSwitcher() {
   );
 }
 
-export default function Sidebar({ sessions, onNewChat, onRenameChat, onDeleteChat }) {
+export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameChat, onDeleteChat }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme: currentTheme, setTheme } = useTheme();
@@ -293,6 +294,7 @@ export default function Sidebar({ sessions, onNewChat, onRenameChat, onDeleteCha
             key={chat.id}
             chat={chat}
             active={activeSessionId === chat.id}
+            newSessionId={newSessionId}
             onSelect={(id) => navigate(`/app/spill/${id}`)}
             onRename={onRenameChat}
             onDelete={onDeleteChat}

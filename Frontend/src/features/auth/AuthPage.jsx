@@ -19,9 +19,9 @@ export default function AuthPage() {
   const [serverError, setServerError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { login, signup, googleLogin, user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const isLight = theme === "light";
+  const isLight = resolvedTheme === "light";
 
   useEffect(() => {
     if (user) {

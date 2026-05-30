@@ -85,7 +85,7 @@ export default function CreateHabitRelicModal({ open, onClose, onCreated }) {
   const targetNum = parseInt(target, 10) || 0;
   const pct = targetNum > 0 ? Math.min(Math.round((currentProgress / targetNum) * 100), 100) : 0;
   const rarity = RarityLabel(title, currentProgress, targetNum);
-  const circ = 2 * Math.PI * 42;
+  const circ = 2 * Math.PI * 62;
   const offset = circ * (1 - pct / 100);
 
   const fieldStyle = {
@@ -229,8 +229,15 @@ export default function CreateHabitRelicModal({ open, onClose, onCreated }) {
 
             {/* Progress ring */}
             <svg width={160} height={160} style={{ position: "absolute", transform: "rotate(-90deg)" }}>
+              <defs>
+                <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8" />
+                  <stop offset="50%" stopColor="#A78BFA" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.8" />
+                </linearGradient>
+              </defs>
               <circle cx={80} cy={80} r={62} fill="none" stroke="var(--color-border, #E5E7EB)" strokeWidth="3" />
-              <circle cx={80} cy={80} r={62} fill="none" stroke="url(#ringGrad)" strokeWidth="3"
+              <circle cx={80} cy={80} r={62} fill="none" stroke="url(#progressGrad)" strokeWidth="3"
                 strokeLinecap="round" strokeDasharray={`${circ}`} strokeDashoffset={offset}
                 style={{ transition: "stroke-dashoffset 0.6s ease" }} />
             </svg>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react"
-import { useParams, useNavigate, useLocation } from "react-router-dom"
+import { useParams, useNavigate, useLocation, useOutletContext } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
 const SPILL_PERSONALITY_KEY = "mindly_spill_personality"
@@ -111,10 +111,7 @@ const ChatBubble = memo(({ msg, personality, isStreaming, isError }) => {
           {isStreaming && !msg.content ? (
             <span style={{ color: theme.muted, fontStyle: "italic" }}>Typing...</span>
           ) : (
-            <>
-              {msg.content}
-              {isStreaming && <span className="streaming-cursor" />}
-            </>
+            msg.content
           )}
         </div>
         {!isStreaming && (
@@ -336,6 +333,7 @@ export default function SpillAIPage() {
   }
 
   const { messages, loading, fetchMessages, fetchSession } = useChat()
+  const { addSession, fetchSessions } = useOutletContext() || {}
 
   const isNewChat = !chatId
 
@@ -470,6 +468,13 @@ export default function SpillAIPage() {
               sessionNavigated = true
               initialSyncDone.current = true
               navigatingFromSendRef.current = true
+              addSession?.({
+                id: newSessionId,
+                title: userText.slice(0, 30) + (userText.length > 30 ? "..." : ""),
+                personalityType: personality,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              })
               navigate(`/app/spill/${newSessionId}`, { replace: true })
             }
           },
@@ -501,6 +506,7 @@ export default function SpillAIPage() {
                 return msg
               }),
             )
+            setTimeout(() => fetchSessions?.(), 500)
           },
           onError: (errorMsg) => {
             if (streamingFlushTimerRef.current) {
@@ -576,7 +582,7 @@ export default function SpillAIPage() {
         <InfoButton tutorialId="ai-personalities" />
       </div>
 
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } } @keyframes mascotFadeIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } } .streaming-cursor { display: inline-block; width: 2px; height: 1.1em; background: var(--color-muted); margin-left: 2px; vertical-align: text-bottom; animation: blink 0.8s step-end infinite; } @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
+      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } } @keyframes mascotFadeIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }`}</style>
       <div
         ref={scrollContainerRef}
         onScroll={handleChatScroll}

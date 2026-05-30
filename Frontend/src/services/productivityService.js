@@ -26,7 +26,7 @@ function toBackend(data) {
   if (data.description !== undefined) body.description = data.description
   if (data.color !== undefined) body.color = data.color
   if (data.priority !== undefined) body.priority = data.priority
-  if (data.productivityLevel !== undefined) body.productivity_level = data.productivityLevel
+  if (data.productivityLevel != null) body.productivity_level = data.productivityLevel
   if (data.startDatetime !== undefined) body.start_datetime = data.startDatetime
   if (data.endDatetime !== undefined) body.end_datetime = data.endDatetime
   if (data.hasDeadline !== undefined) body.has_deadline = data.hasDeadline

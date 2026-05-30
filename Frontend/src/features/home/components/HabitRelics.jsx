@@ -46,7 +46,12 @@ export default function HabitRelics() {
 
   const displayRelics = useMemo(() => {
     if (isTutorial && tutorialRelic) {
-      return [tutorialRelic, ...relics.filter(r => r.id !== "tutorial-relic")];
+      return [
+        tutorialRelic,
+        ...relics
+          .filter(r => r.id !== "tutorial-relic")
+          .map(r => ({ ...r, is_equipped: false, equipped_order: null })),
+      ];
     }
     return relics;
   }, [isTutorial, tutorialRelic, relics]);

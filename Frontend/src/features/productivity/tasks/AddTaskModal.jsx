@@ -17,9 +17,9 @@ const INITIAL_STATE = {
   title: "",
   description: "",
   startDate: "",
-  startTime: "",
+  startTime: "00:00",
   deadlineDate: "",
-  deadlineTime: "",
+  deadlineTime: "23:59",
   color: "#7C3AED",
   priority: "medium",
   productivityLevel: null,
@@ -40,9 +40,9 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
         title: voiceAutofill.title || "",
         description: voiceAutofill.description || "",
         startDate: voiceAutofill.start_date || "",
-        startTime: voiceAutofill.start_time || "",
+        startTime: voiceAutofill.start_time || "00:00",
         deadlineDate: voiceAutofill.end_date || "",
-        deadlineTime: voiceAutofill.end_time || "",
+        deadlineTime: voiceAutofill.end_time || "23:59",
         color: COLOR_NAME_MAP[voiceAutofill.color?.toLowerCase()] || "#7C3AED",
         priority: "medium",
         productivityLevel: voiceAutofill.productivity_level || null,
@@ -52,9 +52,9 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
         title: editingActivity.title,
         description: editingActivity.description || "",
         startDate: editingActivity.startDatetime ? editingActivity.startDatetime.slice(0, 10) : "",
-        startTime: editingActivity.startTime || "",
+        startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
         deadlineDate: editingActivity.endDatetime ? editingActivity.endDatetime.slice(0, 10) : "",
-        deadlineTime: editingActivity.endTime || "",
+        deadlineTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
         color: editingActivity.color || "#7C3AED",
         priority: editingActivity.priority || "medium",
         productivityLevel: editingActivity.productivityLevel || null,
@@ -84,17 +84,18 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
     }
   }, [open])
 
+  const safeStartTime = () => form.startTime || "00:00"
+  const safeDeadlineTime = () => form.deadlineTime || "23:59"
+
   const validate = () => {
     const errs = {}
     if (!form.title.trim()) errs.title = t("productivity.eventForm.validation.titleRequired")
     if (!form.startDate) errs.startDate = t("productivity.eventForm.validation.required")
-    if (!form.startTime) errs.startTime = t("productivity.eventForm.validation.required")
     if (!form.deadlineDate) errs.deadlineDate = t("productivity.eventForm.validation.required")
-    if (!form.deadlineTime) errs.deadlineTime = t("productivity.eventForm.validation.required")
 
-    if (form.startDate && form.startTime && form.deadlineDate && form.deadlineTime) {
-      const start = new Date(`${form.startDate}T${form.startTime}`)
-      const deadline = new Date(`${form.deadlineDate}T${form.deadlineTime}`)
+    if (form.startDate && form.deadlineDate) {
+      const start = new Date(`${form.startDate}T${safeStartTime()}`)
+      const deadline = new Date(`${form.deadlineDate}T${safeDeadlineTime()}`)
       if (deadline <= start) errs.deadlineTime = "Deadline must be after start"
     }
 
@@ -109,11 +110,11 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
       await onSave({
         title: form.title.trim(),
         description: form.description.trim(),
-        startDatetime: `${form.startDate}T${form.startTime}`,
-        endDatetime: `${form.deadlineDate}T${form.deadlineTime}`,
+        startDatetime: `${form.startDate}T${safeStartTime()}`,
+        endDatetime: `${form.deadlineDate}T${safeDeadlineTime()}`,
         color: form.color,
         priority: form.priority,
-        productivityLevel: null,
+        productivityLevel: editingActivity?.productivityLevel ?? null,
         status: editingActivity?.status || "To Do",
         hasDeadline: true,
       })

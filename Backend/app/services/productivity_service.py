@@ -13,8 +13,8 @@ def _build_event(user_id, data):
     ed = _parse_datetime(data["end_datetime"])
     if ed <= sd:
         ed += timedelta(days=1)
-    if (ed - sd) > timedelta(days=2):
-        raise ValueError("Activities cannot span more than 2 days")
+    if not data.get("has_deadline") and (ed - sd) > timedelta(days=2):
+        raise ValueError("Activity cannot span more than 2 days")
     return ProductivityEvent(
         user_id=user_id,
         title=data["title"].strip(),
@@ -94,9 +94,10 @@ class ProductivityService:
             event.priority = data["priority"]
         if "productivity_level" in data:
             val = data["productivity_level"]
-            if val not in ProductivityEvent.VALID_LEVELS:
+            if val is not None and val not in ProductivityEvent.VALID_LEVELS:
                 raise ValueError(f"Invalid productivity level: {val}")
-            event.productivity_level = val
+            if val is not None:
+                event.productivity_level = val
         if "status" in data:
             val = data["status"]
             if val not in ProductivityEvent.VALID_STATUSES:

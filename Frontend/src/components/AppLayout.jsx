@@ -10,7 +10,7 @@ export default function AppLayout() {
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
-  const { sessions, fetchSessions, renameSession, deleteSession } = useChat()
+  const { sessions, newSessionId, fetchSessions, renameSession, deleteSession, addSession } = useChat()
 
   useEffect(() => {
     fetchSessions()
@@ -50,6 +50,7 @@ export default function AppLayout() {
     >
       <Sidebar
         sessions={sessions}
+        newSessionId={newSessionId}
         onNewChat={handleNewChat}
         onRenameChat={handleRenameChat}
         onDeleteChat={handleDeleteChat}
@@ -61,7 +62,7 @@ export default function AppLayout() {
           background: theme.bg,
         }}
       >
-        <Outlet />
+        <Outlet context={{ addSession, fetchSessions }} />
         <SpotlightOverlay />
       </div>
     </div>

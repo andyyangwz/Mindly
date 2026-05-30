@@ -22,23 +22,22 @@ class StatsService:
     @staticmethod
     def get_home_stats(user_id):
         today = date.today()
-        now = datetime.now()
+        today_start = datetime.combine(today, datetime.min.time())
+        today_end = datetime.combine(today, datetime.max.time())
 
         all_tasks = ProductivityEvent.query.filter(
             ProductivityEvent.user_id == user_id,
+            ProductivityEvent.has_deadline == True,
             or_(
                 and_(
-                    ProductivityEvent.start_datetime <= now,
-                    ProductivityEvent.end_datetime >= now,
+                    ProductivityEvent.start_datetime <= today_end,
+                    ProductivityEvent.end_datetime >= today_start,
                 ),
                 ProductivityEvent.status == "In Progress",
             ),
         ).all()
         y = sum(1 for ev in all_tasks if ev.status == "Done")
         x = len(all_tasks)
-
-        today_start = datetime.combine(today, datetime.min.time())
-        today_end = datetime.combine(today, datetime.max.time())
 
         today_events = ProductivityEvent.query.filter(
             ProductivityEvent.user_id == user_id,

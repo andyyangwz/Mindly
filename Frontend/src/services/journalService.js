@@ -2,7 +2,14 @@ import { api } from "./api";
 
 function stripHtml(html) {
   if (!html) return ""
-  const doc = new DOMParser().parseFromString(html, "text/html")
+  // Insert space before block-level boundaries so adjacent elements don't concatenate
+  const spaced = html
+    .replace(/(<\/p>)/gi, " $1")
+    .replace(/(<\/div>)/gi, " $1")
+    .replace(/(<\/li>)/gi, " $1")
+    .replace(/(<\/h[1-6]>)/gi, " $1")
+    .replace(/(<br\s*\/?>)/gi, " $1")
+  const doc = new DOMParser().parseFromString(spaced, "text/html")
   return doc.body.textContent || ""
 }
 

@@ -38,7 +38,7 @@ export function layoutEvents(events, canvasWidth) {
         baseEnd = isNaN(baseEnd) ? start + 60 : baseEnd
       }
 
-      const isDeadlineLinked = e.hasDeadline
+      const isDeadlineLinked = e.hasDeadline && e.continuesNext !== true
 
       let rawHeight = ((baseEnd - start) / 60) * HOUR_HEIGHT
       if (isNaN(rawHeight) || rawHeight < 0) {
@@ -187,6 +187,16 @@ export function formatHour(hour) {
   if (hour < 12) return `${hour} AM`
   if (hour === 12) return "12 PM"
   return `${hour - 12} PM`
+}
+
+export function formatDateRange(startDatetime, endDatetime) {
+  if (!startDatetime || !endDatetime) return ""
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  const start = new Date(startDatetime.slice(0, 10) + "T00:00:00")
+  const end = new Date(endDatetime.slice(0, 10) + "T00:00:00")
+  const fmt = (d, showYear) => `${d.getDate()} ${months[d.getMonth()]}${showYear ? ` ${d.getFullYear()}` : ""}`
+  const showYear = start.getFullYear() !== end.getFullYear()
+  return `${fmt(start, showYear)} – ${fmt(end, showYear)}`
 }
 
 export function formatTime(timeStr) {

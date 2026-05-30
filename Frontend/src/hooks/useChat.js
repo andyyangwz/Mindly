@@ -3,17 +3,24 @@ import { chatService } from "../services/chatService"
 
 export function useChat() {
   const [sessions, setSessions] = useState([])
+  const [newSessionId, setNewSessionId] = useState(null)
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const fetchMessagesIdRef = useRef(0)
+  const pendingAddIds = useRef(new Set())
 
   const fetchSessions = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
       const result = await chatService.getSessions()
-      setSessions(result.sessions)
+      setSessions((prev) => {
+        const apiIds = new Set(result.sessions.map(s => s.id))
+        const pendingToKeep = prev.filter(s => pendingAddIds.current.has(s.id) && !apiIds.has(s.id))
+        pendingAddIds.current.forEach((id) => { if (apiIds.has(id)) pendingAddIds.current.delete(id) })
+        return [...pendingToKeep, ...result.sessions]
+      })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -59,8 +66,20 @@ export function useChat() {
     setSessions((prev) => prev.filter((s) => s.id !== id))
   }, [])
 
+  const addSession = useCallback((session) => {
+    pendingAddIds.current.add(session.id)
+    setSessions((prev) => {
+      const exists = prev.find(s => s.id === session.id)
+      if (exists) return prev.map(s => s.id === session.id ? { ...s, ...session } : s)
+      return [session, ...prev]
+    })
+    setNewSessionId(session.id)
+    setTimeout(() => setNewSessionId((prev) => prev === session.id ? null : prev), 1500)
+  }, [])
+
   return {
     sessions,
+    newSessionId,
     messages,
     loading,
     error,
@@ -69,5 +88,6 @@ export function useChat() {
     fetchSession,
     renameSession,
     deleteSession,
+    addSession,
   }
 }
