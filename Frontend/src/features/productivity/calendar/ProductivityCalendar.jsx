@@ -257,10 +257,11 @@ useImperativeHandle(ref, () => ({
     setLocalActivities((prevActivities) =>
       prevActivities.map((e) => (e.id === activity.id ? next : e))
     )
+    setViewingActivity(next)
     record({ type: "edit", prev, next })
     await updateActivity(activity.id, { status: newStatus })
     onActivityUpdated?.()
-  }, [updateActivity, onActivityUpdated, record, isTutorialDemoMode])
+  }, [updateActivity, onActivityUpdated, record, isTutorialDemoMode, setViewingActivity])
 
   const handleContextMenu = useCallback((activity, pos) => {
     if (isTutorialDemoMode) {

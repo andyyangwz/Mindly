@@ -1,187 +1,44 @@
 import { useState, useCallback } from "react"
 import { motion } from "framer-motion"
 import { X } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import ScrollReveal from "../components/ScrollReveal"
 import CalendarGrid from "../../productivity/calendar/CalendarGrid"
 import CalendarHeader from "../../productivity/calendar/CalendarHeader"
 
 const SHOWCASE_DATE = new Date(2026, 4, 22)
 
-const BASE_EVENTS = [
-  {
-    id: "showcase-1",
-    title: "Morning Planning",
-    description: "Plan the day and set key intentions.",
-    startDatetime: "2026-05-22T07:00",
-    endDatetime: "2026-05-22T07:30",
-    startTime: "07:00",
-    endTime: "07:30",
-    color: "#8B5CF6",
-    priority: "medium",
-    productivityLevel: "productive",
-    status: "Done",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-2",
-    title: "Deep Work",
-    description: "Focused creative work on the main project.",
-    startDatetime: "2026-05-22T08:00",
-    endDatetime: "2026-05-22T10:00",
-    startTime: "08:00",
-    endTime: "10:00",
-    color: "#7C3AED",
-    priority: "high",
-    productivityLevel: "productive",
-    status: "In Progress",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-9",
-    title: "Code Review",
-    description: "Review pull requests and provide feedback.",
-    startDatetime: "2026-05-22T09:00",
-    endDatetime: "2026-05-22T09:45",
-    startTime: "09:00",
-    endTime: "09:45",
-    color: "#3B82F6",
-    priority: "medium",
-    productivityLevel: "productive",
-    status: "To Do",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-11",
-    title: "Team Standup",
-    description: "Daily sync with the engineering team.",
-    startDatetime: "2026-05-22T09:30",
-    endDatetime: "2026-05-22T10:00",
-    startTime: "09:30",
-    endTime: "10:00",
-    color: "#14B8A6",
-    priority: "medium",
-    productivityLevel: "obligation",
-    status: "Done",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-3",
-    title: "Team Meeting",
-    description: "Weekly sync with the team.",
-    startDatetime: "2026-05-22T10:30",
-    endDatetime: "2026-05-22T11:30",
-    startTime: "10:30",
-    endTime: "11:30",
-    color: "#F59E0B",
-    priority: "medium",
-    productivityLevel: "obligation",
-    status: "To Do",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-4",
-    title: "Journal Reflection",
-    description: "Mid-day reflection and note-taking.",
-    startDatetime: "2026-05-22T12:00",
-    endDatetime: "2026-05-22T12:30",
-    startTime: "12:00",
-    endTime: "12:30",
-    color: "#EC4899",
-    priority: "low",
-    productivityLevel: "neutral",
-    status: "To Do",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-5",
-    title: "Reading Session",
-    description: "Read 'Deep Work' by Cal Newport.",
-    startDatetime: "2026-05-22T13:00",
-    endDatetime: "2026-05-22T14:00",
-    startTime: "13:00",
-    endTime: "14:00",
-    color: "#3B82F6",
-    priority: "low",
-    productivityLevel: "productive",
-    status: "To Do",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-6",
-    title: "Focus Session",
-    description: "Deep focus on project milestones.",
-    startDatetime: "2026-05-22T14:00",
-    endDatetime: "2026-05-22T16:00",
-    startTime: "14:00",
-    endTime: "16:00",
-    color: "#8B5CF6",
-    priority: "high",
-    productivityLevel: "productive",
-    status: "To Do",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-12",
-    title: "Design Review",
-    description: "Review wireframes and provide feedback.",
-    startDatetime: "2026-05-22T14:30",
-    endDatetime: "2026-05-22T15:30",
-    startTime: "14:30",
-    endTime: "15:30",
-    color: "#F97316",
-    priority: "medium",
-    productivityLevel: "obligation",
-    status: "To Do",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-10",
-    title: "1:1 with Mentor",
-    description: "Weekly check-in and career discussion.",
-    startDatetime: "2026-05-22T15:00",
-    endDatetime: "2026-05-22T15:30",
-    startTime: "15:00",
-    endTime: "15:30",
-    color: "#EC4899",
-    priority: "high",
-    productivityLevel: "productive",
-    status: "To Do",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-7",
-    title: "Gym Session",
-    description: "Evening workout routine.",
-    startDatetime: "2026-05-22T17:00",
-    endDatetime: "2026-05-22T18:00",
-    startTime: "17:00",
-    endTime: "18:00",
-    color: "#10B981",
-    priority: "medium",
-    productivityLevel: "productive",
-    status: "To Do",
-    hasDeadline: false,
-  },
-  {
-    id: "showcase-8",
-    title: "Assignment Deadline",
-    description: "Final submission due tonight.",
-    startDatetime: "2026-05-22T23:55",
-    endDatetime: "2026-05-22T23:55",
-    startTime: "23:55",
-    endTime: "23:55",
-    color: "#EF4444",
-    priority: "high",
-    productivityLevel: "obligation",
-    status: "To Do",
-    hasDeadline: false,
-  },
+const EVENT_STRUCTURE = [
+  { id: "showcase-1", startDatetime: "2026-05-22T07:00", endDatetime: "2026-05-22T07:30", startTime: "07:00", endTime: "07:30", color: "#8B5CF6", priority: "medium", productivityLevel: "productive", hasDeadline: false },
+  { id: "showcase-2", startDatetime: "2026-05-22T08:00", endDatetime: "2026-05-22T10:00", startTime: "08:00", endTime: "10:00", color: "#7C3AED", priority: "high", productivityLevel: "productive", hasDeadline: false },
+  { id: "showcase-9", startDatetime: "2026-05-22T09:00", endDatetime: "2026-05-22T09:45", startTime: "09:00", endTime: "09:45", color: "#3B82F6", priority: "medium", productivityLevel: "productive", hasDeadline: false },
+  { id: "showcase-11", startDatetime: "2026-05-22T09:30", endDatetime: "2026-05-22T10:00", startTime: "09:30", endTime: "10:00", color: "#14B8A6", priority: "medium", productivityLevel: "obligation", hasDeadline: false },
+  { id: "showcase-3", startDatetime: "2026-05-22T10:30", endDatetime: "2026-05-22T11:30", startTime: "10:30", endTime: "11:30", color: "#F59E0B", priority: "medium", productivityLevel: "obligation", hasDeadline: false },
+  { id: "showcase-4", startDatetime: "2026-05-22T12:00", endDatetime: "2026-05-22T12:30", startTime: "12:00", endTime: "12:30", color: "#EC4899", priority: "low", productivityLevel: "neutral", hasDeadline: false },
+  { id: "showcase-5", startDatetime: "2026-05-22T13:00", endDatetime: "2026-05-22T14:00", startTime: "13:00", endTime: "14:00", color: "#3B82F6", priority: "low", productivityLevel: "productive", hasDeadline: false },
+  { id: "showcase-6", startDatetime: "2026-05-22T14:00", endDatetime: "2026-05-22T16:00", startTime: "14:00", endTime: "16:00", color: "#8B5CF6", priority: "high", productivityLevel: "productive", hasDeadline: false },
+  { id: "showcase-12", startDatetime: "2026-05-22T14:30", endDatetime: "2026-05-22T15:30", startTime: "14:30", endTime: "15:30", color: "#F97316", priority: "medium", productivityLevel: "obligation", hasDeadline: false },
+  { id: "showcase-10", startDatetime: "2026-05-22T15:00", endDatetime: "2026-05-22T15:30", startTime: "15:00", endTime: "15:30", color: "#EC4899", priority: "high", productivityLevel: "productive", hasDeadline: false },
+  { id: "showcase-7", startDatetime: "2026-05-22T17:00", endDatetime: "2026-05-22T18:00", startTime: "17:00", endTime: "18:00", color: "#10B981", priority: "medium", productivityLevel: "productive", hasDeadline: false },
+  { id: "showcase-8", startDatetime: "2026-05-22T23:55", endDatetime: "2026-05-22T23:55", startTime: "23:55", endTime: "23:55", color: "#EF4444", priority: "high", productivityLevel: "obligation", hasDeadline: false },
 ]
 
+function buildEvents(t) {
+  const eventData = t("landing.calendar.events", { returnObjects: true });
+  return EVENT_STRUCTURE.map((s, i) => ({
+    ...s,
+    title: eventData[i]?.title || s.id,
+    description: eventData[i]?.desc || "",
+    status: eventData[i]?.status || "To Do",
+  }));
+}
+
 export default function CalendarShowcase() {
-  const [events, setEvents] = useState(BASE_EVENTS)
+  const { t } = useTranslation();
+  const [events, setEvents] = useState(() => buildEvents(t))
   const [dragOverrides, setDragOverrides] = useState({})
   const [showSignup, setShowSignup] = useState(false)
+  const [interactionMode, setInteractionMode] = useState("fixed")
 
   const handleDragUpdate = useCallback((eventId, newStart, newEnd) => {
     if (newStart === null) {
@@ -257,7 +114,7 @@ export default function CalendarShowcase() {
               textAlign: "center",
             }}
           >
-            Intelligent Scheduling
+            {t("landing.calendar.label")}
           </p>
         </ScrollReveal>
 
@@ -273,7 +130,7 @@ export default function CalendarShowcase() {
               lineHeight: 1.2,
             }}
           >
-            A calendar that understands you
+            {t("landing.calendar.title")}
           </h2>
         </ScrollReveal>
 
@@ -307,6 +164,8 @@ export default function CalendarShowcase() {
                 onAddActivity={handleShowSignup}
                 onAddTask={handleShowSignup}
                 onVoice={handleShowSignup}
+                interactionMode={interactionMode}
+                onModeChange={setInteractionMode}
               />
               <CalendarGrid
                 activities={events}
@@ -321,6 +180,7 @@ export default function CalendarShowcase() {
                 onInlineSave={() => {}}
                 onInlineCancel={() => {}}
                 dragOverrides={dragOverrides}
+                interactionMode={interactionMode}
               />
             </div>
           </motion.div>
@@ -366,7 +226,7 @@ export default function CalendarShowcase() {
                 margin: "0 0 8px",
               }}
             >
-              Unlock the Full Calendar
+               {t("landing.calendar.overlayTitle")}
             </h3>
 
             <p
@@ -376,7 +236,7 @@ export default function CalendarShowcase() {
                 margin: "0 0 24px",
               }}
             >
-              Sign up to create activities, set deadlines, and organize your week with AI-powered scheduling.
+               {t("landing.calendar.overlayDesc")}
             </p>
 
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
@@ -391,7 +251,7 @@ export default function CalendarShowcase() {
                   fontSize: 13, fontWeight: 600, cursor: "pointer",
                 }}
               >
-                Okay
+                {t("landing.calendar.overlayOk")}
               </button>
               <a
                 href="/signup"
@@ -404,7 +264,7 @@ export default function CalendarShowcase() {
                   textDecoration: "none", display: "inline-block",
                 }}
               >
-                Sign Up
+                {t("landing.calendar.overlaySignUp")}
               </a>
             </div>
           </div>

@@ -1,33 +1,13 @@
 import { useState, useCallback } from "react";
 import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import AuthInput from "./AuthInput";
 import GoogleButton from "./GoogleButton";
-
-const MODES = [
-  { key: "login", label: "Sign In" },
-  { key: "signup", label: "Create Account" },
-];
 
 const INPUTS = {
   login: ["email", "password"],
   signup: ["firstName", "lastName", "email", "password", "confirmPassword"],
-};
-
-const LABELS = {
-  firstName: "First Name",
-  lastName: "Last Name",
-  email: "Email Address",
-  password: "Password",
-  confirmPassword: "Confirm Password",
-};
-
-const PLACEHOLDERS = {
-  firstName: "Your first name",
-  lastName: "Your last name",
-  email: "you@example.com",
-  password: "••••••••",
-  confirmPassword: "Re-enter password",
 };
 
 const slideFade = {
@@ -36,7 +16,7 @@ const slideFade = {
   exit: { opacity: 0, y: -8 },
 };
 
-function ModeTab({ active, label, onClick }) {
+function ModeTab({ active, label, onClick, t, isLight }) {
   return (
     <motion.button
       type="button"
@@ -78,27 +58,27 @@ function ModeTab({ active, label, onClick }) {
   );
 }
 
-function LoginForm({ isLight, formData, errors, showPassword, onTogglePassword, handleChange }) {
+function LoginForm({ isLight, formData, errors, showPassword, onTogglePassword, handleChange, t }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <AuthInput
         isLight={isLight}
-        label={LABELS.email}
+        label={t("auth.panel.labels.email")}
         type="email"
         value={formData.email || ""}
         onChange={handleChange("email")}
         error={errors.email}
-        placeholder={PLACEHOLDERS.email}
+        placeholder={t("auth.panel.placeholders.email")}
       />
       <div>
         <AuthInput
           isLight={isLight}
-          label={LABELS.password}
+          label={t("auth.panel.labels.password")}
           type={showPassword ? "text" : "password"}
           value={formData.password || ""}
           onChange={handleChange("password")}
           error={errors.password}
-          placeholder={PLACEHOLDERS.password}
+          placeholder={t("auth.panel.placeholders.password")}
           suffix={
             <button
               type="button"
@@ -126,51 +106,51 @@ function LoginForm({ isLight, formData, errors, showPassword, onTogglePassword, 
             cursor: "default",
           }}
         >
-          Forgot password?
+          {t("auth.panel.forgotPassword")}
         </p>
       </div>
     </div>
   );
 }
 
-function SignUpForm({ isLight, formData, errors, showPassword, showConfirm, onTogglePassword, onToggleConfirm, handleChange }) {
+function SignUpForm({ isLight, formData, errors, showPassword, showConfirm, onTogglePassword, onToggleConfirm, handleChange, t }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <AuthInput
           isLight={isLight}
-          label={LABELS.firstName}
+          label={t("auth.panel.labels.firstName")}
           value={formData.firstName || ""}
           onChange={handleChange("firstName")}
           error={errors.firstName}
-          placeholder={PLACEHOLDERS.firstName}
+          placeholder={t("auth.panel.placeholders.firstName")}
         />
         <AuthInput
           isLight={isLight}
-          label={LABELS.lastName}
+          label={t("auth.panel.labels.lastName")}
           value={formData.lastName || ""}
           onChange={handleChange("lastName")}
           error={errors.lastName}
-          placeholder={PLACEHOLDERS.lastName}
+          placeholder={t("auth.panel.placeholders.lastName")}
         />
       </div>
       <AuthInput
         isLight={isLight}
-        label={LABELS.email}
+        label={t("auth.panel.labels.email")}
         type="email"
         value={formData.email || ""}
         onChange={handleChange("email")}
         error={errors.email}
-        placeholder={PLACEHOLDERS.email}
+        placeholder={t("auth.panel.placeholders.email")}
       />
       <AuthInput
         isLight={isLight}
-        label={LABELS.password}
+        label={t("auth.panel.labels.password")}
         type={showPassword ? "text" : "password"}
         value={formData.password || ""}
         onChange={handleChange("password")}
         error={errors.password}
-        placeholder={PLACEHOLDERS.password}
+        placeholder={t("auth.panel.placeholders.password")}
         suffix={
           <button
             type="button"
@@ -191,12 +171,12 @@ function SignUpForm({ isLight, formData, errors, showPassword, showConfirm, onTo
       />
       <AuthInput
         isLight={isLight}
-        label={LABELS.confirmPassword}
+        label={t("auth.panel.labels.confirmPassword")}
         type={showConfirm ? "text" : "password"}
         value={formData.confirmPassword || ""}
         onChange={handleChange("confirmPassword")}
         error={errors.confirmPassword}
-        placeholder={PLACEHOLDERS.confirmPassword}
+        placeholder={t("auth.panel.placeholders.confirmPassword")}
         suffix={
           <button
             type="button"
@@ -231,6 +211,7 @@ export default function AuthPanel({
   handleChange,
   onGoogleAuth,
 }) {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -338,14 +319,18 @@ export default function AuthPanel({
                 color: c.textColor,
               }}
             >
-              {MODES.map(({ key, label }) => (
-                <ModeTab
-                  key={key}
-                  active={mode === key}
-                  label={label}
-                  onClick={() => handleModeClick(key)}
+              <ModeTab
+                  key="login"
+                  active={mode === "login"}
+                  label={t("auth.panel.signIn")}
+                  onClick={() => handleModeClick("login")}
                 />
-              ))}
+                <ModeTab
+                  key="signup"
+                  active={mode === "signup"}
+                  label={t("auth.panel.createAccount")}
+                  onClick={() => handleModeClick("signup")}
+                />
             </div>
 
             {/* Form body */}
@@ -367,6 +352,7 @@ export default function AuthPanel({
                       showPassword={showPassword}
                       onTogglePassword={() => setShowPassword(v => !v)}
                       handleChange={handleChange}
+                      t={t}
                     />
                   </motion.div>
                 ) : (
@@ -387,6 +373,7 @@ export default function AuthPanel({
                       onTogglePassword={() => setShowPassword(v => !v)}
                       onToggleConfirm={() => setShowConfirm(v => !v)}
                       handleChange={handleChange}
+                      t={t}
                     />
                   </motion.div>
                 )}
@@ -453,7 +440,7 @@ export default function AuthPanel({
                     </motion.div>
                   ) : (
                     <>
-                      {mode === "login" ? "Sign In" : "Create Account"}
+                      {mode === "login" ? t("auth.panel.signIn") : t("auth.panel.createAccount")}
                       <ArrowRight size={16} />
                     </>
                   )}
@@ -479,7 +466,7 @@ export default function AuthPanel({
                     textTransform: "uppercase",
                   }}
                 >
-                  or
+                  {t("auth.panel.or")}
                 </span>
                 <div style={{ flex: 1, height: 1, background: isLight ? "rgba(45,43,61,0.06)" : "rgba(255,255,255,0.06)" }} />
               </div>
@@ -507,8 +494,8 @@ export default function AuthPanel({
           }}
         >
           {mode === "login"
-            ? "Don't have an account? Sign in anyway."
-            : "Already have an account?"}
+            ? t("auth.panel.footerSignIn")
+            : t("auth.panel.footerCreate")}
         </motion.p>
       </motion.div>
     </motion.div>

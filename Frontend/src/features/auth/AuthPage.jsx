@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sun, Moon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../theme/ThemeProvider";
 import AtmospherePanel from "./AtmospherePanel";
 import AuthPanel from "./AuthPanel";
 
 export default function AuthPage() {
+  const { t, i18n } = useTranslation();
   const [mode, setMode] = useState("login");
   const [formData, setFormData] = useState({
     firstName: "",
@@ -41,18 +43,18 @@ export default function AuthPage() {
     const errs = {};
     if (mode === "signup") {
       if (!formData.firstName || formData.firstName.length < 2)
-        errs.firstName = "Enter your first name";
+        errs.firstName = t("auth.page.firstNameError");
       if (!formData.lastName || formData.lastName.length < 2)
-        errs.lastName = "Enter your last name";
+        errs.lastName = t("auth.page.lastNameError");
       if (!formData.email || !formData.email.includes("@"))
-        errs.email = "Valid email required";
+        errs.email = t("auth.page.emailError");
       if (!formData.password || formData.password.length < 6)
-        errs.password = "Minimum 6 characters";
+        errs.password = t("auth.page.passwordError");
       if (formData.password !== formData.confirmPassword)
-        errs.confirmPassword = "Passwords don't match";
+        errs.confirmPassword = t("auth.page.confirmError");
     } else {
-      if (!formData.email) errs.email = "Enter your email";
-      if (!formData.password) errs.password = "Enter your password";
+      if (!formData.email) errs.email = t("auth.page.emailRequired");
+      if (!formData.password) errs.password = t("auth.page.passwordRequired");
     }
     return errs;
   }
@@ -79,7 +81,7 @@ export default function AuthPage() {
         err.response?.error ||
         err.response?.message ||
         err.message ||
-        "Something went wrong. Please try again.";
+        t("auth.page.serverError");
       setServerError(msg);
     } finally {
       setSubmitting(false);
@@ -95,7 +97,7 @@ export default function AuthPage() {
       const msg =
         err.response?.error ||
         err.message ||
-        "Google sign-in failed. Please try again.";
+        t("auth.page.googleError");
       setServerError(msg);
       setSubmitting(false);
     }
@@ -110,8 +112,49 @@ export default function AuthPage() {
   return (
     <>
       <button
+        onClick={() => {
+          const next = i18n.language?.startsWith("id") ? "en" : "id"
+          i18n.changeLanguage(next)
+        }}
+        aria-label={i18n.language?.startsWith("id") ? "Switch to English" : "Beralih ke Bahasa Indonesia"}
+        style={{
+          position: "fixed",
+          top: 24,
+          right: 76,
+          zIndex: 100,
+          width: 44,
+          height: 44,
+          borderRadius: "50%",
+          border: `1px solid ${isLight ? "rgba(45,43,61,0.08)" : "rgba(255,255,255,0.06)"}`,
+          background: isLight ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.03)",
+          color: isLight ? "rgba(45,43,61,0.5)" : "rgba(154,148,184,0.6)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          transition: "all 0.3s ease",
+          fontSize: 14,
+          fontWeight: 600,
+          fontFamily: "'Inter', system-ui, sans-serif",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = isLight ? "rgba(124,92,252,0.3)" : "rgba(108,71,255,0.4)";
+          e.currentTarget.style.color = isLight ? "rgba(124,92,252,0.7)" : "rgba(200,190,240,0.9)";
+          e.currentTarget.style.transform = "scale(1.05)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = isLight ? "rgba(45,43,61,0.08)" : "rgba(255,255,255,0.06)";
+          e.currentTarget.style.color = isLight ? "rgba(45,43,61,0.5)" : "rgba(154,148,184,0.6)";
+          e.currentTarget.style.transform = "scale(1)";
+        }}
+      >
+        {i18n.language?.startsWith("id") ? "ID" : "EN"}
+      </button>
+      <button
         onClick={toggleTheme}
-        aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
+        aria-label={isLight ? t("landing.themeToggle.darkMode") : t("landing.themeToggle.lightMode")}
         style={{
           position: "fixed",
           top: 24,

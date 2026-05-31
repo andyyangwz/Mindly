@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 import ScrollReveal from "../components/ScrollReveal";
 
 export default function FinalCTASection() {
+  const { t } = useTranslation();
   return (
     <section
       style={{
@@ -47,7 +49,7 @@ export default function FinalCTASection() {
               lineHeight: 1.15,
             }}
           >
-            Ready to think clearly?
+            {t("landing.finalCta.title")}
           </h2>
         </ScrollReveal>
 
@@ -64,7 +66,7 @@ export default function FinalCTASection() {
               marginRight: "auto",
             }}
           >
-            Start your journey with Mindly. A calmer, clearer, more intentional way to think, work, and grow.
+            {t("landing.finalCta.desc")}
           </p>
         </ScrollReveal>
 
@@ -97,7 +99,7 @@ export default function FinalCTASection() {
                 e.currentTarget.style.boxShadow = "0 4px 24px color-mix(in srgb, var(--landing-accent) 30%, transparent)";
               }}
             >
-              Begin Your Journey
+              {t("landing.finalCta.button")}
               <ArrowRight size={16} />
             </a>
 
@@ -114,7 +116,7 @@ export default function FinalCTASection() {
               fontWeight: 500,
             }}
           >
-            Mindly — Clear Mind, Better Grind
+            {t("landing.finalCta.tagline")}
           </p>
         </ScrollReveal>
       </div>

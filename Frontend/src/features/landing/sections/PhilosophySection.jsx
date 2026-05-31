@@ -1,6 +1,8 @@
+import { useTranslation } from "react-i18next";
 import ScrollReveal from "../components/ScrollReveal";
 
 export default function PhilosophySection() {
+  const { t } = useTranslation();
   return (
     <section
       style={{
@@ -25,7 +27,7 @@ export default function PhilosophySection() {
               margin: 0,
             }}
           >
-            A system for becoming more intentional and aware
+            {t("landing.philosophy.tagline")}
           </p>
         </ScrollReveal>
       </div>

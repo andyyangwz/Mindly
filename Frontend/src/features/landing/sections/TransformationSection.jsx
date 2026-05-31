@@ -1,25 +1,8 @@
+import { useTranslation } from "react-i18next"
 import { ArrowRight } from "lucide-react"
 import ScrollReveal from "../components/ScrollReveal"
 import productiveSpilli from "../../../assets/mascot_images/productive_spilli.png"
 import unproductiveSpilli from "../../../assets/mascot_images/unproductive_spilli.jpg"
-
-const BEFORE = [
-  "distracted",
-  "overwhelmed",
-  "inconsistent",
-  "mentally cluttered",
-  "reactive",
-  "drifting",
-]
-
-const AFTER = [
-  "focused",
-  "intentional",
-  "disciplined",
-  "clear-minded",
-  "structured",
-  "aligned",
-]
 
 function SpilliImg({ src, alt, accent }) {
   return (
@@ -46,6 +29,9 @@ function SpilliImg({ src, alt, accent }) {
 }
 
 export default function TransformationSection() {
+  const { t } = useTranslation();
+  const beforeTraits = t("landing.transformation.beforeTraits", { returnObjects: true });
+  const afterTraits = t("landing.transformation.afterTraits", { returnObjects: true });
   return (
     <section
       style={{
@@ -67,7 +53,7 @@ export default function TransformationSection() {
               textAlign: "center",
             }}
           >
-            The Shift
+            {t("landing.transformation.label")}
           </p>
         </ScrollReveal>
 
@@ -83,7 +69,7 @@ export default function TransformationSection() {
               lineHeight: 1.2,
             }}
           >
-            Who you become using Mindly
+            {t("landing.transformation.title")}
           </h2>
         </ScrollReveal>
 
@@ -125,13 +111,13 @@ export default function TransformationSection() {
                   textAlign: "center",
                 }}
               >
-                Before
+                {t("landing.transformation.before")}
               </p>
 
-              <SpilliImg src={unproductiveSpilli} alt="Unproductive state" accent="var(--landing-border)" />
+              <SpilliImg src={unproductiveSpilli} alt={t("landing.transformation.beforeAlt")} accent="var(--landing-border)" />
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {BEFORE.map((item) => (
+                {beforeTraits.map((item) => (
                   <div
                     key={item}
                     style={{
@@ -213,7 +199,7 @@ export default function TransformationSection() {
                   writingMode: "vertical-rl",
                 }}
               >
-                transformation
+                {t("landing.transformation.label_transformation")}
               </span>
               <div
                 style={{
@@ -269,13 +255,13 @@ export default function TransformationSection() {
                   textAlign: "center",
                 }}
               >
-                After
+                {t("landing.transformation.after")}
               </p>
 
-              <SpilliImg src={productiveSpilli} alt="Productive state" accent="var(--landing-accent)" />
+              <SpilliImg src={productiveSpilli} alt={t("landing.transformation.afterAlt")} accent="var(--landing-accent)" />
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {AFTER.map((item) => (
+                {afterTraits.map((item) => (
                   <div
                     key={item}
                     style={{

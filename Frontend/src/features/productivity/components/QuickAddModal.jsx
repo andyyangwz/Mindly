@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
+import { useTranslation } from "react-i18next"
 import { X, Plus, Zap, ChevronDown } from "lucide-react"
 import { Portal } from "../../../utils/portal"
 import { theme } from "../../../theme"
@@ -25,6 +26,7 @@ function formatDateDisplay(dateStr) {
 }
 
 export default function QuickAddModal({ open, onClose }) {
+  const { t } = useTranslation()
   const [expandedId, setExpandedId] = useState(null)
   const [selectedDate, setSelectedDate] = useState(() => {
     const d = new Date()
@@ -77,7 +79,7 @@ export default function QuickAddModal({ open, onClose }) {
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Zap size={16} color={theme.primaryText} />
               <h2 style={{ fontSize: 14, fontWeight: 600, color: theme.dark, margin: 0 }}>
-                Reusable Activities
+                {t("productivity.quickAdd.title")}
               </h2>
             </div>
             <button
@@ -163,7 +165,7 @@ export default function QuickAddModal({ open, onClose }) {
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {template.level.charAt(0).toUpperCase() + template.level.slice(1)}
+                          {t(`productivity.eventForm.level_${template.level.charAt(0).toUpperCase() + template.level.slice(1)}`)}
                         </span>
                       </div>
                       <p style={{ fontSize: 11, color: theme.muted, margin: "2px 0 0" }}>
@@ -207,7 +209,7 @@ export default function QuickAddModal({ open, onClose }) {
                                 marginBottom: 4,
                               }}
                             >
-                              Date
+                              {t("productivity.quickAdd.date")}
                             </label>
                             <input
                               type="date"
@@ -229,9 +231,7 @@ export default function QuickAddModal({ open, onClose }) {
                           </div>
                           <button
                             onClick={() => {
-                              toast.show(
-                                `${template.title} added — ${formatDateDisplay(selectedDate)}`
-                              )
+                              toast.show(t("productivity.quickAdd.added", { title: template.title, date: formatDateDisplay(selectedDate) }))
                               setExpandedId(null)
                             }}
                             style={{
@@ -258,7 +258,7 @@ export default function QuickAddModal({ open, onClose }) {
                             }}
                           >
                             <Plus size={12} />
-                            Add Activity
+                            {t("productivity.quickAdd.addActivity")}
                           </button>
                         </div>
                       </div>

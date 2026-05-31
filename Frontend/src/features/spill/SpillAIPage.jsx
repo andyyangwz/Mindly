@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { useParams, useNavigate, useLocation, useOutletContext } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import WaveformAnimation from "../../components/ui/WaveformAnimation"
 
 const SPILL_PERSONALITY_KEY = "mindly_spill_personality"
 import { Send, Loader2, MessageCircle, BookOpen, Mic, Square, X } from "lucide-react"

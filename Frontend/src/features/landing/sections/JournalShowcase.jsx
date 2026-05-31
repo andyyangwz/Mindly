@@ -1,32 +1,13 @@
 import { motion } from "framer-motion"
 import { Sparkles } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import ScrollReveal from "../components/ScrollReveal"
 
-const ENTRIES = [
-  {
-    date: "May 20, 2026",
-    time: "8:42 AM",
-    emojis: ["☕", "✨", "🎨"],
-    title: "Morning Creative Flow",
-    preview: "I feel most creative in the morning. The quiet hours before the world wakes up let my thoughts wander freely, and today's session was particularly productive...",
-  },
-  {
-    date: "May 19, 2026",
-    time: "10:15 PM",
-    emojis: ["🧠", "💡", "🛠️"],
-    title: "Understanding Procrastination",
-    preview: "Realized that my procrastination isn't laziness — it's a signal that the task feels too big. Breaking it down into tiny steps helped me actually start...",
-  },
-  {
-    date: "May 18, 2026",
-    time: "7:30 AM",
-    emojis: ["🎯", "🌅", "📝"],
-    title: "Setting Daily Intentions",
-    preview: "New intention: be present. Not just in meditation, but in conversations, during meals, and while walking between meetings. The moments in between matter most...",
-  },
-]
+const ENTRY_EMOJIS = [["☕", "✨", "🎨"], ["🧠", "💡", "🛠️"], ["🎯", "🌅", "📝"]];
 
 export default function JournalShowcase() {
+  const { t } = useTranslation();
+  const entries = t("landing.journal.entries", { returnObjects: true });
   return (
     <section
       style={{
@@ -48,7 +29,7 @@ export default function JournalShowcase() {
               textAlign: "center",
             }}
           >
-            Personal Journaling
+            {t("landing.journal.label")}
           </p>
         </ScrollReveal>
 
@@ -64,7 +45,7 @@ export default function JournalShowcase() {
               lineHeight: 1.2,
             }}
           >
-            Your thoughts, beautifully captured
+            {t("landing.journal.title")}
           </h2>
         </ScrollReveal>
 
@@ -78,7 +59,7 @@ export default function JournalShowcase() {
               gap: 16,
             }}
           >
-            {ENTRIES.map((entry, i) => (
+            {entries.map((entry, i) => (
               <motion.div
                 key={entry.date}
                 initial={{ opacity: 0, y: 20 }}
@@ -125,7 +106,7 @@ export default function JournalShowcase() {
                   </div>
 
                   <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
-                    {entry.emojis.map((e, ei) => (
+                    {(ENTRY_EMOJIS[i] || []).map((e, ei) => (
                       <span key={ei} style={{ fontSize: 15 }}>{e}</span>
                     ))}
                   </div>

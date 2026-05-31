@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Brain, ChevronDown } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export default function HeroSection() {
+  const { t } = useTranslation()
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
@@ -87,7 +89,7 @@ export default function HeroSection() {
           backgroundClip: "text",
         }}
       >
-        Mindly
+        {t("landing.hero.title")}
       </motion.h1>
 
       {/* CLEAR MIND, BETTER GRIND */}
@@ -103,7 +105,7 @@ export default function HeroSection() {
           textTransform: "uppercase",
         }}
       >
-        Clear Mind, Better Grind
+        {t("landing.hero.tagline")}
       </motion.p>
 
       {/* Description */}
@@ -119,7 +121,7 @@ export default function HeroSection() {
           letterSpacing: "0.01em",
         }}
       >
-        Your AI-Powered Companion to Think & Grow
+        {t("landing.hero.subtitle")}
       </motion.p>
 
       {/* CTA Buttons */}
@@ -157,7 +159,7 @@ export default function HeroSection() {
             e.currentTarget.style.boxShadow = "0 4px 20px color-mix(in srgb, var(--landing-accent) 25%, transparent)"
           }}
         >
-          Sign Up
+          {t("landing.hero.signUp")}
         </a>
         <a
           href="/auth"
@@ -184,7 +186,7 @@ export default function HeroSection() {
             e.currentTarget.style.background = "var(--landing-surface)"
           }}
         >
-          Login
+          {t("landing.hero.login")}
         </a>
       </motion.div>
 
@@ -213,7 +215,7 @@ export default function HeroSection() {
             textTransform: "uppercase",
           }}
         >
-          Scroll
+          {t("landing.hero.scroll")}
         </span>
         <motion.div
           animate={{ y: [0, 6, 0] }}

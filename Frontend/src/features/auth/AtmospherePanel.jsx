@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Brain } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import TypewriterText from "./TypewriterText";
 
 const DARK_ORBS = [
@@ -17,20 +18,6 @@ const LIGHT_ORBS = [
   { color: "#DDD6FE", size: 260, x: "40%", y: "60%", duration: 22 },
   { color: "#C4B5FD", size: 180, x: "15%", y: "70%", duration: 30 },
   { color: "#A78BFA", size: 160, x: "70%", y: "75%", duration: 26 },
-];
-
-const DARK_TAGLINES = [
-  "Your thoughts deserve clarity.",
-  "Reflect deeper. Focus sharper.",
-  "An AI space for your mind.",
-  "Build calm within the chaos.",
-];
-
-const LIGHT_TAGLINES = [
-  "Clarity begins with a quiet mind.",
-  "Small reflections, big insights.",
-  "Your personal space for thought.",
-  "Start your day with intention.",
 ];
 
 
@@ -101,8 +88,11 @@ function FloatingParticle({ isLight }) {
 }
 
 export default function AtmospherePanel({ isLight }) {
+  const { t } = useTranslation();
   const orbs = isLight ? LIGHT_ORBS : DARK_ORBS;
-  const taglines = isLight ? LIGHT_TAGLINES : DARK_TAGLINES;
+  const taglines = isLight
+    ? t("auth.atmosphere.taglinesLight", { returnObjects: true })
+    : t("auth.atmosphere.taglinesDark", { returnObjects: true });
 
   return (
     <div
@@ -207,7 +197,7 @@ export default function AtmospherePanel({ isLight }) {
                 letterSpacing: "-0.01em",
               }}
             >
-              Mindly
+              {t("auth.atmosphere.title")}
             </span>
             <p
               style={{
@@ -219,7 +209,7 @@ export default function AtmospherePanel({ isLight }) {
                 textTransform: "none",
               }}
             >
-              Your AI-Powered Companion to Think &amp; Grow
+              {t("auth.atmosphere.subtitle")}
             </p>
           </div>
         </motion.div>
@@ -239,10 +229,10 @@ export default function AtmospherePanel({ isLight }) {
             marginBottom: 20,
           }}
         >
-          An intelligent space
+          {t("auth.atmosphere.headline1")}
           <br />
           <span style={{ fontWeight: 600, color: isLight ? "rgba(124,92,252,0.85)" : "rgba(200,190,240,0.9)" }}>
-            for your mind.
+            {t("auth.atmosphere.headline2")}
           </span>
         </motion.h1>
 
@@ -299,7 +289,7 @@ export default function AtmospherePanel({ isLight }) {
               letterSpacing: "0.04em",
             }}
           >
-            &copy; 2026 Mindly &mdash; Clear Mind, Better Grind
+            {t("auth.atmosphere.footer")}
           </p>
         </motion.div>
       </div>

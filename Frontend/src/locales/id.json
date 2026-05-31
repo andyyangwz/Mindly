@@ -145,7 +145,19 @@
       "delete": "Hapus",
       "deleteTitle": "Hapus Pusaka?",
       "deleteMessage": "Pusaka ini akan dihapus secara permanen dari arsip Anda.",
-      "deleteConfirm": "Hapus"
+      "deleteConfirm": "Hapus",
+      "relicsAvailable": "{{count}} pusaka tersedia",
+      "equipped": "Terpasang",
+      "add": "Tambah",
+      "channeling": "Menyalurkan...",
+      "resetProgress": "Reset Progres",
+      "channelEnergy": "Salurkan Energi ({{count}})",
+      "removeEnergy": "Hapus Energi ({{count}})",
+      "selectToChannel": "Pilih pusaka untuk menyalurkan",
+      "selectToChannelHint": "Pilih pusaka dari daftar untuk menyalurkan energi progres ke dalamnya.",
+      "fullyAttuned": "Sepenuhnya selaras. Pusaka beresonansi dengan perjalananmu.",
+      "halfwayAttuned": "Lebih dari separuh selaras. Dedikasimu membentuk pusaka ini.",
+      "progressHarmony": "Setiap langkah menyelaraskan pusaka dengan jalanmu. Progres adalah harmoni."
     }
   },
   "journal": {
@@ -247,6 +259,26 @@
       "focus": "Fokus",
       "viewPlanAndTasks": "Lihat Rencana & Tugas Hari Ini",
       "finishOn": "Selesai:"
+    },
+    "aiPlanningAssistant": {
+      "title": "Asisten Perencana AI",
+      "subtitle": "Butuh bantuan merencanakan harimu?",
+      "smartSuggestions": "Saran Cerdas",
+      "aiScheduler": "Penjadwal AI",
+      "placeholder": "Apa yang perlu dibantu? Mis. Rencanakan hariku, Buat jadwal belajar, Bantu selesaikan tugas minggu ini",
+      "generateSchedule": "Buat Jadwal",
+      "suggestions": {
+        "0": "Besok ada 3 jam kosong tersedia",
+        "1": "Kamu biasanya belajar paling baik antara jam 8–11 pagi",
+        "2": "Tugas Statistika jatuh tempo dalam 2 hari",
+        "3": "Kamu menyelesaikan lebih banyak tugas minggu ini daripada minggu lalu"
+      }
+    },
+    "quickAdd": {
+      "title": "Aktivitas yang Dapat Digunakan Kembali",
+      "date": "Tanggal",
+      "addActivity": "Tambah Aktivitas",
+      "added": "{{title}} ditambahkan — {{date}}"
     },
     "status": {
       "todo": "Harus Dikerjakan",
@@ -351,7 +383,8 @@
       "start": "Mulai Mode Fokus",
       "stop": "BERHENTI",
       "sessionComplete": "Sesi Selesai!",
-      "breakComplete": "Istirahat Selesai!"
+      "breakComplete": "Istirahat Selesai!",
+      "reset": "Atur Ulang"
     },
     "suggestions": {
       "morningTasks": "Pindahkan tugas berat ke jam pagi saat kamu paling waspada",
@@ -361,24 +394,101 @@
       "previousWeek": "Minggu sebelumnya",
       "nextWeek": "Minggu berikutnya",
       "undo": "Urungkan",
-      "redo": "Ulangi"
+      "redo": "Ulangi",
+      "add": "Tambah",
+      "addMenu": {
+        "activity": "Aktivitas",
+        "activityDesc": "Jadwalkan blok waktu",
+        "task": "Tugas",
+        "taskDesc": "Buat tenggat",
+        "useVoice": "Gunakan Suara",
+        "voiceDesc": "Ucapkan rencanamu",
+        "quickAdd": "Tambah Cepat",
+        "quickAddDesc": "Template yang dapat digunakan kembali"
+      },
+      "sync": "Sinkronisasi Otomatis",
+      "syncing": "Menyinkronkan...",
+      "fixed": "Tetap",
+      "reschedule": "Jadwal Ulang",
+      "toggleTooltip": "Tekan CTRL+K untuk beralih",
+      "switchToReschedule": "Beralih ke Mode Jadwal Ulang",
+      "switchToFixed": "Beralih ke Mode Tetap"
     }
   },
   "insight": {
     "title": "Analisa Saya",
+    "subtitle": "Refleksi pribadi tentang bagaimana kamu menghabiskan waktumu",
     "weekly": "Mingguan",
     "monthly": "Bulanan",
+    "reflectionTitle": "Refleksi dari Spilli AI",
+    "showLess": "Tampilkan Lebih Sedikit",
+    "viewFullReflection": "Lihat Refleksi Lengkap",
+    "knowYou": "Yang Kami Tahu Tentang Kamu",
+    "knowYouItems": {
+      "bestTime": "Waktu Terbaik",
+      "bestTimeValue": "9–11 Pagi",
+      "bestDay": "Hari Terbaik",
+      "bestDayValue": "Selasa",
+      "strongestHabit": "Kebiasaan Terkuat",
+      "strongestHabitValue": "Membaca",
+      "biggestDistraction": "Gangguan Terbesar",
+      "biggestDistractionValue": "Gaming",
+      "strongestActivity": "Aktivitas Terkuat",
+      "strongestActivityValue": "Belajar Mendalam",
+      "peakEnergy": "Energi Puncak",
+      "peakEnergyValue": "6–8 Pagi"
+    },
     "performanceOverview": "Gambaran Performa",
-    "performanceDesc": "Tren waktu belajar, produktivitas, dan fokus",
+    "performanceDesc": "Waktu belajar, produktivitas, dan fokus selama {{period}}",
+    "period7days": "7 hari",
+    "period4weeks": "4 minggu",
     "timeDistribution": "Distribusi Waktu",
-    "timeDistributionDesc": "Bagaimana kamu menghabiskan waktumu",
+    "timeDistributionDesc": "Rincian aktivitas yang kamu lacak",
+    "chart": {
+      "studyTime": "Waktu Belajar",
+      "productivity": "Produktivitas",
+      "focus": "Fokus"
+    },
+    "patterns": "Pola yang Kami Perhatikan",
+    "areasToImprove": "Area untuk Ditingkatkan",
+    "smallWins": "Kemenangan Kecil",
+    "suggestedExperiments": "Eksperimen yang Disarankan",
+    "patternItems": [
+      "Hari gym meningkatkan sesi fokus",
+      "Hari jurnal meningkatkan tingkat penyelesaian",
+      "Sesi pagi lebih baik dari sesi malam",
+      "Sesi fokus pendek menunjukkan kualitas lebih baik",
+      "Mulai lebih awal meningkatkan tingkat penyelesaian"
+    ],
+    "areaItems": [
+      "Tugas statistika ditunda 4 kali",
+      "Fokus Jumat malam masih rendah",
+      "Beberapa tugas tidak tersentuh selama 7+ hari",
+      "Durasi istirahat sering melebihi rencana"
+    ],
+    "winItems": [
+      "7 Hari Streak Fokus",
+      "+15% Konsistensi Belajar",
+      "12 Tugas Selesai",
+      "Bulan Terbaik Tahun Ini"
+    ],
+    "experimentItems": [
+      "Belajar sebelum jam 11 pagi",
+      "Coba jurnal 3 menit setelah sesi",
+      "Buat rutinitas sebelum tidur",
+      "Jadwalkan tugas sulit lebih dulu",
+      "Ganti satu sesi malam dengan pagi"
+    ],
+    "aiPreview": {
+      "weekly": ["Kamu tampil terbaik di pagi hari Selasa dan Kamis.", "Aktivitas larut malam terus mempengaruhi produktivitas keesokan harinya.", "Membaca tetap menjadi kebiasaanmu yang paling konsisten."],
+      "monthly": ["Fokusmu menurun drastis setelah sesi gaming yang panjang.", "Minggu 4 adalah minggu terkuatmu bulan ini.", "Jam pagi tetap menjadi jendela produktifmu."]
+    },
+    "aiFull": {
+      "weekly": "Selama 7 hari terakhir, kamu sangat konsisten dengan kebiasaan belajarmu. Hari terkuatmu adalah Selasa dan Kamis, di mana produktivitasmu mencapai puncak. Jam pagi (9\u201311) menunjukkan tingkat fokus tertinggi, dan kamu cenderung menyelesaikan lebih banyak tugas saat memulai sesi pertama sebelum jam 10. Namun, aktivitas larut malam di hari Jumat sering mengurangi tingkat penyelesaianmu keesokan harinya. Secara keseluruhan, ini minggu yang solid — disiplinmu terus terbangun.",
+      "monthly": "Bulan ini menunjukkan tren peningkatan yang jelas dalam konsistensi belajarmu. Minggu 4 adalah yang terkuat, dengan peningkatan 13% dari Minggu 1. Waktu paling produktifmu tetap blok pagi, dan kamu menjaga keseimbangan sehat antara kerja fokus dan istirahat. Satu pola yang perlu dicatat: fokusmu menurun drastis setelah sesi gaming yang panjang. Mengambil istirahat lebih pendek dan menetapkan batas sesi bisa membantu menjaga produktivitas malam."
+    },
     "aiPowered": "Wawasan Berbasis AI",
     "aiPoweredDesc": "Kemajuan bagus! Produktivitas naik <strong>8%</strong> dan kamu mempertahankan <strong>7 hari streak</strong>. Fokus puncak antara jam 9\u201311. Pertimbangkan tugas ringan di hari Jumat saat fokus menurun.",
-    "chart": {
-      "studyTime": "Waktu Belajar (jam)",
-      "productivity": "Produktivitas (%)",
-      "focus": "Fokus (%)"
-    },
     "quickWins": "Kemenangan Cepat",
     "stats": {
       "productivityScore": "Skor Produktivitas",
@@ -536,7 +646,7 @@
       "tooltip": "Berapa banyak tugas yang sedang berlangsung dan sudah kamu selesaikan saat ini",
       "description": "Menampilkan tugas selesai vs total tugas yang sedang berlangsung — tugas yang sedang terjadi saat ini. Sebuah tugas sedang berlangsung jika waktu mulainya sudah lewat tetapi waktu berakhirnya belum (mulai < sekarang < selesai). Rasio menunjukkan berapa banyak tugas yang sedang berlangsung sudah ditandai Selesai.",
       "steps": [
-        { "title": "Apa yang Diukur", "text": "Pembilang adalah berapa banyak tugas yang sedang berlangsung sudah kamu tandai Selesai. Penyebut adalah berapa banyak tugas yang sedang aktif (mulai < sekarang < selesai). Jika tidak ada tugas yang sedang berlangsung, akan muncul 'No On Going Task'." },
+        { "title": "Apa yang Diukur", "text": "Pembilang adalah berapa banyak tugas yang sedang berlangsung sudah kamu tandai Selesai. Penyebut mencakup tugas dengan waktu mulai ≤ hari ini ≤ waktu selesai ditambah tugas dengan status 'Sedang Dikerjakan'. Jika tidak ada tugas yang sedang berlangsung, akan muncul 'No On Going Task'." },
         { "title": "Cara Meningkatkan", "text": "Rencanakan jumlah tugas harian yang realistis. Pecah tugas besar menjadi lebih kecil untuk membangun momentum. Gunakan Kalender Produktivitas untuk menjadwalkan blok waktu fokus untuk setiap tugas." }
       ]
     },
@@ -708,6 +818,200 @@
         { "title": "Daftar Pusaka", "text": "Daftar menampilkan semua pusakamu — yang terpasang lebih dulu, lalu sisanya. Klik pusaka untuk memilihnya, lalu gunakan kontrol di kanan untuk menambah atau mereset progres.", "targetId": "upgrade-roster" },
         { "title": "Kontrol & Komit", "text": "Dengan pusaka terpilih, ketik angka untuk menambah progres. Gunakan tombol Reset untuk mengosongkannya. Klik 'Salurkan Energi' untuk menerapkan semua perubahan.", "targetId": "update-progress" }
       ]
+    }
+  },
+  "landing": {
+    "hero": {
+      "title": "Mindly",
+      "tagline": "Pikiran Jernih, Hasil Lebih Baik",
+      "subtitle": "Teman AI untuk Berpikir & Berkembang",
+      "signUp": "Daftar",
+      "login": "Masuk",
+      "scroll": "Gulir"
+    },
+    "philosophy": {
+      "tagline": "Sistem untuk menjadi lebih sadar dan penuh tujuan"
+    },
+    "why": {
+      "label": "Filosofi Kami",
+      "title": "Mengapa Kami Membangun Ini",
+      "ideaTitle": "Gagasan di balik Mindly",
+      "ideaPara1": "Kebanyakan aplikasi produktivitas hanya fokus pada satu sisi persamaan.",
+      "ideaPara2": "Beberapa membantu Anda menjadi lebih produktif. Yang lain hanya fokus pada kesejahteraan emosional. Kami percaya keduanya penting.",
+      "emphasis1": "Produktivitas tanpa refleksi dapat menyebabkan kelelahan.",
+      "emphasis2": "Refleksi tanpa tindakan dapat menyebabkan stagnasi.",
+      "ideaPara3": "Kami ingin membangun tempat di mana perencanaan dan kesadaran diri hidup berdampingan. Otak kedua untuk perencanaan. Teman untuk refleksi. Ruang di mana Anda dapat mengatur hidup Anda dan berbicara tentang apa yang ada di pikiran Anda saat Anda membutuhkan dukungan.",
+      "highlightLabels": ["Produktivitas", "Refleksi", "Keseimbangan"],
+      "highlightTexts": ["Rencanakan dengan sengaja.", "Pahami dirimu.", "Tumbuh secara berkelanjutan."],
+      "forTitle": "Untuk Siapa Ini?",
+      "forIntro": "Aplikasi ini dibuat untuk orang yang menginginkan lebih dari sekadar daftar tugas.",
+      "personaTitles": ["Pelajar", "Pemikir Reflektif", "Pencari Pengembangan Diri", "Pencari Kejelasan"],
+      "personaDescs": ["Mengelola kelas, tugas, dan tujuan.", "Orang yang menulis jurnal dan belajar dari pengalaman mereka.", "Orang yang secara aktif bekerja untuk menjadi lebih baik.", "Orang yang merasa kewalahan, tersesat, atau tidak pasti."],
+      "checklistTitle": "Ini untukmu jika...",
+      "checklistItems": ["Kamu menginginkan struktur", "Kamu menginginkan konsistensi", "Kamu menikmati refleksi", "Kamu ingin memahami kebiasaanmu", "Kamu menginginkan produktivitas dan dukungan emosional", "Kamu menginginkan kejelasan dalam kehidupan sehari-hari"],
+      "notForLabel": "Tidak dirancang untuk:",
+      "notForText": "kolaborasi tim, manajemen perusahaan, atau pelacakan proyek korporat. Aplikasi ini dibuat untuk individu.",
+      "speechBold": "Kebanyakan aplikasi produktivitas",
+      "speechNormal": "membantu Anda mengelola tugas.",
+      "speechEnd": "Kami ingin membangun sesuatu yang membantu Anda memahami diri sendiri juga.",
+      "mascotAlt": "Maskot Spilli"
+    },
+    "features": {
+      "label": "Semua yang Kamu Butuhkan",
+      "title": "Toolkit kognitif yang lengkap",
+      "cards": [
+        { "title": "Manajer Produktivitas", "desc": "Blok waktu cerdas yang menyesuaikan dengan tingkat energimu. Fokus pada apa yang penting." },
+        { "title": "Penetapan Tujuan & Jurnal", "desc": "Menulis dengan tujuan. Tetapkan niat yang melekat. Jurnalmu menjadi peta pertumbuhanmu." },
+        { "title": "Obrolan AI Terintegrasi", "desc": "Rekan berpikir yang mendengarkan, merenung, dan membantu Anda mengurai pikiran yang rumit." },
+        { "title": "Wawasan Perbaikan Mingguan", "desc": "Refleksi lembut berbasis data tentang pola Anda. Lihat di mana Anda berkembang." }
+      ]
+    },
+    "transformation": {
+      "label": "Perubahan",
+      "title": "Siapa dirimu dengan Mindly",
+      "before": "Sebelum",
+      "after": "Sesudah",
+      "label_transformation": "transformasi",
+      "beforeTraits": ["terganggu", "kewalahan", "tidak konsisten", "pikiran berantakan", "reaktif", "hanyut"],
+      "afterTraits": ["fokus", "penuh tujuan", "disiplin", "pikiran jernih", "terstruktur", "selaras"],
+      "beforeAlt": "Keadaan tidak produktif",
+      "afterAlt": "Keadaan produktif"
+    },
+    "calendar": {
+      "label": "Penjadwalan Cerdas",
+      "title": "Kalender yang memahami Anda",
+      "events": [
+        { "title": "Perencanaan Pagi", "desc": "Rencanakan hari dan tetapkan niat utama.", "status": "Selesai" },
+        { "title": "Kerja Mendalam", "desc": "Kerja kreatif terfokus pada proyek utama.", "status": "Sedang Berjalan" },
+        { "title": "Tinjauan Kode", "desc": "Tinjau pull request dan berikan umpan balik.", "status": "Perlu Dilakukan" },
+        { "title": "Sinkronisasi Tim", "desc": "Sinkronisasi harian dengan tim engineering.", "status": "Selesai" },
+        { "title": "Rapat Tim", "desc": "Sinkronisasi mingguan dengan tim.", "status": "Perlu Dilakukan" },
+        { "title": "Refleksi Jurnal", "desc": "Refleksi tengah hari dan pencatatan.", "status": "Perlu Dilakukan" },
+        { "title": "Sesi Membaca", "desc": "Baca 'Deep Work' oleh Cal Newport.", "status": "Perlu Dilakukan" },
+        { "title": "Sesi Fokus", "desc": "Fokus mendalam pada pencapaian proyek.", "status": "Perlu Dilakukan" },
+        { "title": "Tinjauan Desain", "desc": "Tinjau wireframe dan berikan umpan balik.", "status": "Perlu Dilakukan" },
+        { "title": "1:1 dengan Mentor", "desc": "Pertemuan mingguan dan diskusi karir.", "status": "Perlu Dilakukan" },
+        { "title": "Sesi Gym", "desc": "Rutinitas olahraga malam.", "status": "Perlu Dilakukan" },
+        { "title": "Tenggat Tugas", "desc": "Pengumpulan final malam ini.", "status": "Perlu Dilakukan" }
+      ],
+      "overlayTitle": "Buka Kalender Penuh",
+      "overlayDesc": "Daftar untuk membuat aktivitas, menetapkan tenggat, dan mengatur minggu Anda dengan penjadwalan bertenaga AI.",
+      "overlayOk": "Oke",
+      "overlaySignUp": "Daftar"
+    },
+    "journal": {
+      "label": "Jurnal Pribadi",
+      "title": "Pikiranmu, tertangkap dengan indah",
+      "entries": [
+        { "date": "20 Mei 2026", "time": "08:42", "title": "Aliran Kreatif Pagi", "preview": "Saya merasa paling kreatif di pagi hari. Jam-jam tenang sebelum dunia bangun membuat pikiran saya melayang bebas, dan sesi hari ini sangat produktif..." },
+        { "date": "19 Mei 2026", "time": "22:15", "title": "Memahami Prokrastinasi", "preview": "Menyadari bahwa prokrastinasi saya bukanlah kemalasan — itu adalah sinyal bahwa tugasnya terasa terlalu besar. Memecahnya menjadi langkah-langkah kecil membantu saya untuk mulai..." },
+        { "date": "18 Mei 2026", "time": "07:30", "title": "Menetapkan Niat Harian", "preview": "Niat baru: hadir. Tidak hanya dalam meditasi, tetapi dalam percakapan, saat makan, dan saat berjalan di antara pertemuan. Momen-momen di antaranya adalah yang paling berarti..." }
+      ]
+    },
+    "pricing": {
+      "title": "Pilih Perjalananmu",
+      "subtitle": "Mulai gratis dan buka alat produktivitas canggih saat kamu siap.",
+      "valueTitle": "Buka Potensi Penuhmu",
+      "valueDesc": "Dapatkan wawasan yang dipersonalisasi, perencanaan berbantuan AI, dan alat pembinaan premium yang dirancang untuk membantu Anda membangun konsistensi dan mencapai tujuan Anda.",
+      "featureCol": "Fitur",
+      "plans": {
+        "freeLabel": "Gratis",
+        "freePrice": "Rp0",
+        "freeSub": "Gratis Selamanya",
+        "monthlyLabel": "Bulanan",
+        "monthlyPrice": "Rp19.999",
+        "monthlySub": "Bulan Pertama",
+        "monthlyRenewal": "Perpanjang Rp29.999/bulan",
+        "yearlyLabel": "Tahunan",
+        "yearlyPrice": "Rp319.999/tahun",
+        "yearlyBadge": "Terbaik",
+        "yearlySave": "Hemat 11%"
+      },
+      "features": [
+        { "feature": "Wawasan Mingguan", "desc": "Wawasan dan refleksi produktivitas yang dipersonalisasi." },
+        { "feature": "Wawasan Bulanan", "desc": "Analisis lebih dalam tentang tren bulanan Anda." },
+        { "feature": "Penjadwal AI", "desc": "AI membantu mengatur jadwal dan menyarankan perencanaan optimal." },
+        { "feature": "Transkripsi Suara", "desc": "Ubah rekaman suara menjadi aktivitas dan tugas." },
+        { "feature": "Tambah Cepat Aktivitas", "desc": "Gunakan kembali aktivitas dan isi jadwal dengan cepat." },
+        { "feature": "Kepribadian Spill AI", "desc": "Akses berbagai gaya pembinaan di dalam Spill AI." }
+      ],
+      "freeValues": {
+        "notAvailable": "Tidak Tersedia",
+        "voiceTranscription": "4 per hari",
+        "empathicListener": "Pendengar Empatik",
+        "noInsights": "Tidak Ada Wawasan"
+      },
+      "premiumValues": {
+        "unlimited": "Tak Terbatas",
+        "aiPersonalities": ["Pendengar Empatik", "Pemecah Masalah", "Pelatih Motivasi"]
+      },
+      "cta": {
+        "getStarted": "Mulai",
+        "getFree": "Dapatkan Gratis",
+        "startMonthly": "Mulai Bulanan",
+        "startYearly": "Mulai Tahunan"
+      },
+      "trustItems": ["Batalkan Kapan Saja", "Tanpa Biaya Tersembunyi", "Akses Instan", "Pembayaran Aman"]
+    },
+    "finalCta": {
+      "title": "Siap berpikir jernih?",
+      "desc": "Mulai perjalananmu dengan Mindly. Cara yang lebih tenang, jelas, dan penuh tujuan untuk berpikir, bekerja, dan berkembang.",
+      "button": "Mulai Perjalanan",
+      "tagline": "Mindly — Pikiran Jernih, Hasil Lebih Baik"
+    },
+    "themeToggle": {
+      "darkMode": "Beralih ke mode gelap",
+      "lightMode": "Beralih ke mode terang"
+    }
+  },
+  "auth": {
+    "page": {
+      "firstNameError": "Masukkan nama depan",
+      "lastNameError": "Masukkan nama belakang",
+      "emailError": "Diperlukan email yang valid",
+      "passwordError": "Minimal 6 karakter",
+      "confirmError": "Kata sandi tidak cocok",
+      "emailRequired": "Masukkan email",
+      "passwordRequired": "Masukkan kata sandi",
+      "serverError": "Terjadi kesalahan. Silakan coba lagi.",
+      "googleError": "Masuk Google gagal. Silakan coba lagi."
+    },
+    "panel": {
+      "signIn": "Masuk",
+      "createAccount": "Buat Akun",
+      "labels": {
+        "firstName": "Nama Depan",
+        "lastName": "Nama Belakang",
+        "email": "Alamat Email",
+        "password": "Kata Sandi",
+        "confirmPassword": "Konfirmasi Kata Sandi"
+      },
+      "placeholders": {
+        "firstName": "Nama depan Anda",
+        "lastName": "Nama belakang Anda",
+        "email": "anda@contoh.com",
+        "password": "••••••••",
+        "confirmPassword": "Masukkan ulang kata sandi"
+      },
+      "forgotPassword": "Lupa kata sandi?",
+      "or": "atau",
+      "footerSignIn": "Belum punya akun? Masuk saja.",
+      "footerCreate": "Sudah punya akun?"
+    },
+    "google": {
+      "cancel": "Masuk Google dibatalkan",
+      "notConfigured": "Masuk Google tidak dikonfigurasi",
+      "signingIn": "Memasuki...",
+      "continue": "Lanjutkan dengan Google"
+    },
+    "atmosphere": {
+      "title": "Mindly",
+      "subtitle": "Teman AI untuk Berpikir & Berkembang",
+      "headline1": "Ruang cerdas",
+      "headline2": "untuk pikiranmu.",
+      "taglinesDark": ["Pikiranmu pantas mendapatkan kejelasan.", "Renung lebih dalam. Fokus lebih tajam.", "Ruang AI untuk pikiranmu.", "Bangun ketenangan di tengah kekacauan."],
+      "taglinesLight": ["Kejelasan dimulai dengan pikiran yang tenang.", "Refleksi kecil, wawasan besar.", "Ruang pribadimu untuk berpikir.", "Mulai harimu dengan niat."],
+      "footer": "© 2026 Mindly — Pikiran Jernih, Hasil Lebih Baik"
     }
   }
 }

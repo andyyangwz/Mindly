@@ -349,7 +349,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                   </h2>
                 </div>
                 <p style={{ fontSize: 11, color: "var(--color-muted)", margin: "1px 0 0" }}>
-                  {relicList.length} relics available
+                  {t("home.updateProgress.relicsAvailable", { count: relicList.length })}
                 </p>
               </div>
               <button onClick={onClose} style={{
@@ -442,7 +442,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                             color: pendingOp.type === "reset" ? "#DC2626" : theme.primary,
                             whiteSpace: "nowrap", flexShrink: 0,
                           }}>
-                            {pendingOp.type === "reset" ? "Reset" : `+${pendingOp.value}`}
+                            {pendingOp.type === "reset" ? t("home.updateProgress.reset") : `+${pendingOp.value}`}
                           </span>
                         )}
                       </div>
@@ -467,7 +467,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                         color: theme.primary,
                         letterSpacing: "0.08em", textTransform: "uppercase",
                       }}>
-                        Equipped
+                        {t("home.updateProgress.equipped")}
                       </span>
                     )}
                   </div>
@@ -655,10 +655,10 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                     fontStyle: "italic",
                   }}>
                     {selectedPct === 100
-                      ? "Fully attuned. The relic resonates with your journey."
+                      ? t("home.updateProgress.fullyAttuned")
                       : selectedPct > 50
-                        ? "More than halfway attuned. Your dedication is shaping this relic."
-                        : "Each step attunes the relic to your path. Progress is harmony."}
+                        ? t("home.updateProgress.halfwayAttuned")
+                        : t("home.updateProgress.progressHarmony")}
                   </p>
                 </div>
               </div>
@@ -713,12 +713,12 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                         fontFamily: "inherit",
                       }}
                     >
-                      Reset
+                      {t("home.updateProgress.reset")}
                     </button>
 
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
                       <span style={{ fontSize: 11, color: "var(--color-muted)", fontWeight: 500, whiteSpace: "nowrap" }}>
-                        Add
+                        {t("home.updateProgress.add")}
                       </span>
                       <input
                         ref={inputRef}
@@ -772,14 +772,14 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                   }}
                 >
                   {updating
-                    ? "Channeling..."
+                    ? t("home.updateProgress.channeling")
                     : pendingCount > 0 && primaryOp
                       ? primaryOp.type === "reset"
-                        ? "Reset Progress"
+                        ? t("home.updateProgress.resetProgress")
                         : primaryOp.value > 0
-                          ? `Channel Energy (${primaryOp.value})`
-                          : `Remove Energy (${Math.abs(primaryOp.value)})`
-                      : "Select a relic to channel"}
+                          ? t("home.updateProgress.channelEnergy", { count: primaryOp.value })
+                          : t("home.updateProgress.removeEnergy", { count: Math.abs(primaryOp.value) })
+                      : t("home.updateProgress.selectToChannel")}
                   {updating && (
                     <span style={{
                       position: "absolute", inset: 0,
@@ -807,7 +807,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                 ✦
               </div>
               <p style={{ fontSize: 13, color: "var(--color-muted)", margin: 0, lineHeight: 1.5 }}>
-                Select a relic from the roster to channel progress energy into it.
+                {t("home.updateProgress.selectToChannelHint")}
               </p>
             </div>
           )}

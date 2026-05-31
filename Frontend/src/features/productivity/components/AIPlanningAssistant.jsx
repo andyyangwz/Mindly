@@ -1,19 +1,16 @@
 import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
+import { useTranslation } from "react-i18next"
 import { Sparkles, Lightbulb, Bot, Send, ChevronDown } from "lucide-react"
 import { theme } from "../../../theme"
-
-const suggestions = [
-  "Tomorrow has 3 free hours available",
-  "You usually study best between 8 AM and 11 AM",
-  "Statistics assignment is due in 2 days",
-  "You completed more tasks this week than last week",
-]
+import mascotSrc from "../../../assets/mascot_images/empathic.png"
 
 export default function AIPlanningAssistant() {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const contentRef = useRef(null)
   const [contentHeight, setContentHeight] = useState(0)
+  const suggestions = Object.values(t("productivity.aiPlanningAssistant.suggestions", { returnObjects: true }) ?? {})
 
   useEffect(() => {
     if (contentRef.current) {
@@ -75,7 +72,7 @@ export default function AIPlanningAssistant() {
               margin: 0,
             }}
           >
-            AI Planning Assistant
+            {t("productivity.aiPlanningAssistant.title")}
           </p>
           {!expanded && (
             <p
@@ -85,7 +82,7 @@ export default function AIPlanningAssistant() {
                 margin: "2px 0 0",
               }}
             >
-              Need help planning your day?
+              {t("productivity.aiPlanningAssistant.subtitle")}
             </p>
           )}
         </div>
@@ -141,7 +138,7 @@ export default function AIPlanningAssistant() {
                     margin: 0,
                   }}
                 >
-                  Smart Suggestions
+                  {t("productivity.aiPlanningAssistant.smartSuggestions")}
                 </p>
               </div>
               {suggestions.map((s, i) => (
@@ -182,7 +179,7 @@ export default function AIPlanningAssistant() {
               ))}
             </div>
 
-            {/* Right column — AI Scheduler */}
+              {/* Right column — AI Scheduler */}
             <div>
               <div
                 style={{
@@ -201,18 +198,19 @@ export default function AIPlanningAssistant() {
                     margin: 0,
                   }}
                 >
-                  AI Scheduler
+                  {t("productivity.aiPlanningAssistant.aiScheduler")}
                 </p>
               </div>
               <div
                 style={{
                   border: `1px solid ${theme.border}`,
                   borderRadius: 10,
-                  overflow: "hidden",
+                  overflow: "visible",
+                  position: "relative",
                 }}
               >
                 <textarea
-                  placeholder="What do you need help planning? e.g. Plan my day, Build a study schedule, Help me finish my assignment this week"
+                  placeholder={t("productivity.aiPlanningAssistant.placeholder")}
                   rows={4}
                   style={{
                     width: "100%",
@@ -260,9 +258,24 @@ export default function AIPlanningAssistant() {
                     }}
                   >
                     <Send size={12} />
-                    Generate Schedule
+                    {t("productivity.aiPlanningAssistant.generateSchedule")}
                   </button>
                 </div>
+                <motion.img
+                  src={mascotSrc}
+                  alt=""
+                  animate={{ y: [0, -4, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  style={{
+                    position: "absolute",
+                    left: -16,
+                    bottom: -16,
+                    width: 56,
+                    height: 56,
+                    objectFit: "contain",
+                    filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.12))",
+                  }}
+                />
               </div>
             </div>
           </div>

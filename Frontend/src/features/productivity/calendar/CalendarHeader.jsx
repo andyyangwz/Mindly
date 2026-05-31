@@ -351,7 +351,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
               type="button"
               data-tutorial-target="mode-toggle"
               onClick={() => onModeChange(interactionMode === "fixed" ? "reschedule" : "fixed")}
-              title={interactionMode === "fixed" ? "Switch to Reschedule Mode" : "Switch to Fixed Mode"}
+              title={interactionMode === "fixed" ? t("productivity.calendar.switchToReschedule") : t("productivity.calendar.switchToFixed")}
               style={{
                 background: interactionMode === "reschedule" ? theme.primary : "transparent",
                 border: `1px solid ${interactionMode === "reschedule" ? theme.primary : theme.border}`,
@@ -381,7 +381,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
               }}
             >
               {interactionMode === "fixed" ? <Lock size={12} /> : <Move size={12} />}
-              {interactionMode === "fixed" ? "Fixed" : "Reschedule"}
+              {interactionMode === "fixed" ? t("productivity.calendar.fixed") : t("productivity.calendar.reschedule")}
             </button>
             {showModeTip && (
               <div style={{
@@ -399,7 +399,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
                 zIndex: theme.z.tooltip || 1200,
                 pointerEvents: "none",
               }}>
-                Press CTRL+K to toggle
+                {t("productivity.calendar.toggleTooltip")}
               </div>
             )}
           </div>
@@ -449,7 +449,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
               }}
             />
             <span className="sync-label" style={{ position: "relative", zIndex: 1 }}>
-              {syncing ? "Synchronizing" : "Auto Sync"}
+              {syncing ? t("productivity.calendar.syncing") : t("productivity.calendar.sync")}
             </span>
           </button>
 
@@ -564,7 +564,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
               }}
             >
               <Plus size={14} />
-              {"Add"}
+              {t("productivity.calendar.add")}
             </button>
 
             {(showCreateMenu || forcedMenuOpen) && (
@@ -603,8 +603,8 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
                     <Waves size={14} color="#10B981" />
                   </span>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>Activity</span>
-                    <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>Schedule a time block</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>{t("productivity.calendar.addMenu.activity")}</span>
+                    <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>{t("productivity.calendar.addMenu.activityDesc")}</span>
                   </div>
                 </button>
                 <button
@@ -626,8 +626,8 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
                     <Target size={14} color="#6366F1" />
                   </span>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>Task</span>
-                    <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>Create a deadline</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>{t("productivity.calendar.addMenu.task")}</span>
+                    <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>{t("productivity.calendar.addMenu.taskDesc")}</span>
                   </div>
                 </button>
                 <div style={{ height: 1, background: theme.border, margin: "4px 0" }} />
@@ -651,8 +651,8 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
                     <Mic size={14} color="#7C3AED" />
                   </span>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>Use Voice</span>
-                    <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>Speak your plan</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>{t("productivity.calendar.addMenu.useVoice")}</span>
+                    <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>{t("productivity.calendar.addMenu.voiceDesc")}</span>
                   </div>
                 </button>
                 <div style={{ height: 1, background: theme.border, margin: "4px 0" }} />
@@ -675,8 +675,8 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
                     <Zap size={14} color="#F59E0B" />
                   </span>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>Quick Add</span>
-                    <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>Reusable templates</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>{t("productivity.calendar.addMenu.quickAdd")}</span>
+                    <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>{t("productivity.calendar.addMenu.quickAddDesc")}</span>
                   </div>
                 </button>
               </div>

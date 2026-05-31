@@ -1,34 +1,21 @@
 import { Brain, MessageSquare, BarChart3, BookOpen } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import ScrollReveal from "../components/ScrollReveal";
 
-const FEATURES = [
-  {
-    icon: Brain,
-    title: "Productivity Manager",
-    description: "Intelligent time blocks that adapt to your energy levels. Focus on what matters.",
-    gradient: "linear-gradient(135deg, var(--landing-accent), var(--landing-accent-soft))",
-  },
-  {
-    icon: BookOpen,
-    title: "Goal Setting & Journaling",
-    description: "Write with purpose. Set intentions that stick. Your journal becomes a map of your growth.",
-    gradient: "linear-gradient(135deg, var(--landing-secondary), var(--landing-accent-soft))",
-  },
-  {
-    icon: MessageSquare,
-    title: "AI Integrated Chat",
-    description: "A thinking partner that listens, reflects, and helps you untangle complex thoughts.",
-    gradient: "linear-gradient(135deg, var(--landing-accent-soft), var(--landing-accent))",
-  },
-  {
-    icon: BarChart3,
-    title: "Weekly Improvement Insights",
-    description: "Gentle, data-informed reflections on your patterns. See where you thrive.",
-    gradient: "linear-gradient(135deg, var(--landing-accent), var(--landing-secondary))",
-  },
+const ICON_MAP = { Brain, MessageSquare, BarChart3, BookOpen };
+
+const GRADIENTS = [
+  "linear-gradient(135deg, var(--landing-accent), var(--landing-accent-soft))",
+  "linear-gradient(135deg, var(--landing-secondary), var(--landing-accent-soft))",
+  "linear-gradient(135deg, var(--landing-accent-soft), var(--landing-accent))",
+  "linear-gradient(135deg, var(--landing-accent), var(--landing-secondary))",
 ];
 
+const ICON_KEYS = ["Brain", "BookOpen", "MessageSquare", "BarChart3"];
+
 export default function FeaturesSection() {
+  const { t } = useTranslation();
+  const features = t("landing.features.cards", { returnObjects: true });
   return (
     <section
       style={{
@@ -50,7 +37,7 @@ export default function FeaturesSection() {
               textAlign: "center",
             }}
           >
-            Everything You Need
+            {t("landing.features.label")}
           </p>
         </ScrollReveal>
 
@@ -66,13 +53,13 @@ export default function FeaturesSection() {
               lineHeight: 1.2,
             }}
           >
-            A complete cognitive toolkit
+            {t("landing.features.title")}
           </h2>
         </ScrollReveal>
 
         <div className="feature-grid">
-          {FEATURES.map((feature, i) => {
-            const Icon = feature.icon;
+          {features.map((feature, i) => {
+            const Icon = ICON_MAP[ICON_KEYS[i]];
             return (
               <ScrollReveal key={feature.title} delay={0.1 * i} distance={30}>
                 <div
@@ -102,7 +89,7 @@ export default function FeaturesSection() {
                       width: 40,
                       height: 40,
                       borderRadius: 12,
-                      background: feature.gradient,
+                      background: GRADIENTS[i],
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -134,7 +121,7 @@ export default function FeaturesSection() {
                       fontWeight: 350,
                     }}
                   >
-                    {feature.description}
+                    {feature.desc}
                   </p>
                 </div>
               </ScrollReveal>

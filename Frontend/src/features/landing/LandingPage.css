@@ -132,3 +132,75 @@ body.landing-active {
     padding-right: 20px !important;
   }
 }
+
+/* ===== Pricing Table (card columns) ===== */
+
+/* Monthly column — card top */
+.pricing-table thead th[data-plan="monthly"] {
+  border-radius: 12px 12px 0 0;
+}
+
+/* Monthly column — card bottom */
+.pricing-table tbody tr:last-child td[data-plan="monthly"] {
+  border-radius: 0 0 12px 12px;
+}
+
+/* Yearly column — card top + glow */
+.pricing-table thead th[data-plan="yearly"] {
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 0 30px color-mix(in srgb, var(--landing-accent) 12%, transparent),
+              inset 0 1px 0 color-mix(in srgb, var(--landing-accent) 25%, transparent);
+}
+
+/* Yearly column — card bottom */
+.pricing-table tbody tr:last-child td[data-plan="yearly"] {
+  border-radius: 0 0 12px 12px;
+}
+
+/* Yearly column — side borders for card separation */
+.pricing-table th[data-plan="yearly"],
+.pricing-table td[data-plan="yearly"] {
+  border-left: 1px solid color-mix(in srgb, var(--landing-accent) 14%, transparent) !important;
+  border-right: 1px solid color-mix(in srgb, var(--landing-accent) 14%, transparent) !important;
+}
+
+/* Yearly column — overall card shadow when hovering the section */
+.pricing-table-wrap:hover th[data-plan="yearly"] {
+  box-shadow: 0 0 40px color-mix(in srgb, var(--landing-accent) 18%, transparent),
+              inset 0 1px 0 color-mix(in srgb, var(--landing-accent) 30%, transparent);
+  transition: box-shadow 0.4s ease;
+}
+
+/* Hover row glow — monthly */
+.pricing-table tbody tr:hover td[data-plan="monthly"] {
+  background: color-mix(in srgb, var(--landing-accent) 6%, transparent) !important;
+}
+
+/* Hover row glow — yearly */
+.pricing-table tbody tr:hover td[data-plan="yearly"] {
+  background: color-mix(in srgb, var(--landing-accent) 9%, transparent) !important;
+}
+
+/* ===== Why Section (2-column layout) ===== */
+
+@media (max-width: 820px) {
+  .why-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+
+  .why-highlights {
+    flex-direction: column !important;
+  }
+}
+
+/* Pricing table responsive */
+@media (max-width: 700px) {
+  .pricing-table-wrap {
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+    margin-left: -24px;
+    margin-right: -24px;
+  }
+}

@@ -145,7 +145,19 @@
       "delete": "Delete",
       "deleteTitle": "Delete Relic?",
       "deleteMessage": "This relic will be permanently removed from your archive.",
-      "deleteConfirm": "Delete"
+      "deleteConfirm": "Delete",
+      "relicsAvailable": "{{count}} relics available",
+      "equipped": "Equipped",
+      "add": "Add",
+      "channeling": "Channeling...",
+      "resetProgress": "Reset Progress",
+      "channelEnergy": "Channel Energy ({{count}})",
+      "removeEnergy": "Remove Energy ({{count}})",
+      "selectToChannel": "Select a relic to channel",
+      "selectToChannelHint": "Select a relic from the roster to channel progress energy into it.",
+      "fullyAttuned": "Fully attuned. The relic resonates with your journey.",
+      "halfwayAttuned": "More than halfway attuned. Your dedication is shaping this relic.",
+      "progressHarmony": "Each step attunes the relic to your path. Progress is harmony."
     }
   },
   "journal": {
@@ -247,6 +259,26 @@
       "focus": "Focus",
       "viewPlanAndTasks": "View Today's Plan and My Tasks",
       "finishOn": "Finish on:"
+    },
+    "aiPlanningAssistant": {
+      "title": "AI Planning Assistant",
+      "subtitle": "Need help planning your day?",
+      "smartSuggestions": "Smart Suggestions",
+      "aiScheduler": "AI Scheduler",
+      "placeholder": "What do you need help planning? e.g. Plan my day, Build a study schedule, Help me finish my assignment this week",
+      "generateSchedule": "Generate Schedule",
+      "suggestions": {
+        "0": "Tomorrow has 3 free hours available",
+        "1": "You usually study best between 8 AM and 11 AM",
+        "2": "Statistics assignment is due in 2 days",
+        "3": "You completed more tasks this week than last week"
+      }
+    },
+    "quickAdd": {
+      "title": "Reusable Activities",
+      "date": "Date",
+      "addActivity": "Add Activity",
+      "added": "{{title}} added — {{date}}"
     },
     "status": {
       "todo": "To Do",
@@ -351,7 +383,8 @@
       "start": "Start Focus Mode",
       "stop": "STOP",
       "sessionComplete": "Session Complete!",
-      "breakComplete": "Break Over!"
+      "breakComplete": "Break Over!",
+      "reset": "Reset"
     },
     "suggestions": {
       "morningTasks": "Move heavy tasks to morning hours when you're most alert",
@@ -361,24 +394,101 @@
       "previousWeek": "Previous week",
       "nextWeek": "Next week",
       "undo": "Undo",
-      "redo": "Redo"
+      "redo": "Redo",
+      "add": "Add",
+      "addMenu": {
+        "activity": "Activity",
+        "activityDesc": "Schedule a time block",
+        "task": "Task",
+        "taskDesc": "Create a deadline",
+        "useVoice": "Use Voice",
+        "voiceDesc": "Speak your plan",
+        "quickAdd": "Quick Add",
+        "quickAddDesc": "Reusable templates"
+      },
+      "sync": "Auto Sync",
+      "syncing": "Synchronizing",
+      "fixed": "Fixed",
+      "reschedule": "Reschedule",
+      "toggleTooltip": "Press CTRL+K to toggle",
+      "switchToReschedule": "Switch to Reschedule Mode",
+      "switchToFixed": "Switch to Fixed Mode"
     }
   },
   "insight": {
-    "title": "Your Insights",
+    "title": "My Insights",
+    "subtitle": "A personal reflection on how you spend your time",
     "weekly": "Weekly",
     "monthly": "Monthly",
+    "reflectionTitle": "Reflection from Spilli AI",
+    "showLess": "Show Less",
+    "viewFullReflection": "View Full Reflection",
+    "knowYou": "What We Know About You",
+    "knowYouItems": {
+      "bestTime": "Best Time",
+      "bestTimeValue": "9 AM – 11 AM",
+      "bestDay": "Best Day",
+      "bestDayValue": "Tuesday",
+      "strongestHabit": "Strongest Habit",
+      "strongestHabitValue": "Reading",
+      "biggestDistraction": "Biggest Distraction",
+      "biggestDistractionValue": "Gaming",
+      "strongestActivity": "Strongest Activity",
+      "strongestActivityValue": "Deep Study",
+      "peakEnergy": "Peak Energy",
+      "peakEnergyValue": "6 – 8 AM"
+    },
     "performanceOverview": "Performance Overview",
-    "performanceDesc": "Study time, productivity, and focus trends",
+    "performanceDesc": "Study time, productivity, and focus over {{period}}",
+    "period7days": "7 days",
+    "period4weeks": "4 weeks",
     "timeDistribution": "Time Distribution",
-    "timeDistributionDesc": "How you spent your time",
+    "timeDistributionDesc": "Breakdown of your tracked activities",
+    "chart": {
+      "studyTime": "Study Time",
+      "productivity": "Productivity",
+      "focus": "Focus"
+    },
+    "patterns": "Patterns We've Noticed",
+    "areasToImprove": "Areas to Improve",
+    "smallWins": "Small Wins",
+    "suggestedExperiments": "Suggested Experiments",
+    "patternItems": [
+      "Gym days improve focus sessions",
+      "Journaling days improve completion rates",
+      "Morning sessions outperform evening sessions",
+      "Shorter focus sessions show better quality",
+      "Early starts improve completion rates"
+    ],
+    "areaItems": [
+      "Statistics work postponed 4 times",
+      "Friday evening focus remains low",
+      "Several tasks untouched for 7+ days",
+      "Break durations often exceed planned time"
+    ],
+    "winItems": [
+      "7 Day Focus Streak",
+      "+15% Study Consistency",
+      "12 Tasks Completed",
+      "Best Month This Year"
+    ],
+    "experimentItems": [
+      "Study before 11 AM",
+      "Try 3-minute journaling after sessions",
+      "Create a bedtime routine",
+      "Schedule difficult tasks first",
+      "Replace one evening session with morning"
+    ],
+    "aiPreview": {
+      "weekly": ["You perform best on Tuesday and Thursday mornings.", "Late-night activities continue to affect your next-day productivity.", "Reading remains your most consistent habit."],
+      "monthly": ["Your focus dips noticeably after extended gaming sessions.", "Week 4 was your strongest week this month.", "Morning hours remain your most productive window."]
+    },
+    "aiFull": {
+      "weekly": "Over the last 7 days, you've been remarkably consistent with your study habits. Your strongest days are Tuesday and Thursday, where your productivity consistently peaks. Morning hours (9\u201311 AM) show your highest focus levels, and you tend to complete more tasks when you start your first session before 10 AM. However, late-night activities on Fridays often reduce your completion rate the following day. Overall, this was a solid week — your discipline is building.",
+      "monthly": "This month shows a clear upward trend in your study consistency. Week 4 was your strongest, with a 13% improvement over Week 1. Your most productive time remains the morning block, and you've maintained a healthy balance between focused work and rest. One pattern worth noting: your focus dips noticeably after extended gaming sessions. Taking shorter breaks and setting session limits could help maintain evening productivity."
+    },
     "aiPowered": "AI-Powered Insights",
     "aiPoweredDesc": "Great progress! Productivity improved by <strong>8%</strong> and you've maintained a <strong>7-day streak</strong>. Your focus peaks between 9\u201311 AM. Consider scheduling lighter tasks on Fridays when focus naturally dips.",
-    "chart": {
-      "studyTime": "Study Time (hrs)",
-      "productivity": "Productivity (%)",
-      "focus": "Focus (%)"
-    },
     "quickWins": "Quick Wins",
     "stats": {
       "productivityScore": "Productivity Score",
@@ -536,7 +646,7 @@
       "tooltip": "How many ongoing tasks you've already completed right now",
       "description": "Shows completed vs total ongoing tasks — tasks that are currently happening right now. A task is ongoing if its start time has passed but its end time hasn't (start < now < end). The ratio tells you how many of those ongoing tasks have already been marked Done.",
       "steps": [
-        { "title": "What It Measures", "text": "The numerator is how many ongoing tasks you've marked Done. The denominator is how many tasks are currently active (start < now < end). If no tasks are ongoing right now, it shows 'No On Going Task'." },
+        { "title": "What It Measures", "text": "The numerator is how many ongoing tasks you've marked Done. The denominator includes tasks with start time ≤ today ≤ end time plus tasks with status 'In Progress'. If no tasks are ongoing right now, it shows 'No On Going Task'." },
         { "title": "How to Improve", "text": "Plan realistic daily task counts. Break large tasks into smaller ones to build momentum. Use the Productivity Calendar to schedule focused time blocks for each task." }
       ]
     },
@@ -708,6 +818,200 @@
         { "title": "Relic Roster", "text": "The roster lists all your relics — equipped ones first, then the rest. Click any relic to select it, then use the controls on the right to add progress or reset it.", "targetId": "upgrade-roster" },
         { "title": "Controls & Committing", "text": "With a relic selected, type a number in the input to add that many points to its progress. Use the Reset button to zero it out. Click 'Channel Energy' to commit all pending changes at once.", "targetId": "update-progress" }
       ]
+    }
+  },
+  "landing": {
+    "hero": {
+      "title": "Mindly",
+      "tagline": "Clear Mind, Better Grind",
+      "subtitle": "Your AI-Powered Companion to Think & Grow",
+      "signUp": "Sign Up",
+      "login": "Login",
+      "scroll": "Scroll"
+    },
+    "philosophy": {
+      "tagline": "A system for becoming more intentional and aware"
+    },
+    "why": {
+      "label": "Our Philosophy",
+      "title": "Why We Built This",
+      "ideaTitle": "The idea behind Mindly",
+      "ideaPara1": "Most productivity apps focus on only one side of the equation.",
+      "ideaPara2": "Some help you become more productive. Others focus only on emotional wellbeing. We believe both matters.",
+      "emphasis1": "Productivity without reflection can lead to burnout.",
+      "emphasis2": "Reflection without action can lead to stagnation.",
+      "ideaPara3": "We wanted to build a place where planning and self-awareness coexist. A second brain for planning. A companion for reflection. A space where you can organize your life and talk about what is on your mind when you need support.",
+      "highlightLabels": ["Productivity", "Reflection", "Balance"],
+      "highlightTexts": ["Plan intentionally.", "Understand yourself.", "Grow sustainably."],
+      "forTitle": "Who Is This For?",
+      "forIntro": "This app was built for people who want more than a to-do list.",
+      "personaTitles": ["Students", "Reflective Thinkers", "Self-Improvers", "People Seeking Clarity"],
+      "personaDescs": ["Managing classes, assignments, and goals.", "People who journal and learn from their experiences.", "People actively working toward becoming better.", "People who feel overwhelmed, lost, or uncertain."],
+      "checklistTitle": "This is for you if...",
+      "checklistItems": ["You want structure", "You want consistency", "You enjoy reflection", "You want to understand your habits", "You want both productivity and emotional support", "You want clarity in your daily life"],
+      "notForLabel": "Not designed for:",
+      "notForText": "team collaboration, enterprise management, or corporate project tracking. This application is built for individuals.",
+      "speechBold": "Most productivity apps",
+      "speechNormal": "help you manage tasks.",
+      "speechEnd": "We wanted to build something that helps you understand yourself too.",
+      "mascotAlt": "Spilli mascot"
+    },
+    "features": {
+      "label": "Everything You Need",
+      "title": "A complete cognitive toolkit",
+      "cards": [
+        { "title": "Productivity Manager", "desc": "Intelligent time blocks that adapt to your energy levels. Focus on what matters." },
+        { "title": "Goal Setting & Journaling", "desc": "Write with purpose. Set intentions that stick. Your journal becomes a map of your growth." },
+        { "title": "AI Integrated Chat", "desc": "A thinking partner that listens, reflects, and helps you untangle complex thoughts." },
+        { "title": "Weekly Improvement Insights", "desc": "Gentle, data-informed reflections on your patterns. See where you thrive." }
+      ]
+    },
+    "transformation": {
+      "label": "The Shift",
+      "title": "Who you become using Mindly",
+      "before": "Before",
+      "after": "After",
+      "label_transformation": "transformation",
+      "beforeTraits": ["distracted", "overwhelmed", "inconsistent", "mentally cluttered", "reactive", "drifting"],
+      "afterTraits": ["focused", "intentional", "disciplined", "clear-minded", "structured", "aligned"],
+      "beforeAlt": "Unproductive state",
+      "afterAlt": "Productive state"
+    },
+    "calendar": {
+      "label": "Intelligent Scheduling",
+      "title": "A calendar that understands you",
+      "events": [
+        { "title": "Morning Planning", "desc": "Plan the day and set key intentions.", "status": "Done" },
+        { "title": "Deep Work", "desc": "Focused creative work on the main project.", "status": "In Progress" },
+        { "title": "Code Review", "desc": "Review pull requests and provide feedback.", "status": "To Do" },
+        { "title": "Team Standup", "desc": "Daily sync with the engineering team.", "status": "Done" },
+        { "title": "Team Meeting", "desc": "Weekly sync with the team.", "status": "To Do" },
+        { "title": "Journal Reflection", "desc": "Mid-day reflection and note-taking.", "status": "To Do" },
+        { "title": "Reading Session", "desc": "Read 'Deep Work' by Cal Newport.", "status": "To Do" },
+        { "title": "Focus Session", "desc": "Deep focus on project milestones.", "status": "To Do" },
+        { "title": "Design Review", "desc": "Review wireframes and provide feedback.", "status": "To Do" },
+        { "title": "1:1 with Mentor", "desc": "Weekly check-in and career discussion.", "status": "To Do" },
+        { "title": "Gym Session", "desc": "Evening workout routine.", "status": "To Do" },
+        { "title": "Assignment Deadline", "desc": "Final submission due tonight.", "status": "To Do" }
+      ],
+      "overlayTitle": "Unlock the Full Calendar",
+      "overlayDesc": "Sign up to create activities, set deadlines, and organize your week with AI-powered scheduling.",
+      "overlayOk": "Okay",
+      "overlaySignUp": "Sign Up"
+    },
+    "journal": {
+      "label": "Personal Journaling",
+      "title": "Your thoughts, beautifully captured",
+      "entries": [
+        { "date": "May 20, 2026", "time": "8:42 AM", "title": "Morning Creative Flow", "preview": "I feel most creative in the morning. The quiet hours before the world wakes up let my thoughts wander freely, and today's session was particularly productive..." },
+        { "date": "May 19, 2026", "time": "10:15 PM", "title": "Understanding Procrastination", "preview": "Realized that my procrastination isn't laziness — it's a signal that the task feels too big. Breaking it down into tiny steps helped me actually start..." },
+        { "date": "May 18, 2026", "time": "7:30 AM", "title": "Setting Daily Intentions", "preview": "New intention: be present. Not just in meditation, but in conversations, during meals, and while walking between meetings. The moments in between matter most..." }
+      ]
+    },
+    "pricing": {
+      "title": "Choose Your Journey",
+      "subtitle": "Start for free and unlock advanced productivity tools when you're ready.",
+      "valueTitle": "Unlock Your Full Potential",
+      "valueDesc": "Get personalized insights, AI-assisted planning, and premium coaching tools designed to help you build consistency and achieve your goals.",
+      "featureCol": "Feature",
+      "plans": {
+        "freeLabel": "Free",
+        "freePrice": "Rp0",
+        "freeSub": "Forever Free",
+        "monthlyLabel": "Monthly",
+        "monthlyPrice": "Rp19.999",
+        "monthlySub": "First Month",
+        "monthlyRenewal": "Renews at Rp29.999/month",
+        "yearlyLabel": "Yearly",
+        "yearlyPrice": "Rp319.999/year",
+        "yearlyBadge": "Best Value",
+        "yearlySave": "Save 11%"
+      },
+      "features": [
+        { "feature": "Weekly Insights", "desc": "Personalized productivity insights and reflections." },
+        { "feature": "Monthly Insights", "desc": "Deeper analysis of your monthly trends." },
+        { "feature": "AI Scheduler", "desc": "AI helps organize schedules and suggest optimal planning." },
+        { "feature": "Voice Transcription", "desc": "Convert voice recordings into activities and tasks." },
+        { "feature": "Quick Add Activities", "desc": "Reuse activities and quickly populate schedules." },
+        { "feature": "Spill AI Personalities", "desc": "Access multiple coaching styles inside Spill AI." }
+      ],
+      "freeValues": {
+        "notAvailable": "Not Available",
+        "voiceTranscription": "4 per day",
+        "empathicListener": "Empathic Listener",
+        "noInsights": "No Insights"
+      },
+      "premiumValues": {
+        "unlimited": "Unlimited",
+        "aiPersonalities": ["Empathic Listener", "Problem Solver", "Motivational Coach"]
+      },
+      "cta": {
+        "getStarted": "Get Started",
+        "getFree": "Get Free",
+        "startMonthly": "Start Monthly",
+        "startYearly": "Start Yearly"
+      },
+      "trustItems": ["Cancel Anytime", "No Hidden Fees", "Instant Access", "Secure Payment"]
+    },
+    "finalCta": {
+      "title": "Ready to think clearly?",
+      "desc": "Start your journey with Mindly. A calmer, clearer, more intentional way to think, work, and grow.",
+      "button": "Begin Your Journey",
+      "tagline": "Mindly — Clear Mind, Better Grind"
+    },
+    "themeToggle": {
+      "darkMode": "Switch to dark mode",
+      "lightMode": "Switch to light mode"
+    }
+  },
+  "auth": {
+    "page": {
+      "firstNameError": "Enter your first name",
+      "lastNameError": "Enter your last name",
+      "emailError": "Valid email required",
+      "passwordError": "Minimum 6 characters",
+      "confirmError": "Passwords don't match",
+      "emailRequired": "Enter your email",
+      "passwordRequired": "Enter your password",
+      "serverError": "Something went wrong. Please try again.",
+      "googleError": "Google sign-in failed. Please try again."
+    },
+    "panel": {
+      "signIn": "Sign In",
+      "createAccount": "Create Account",
+      "labels": {
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email Address",
+        "password": "Password",
+        "confirmPassword": "Confirm Password"
+      },
+      "placeholders": {
+        "firstName": "Your first name",
+        "lastName": "Your last name",
+        "email": "you@example.com",
+        "password": "••••••••",
+        "confirmPassword": "Re-enter password"
+      },
+      "forgotPassword": "Forgot password?",
+      "or": "or",
+      "footerSignIn": "Don't have an account? Sign in anyway.",
+      "footerCreate": "Already have an account?"
+    },
+    "google": {
+      "cancel": "Google sign-in was cancelled",
+      "notConfigured": "Google sign-in is not configured",
+      "signingIn": "Signing in...",
+      "continue": "Continue with Google"
+    },
+    "atmosphere": {
+      "title": "Mindly",
+      "subtitle": "Your AI-Powered Companion to Think & Grow",
+      "headline1": "An intelligent space",
+      "headline2": "for your mind.",
+      "taglinesDark": ["Your thoughts deserve clarity.", "Reflect deeper. Focus sharper.", "An AI space for your mind.", "Build calm within the chaos."],
+      "taglinesLight": ["Clarity begins with a quiet mind.", "Small reflections, big insights.", "Your personal space for thought.", "Start your day with intention."],
+      "footer": "© 2026 Mindly — Clear Mind, Better Grind"
     }
   }
 }

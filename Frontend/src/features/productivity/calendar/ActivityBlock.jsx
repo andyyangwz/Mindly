@@ -37,6 +37,13 @@ function formatDeadlineDate(dateStr) {
   return d.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" })
 }
 
+function formatCompletionTime(dateStr) {
+  if (!dateStr) return ""
+  const d = new Date(dateStr)
+  const locale = i18n.language?.startsWith("id") ? "id-ID" : "en-US"
+  return d.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" })
+}
+
 const RESIZE_ZONE_HEIGHT = 8
 
 const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMenu, onViewDetails, isInlineEditing, onInlineSave, onInlineCancel, onStatusChange, interactionMode, isSyncing, tutorialTarget }) {
@@ -45,14 +52,17 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
   const { startTime, endTime, segmentStart, segmentEnd, status, hasDeadline } = activity
   const displayStart = startTime || (segmentStart && segmentStart.length > 5 ? segmentStart.split("T")[1] : segmentStart)
   const displayEnd = endTime || (segmentEnd && segmentEnd.length > 5 ? segmentEnd.split("T")[1] : segmentEnd)
-  const height = style?.height || 60
-  const top = style?.top || 0
-  const isCompact = height < 32
-  const isMini = height < 24
+  const isDone = status === "Done"
   const es = getActivityStyles(activity)
   const typeInfo = TYPE_META[es.variantKey] || null
   const statusMeta = STATUS_META[status] || null
-  const isDone = status === "Done"
+  const baseHeight = style?.height || 60
+  const top = style?.top || 0
+  const height = hasDeadline ? baseHeight + 6 : baseHeight
+  const isCompact = height < 32
+  const isMini = height < 24
+  const showFinishedAt = isDone && !isMini && hasDeadline && activity.statusChangeAt
+  const displayHeight = showFinishedAt ? height + 6 : height
   const isCrossDaySeg = activity.isSegmented
   const continuesPrev = !isCrossDaySeg ? false : activity.continuesPrev
   const continuesNext = !isCrossDaySeg ? false : activity.continuesNext
@@ -171,7 +181,7 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
           position: "absolute",
           top,
           left: displayLeft,
-          height,
+          height: displayHeight,
           width: displayWidth,
           borderRadius: 6,
           padding: isMini ? "2px 5px" : isCompact ? "3px 8px" : "4px 10px",
@@ -268,9 +278,9 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
               )}
             </span>
 
-            {typeInfo && !isMini && (
-              <span style={{ fontSize: 8, fontWeight: isTaskMarker ? 500 : 600, padding: "1px 5px", borderRadius: 3, background: `${typeInfo.color}18`, color: typeInfo.color, lineHeight: 1.3, flexShrink: 0 }}>
-                {isTaskMarker ? formatDateRange(activity.startDatetime, activity.endDatetime) : (isDone ? `Finish on ${formatDeadlineDate(activity.endDatetime ? activity.endDatetime.slice(0, 10) : "")}` : "Deadline")}
+            {typeInfo && !isMini && !isTaskMarker && (
+              <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: `${typeInfo.color}18`, color: typeInfo.color, lineHeight: 1.3, flexShrink: 0 }}>
+                {isDone ? `Finish on ${formatDeadlineDate(activity.endDatetime ? activity.endDatetime.slice(0, 10) : "")}` : "Deadline"}
               </span>
             )}
 
@@ -280,6 +290,26 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
               </span>
             )}
           </span>
+
+          {isTaskMarker && !isMini && (() => {
+            const isStart = activity._taskRole === "start"
+            const roleColor = isStart ? "#10B981" : "#EF4444"
+            return (
+              <span
+                style={{
+                  fontSize: 8, fontWeight: 600,
+                  padding: "1px 6px", borderRadius: 3,
+                  background: `${roleColor}14`,
+                  color: roleColor,
+                  border: `1px solid ${roleColor}30`,
+                  lineHeight: 1.4, letterSpacing: "0.01em",
+                  flexShrink: 0,
+                }}
+              >
+                {isStart ? "Start" : "Deadline"}
+              </span>
+            )
+          })()}
 
           {statusMeta && !isMini && (
             <span
@@ -309,7 +339,13 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
           )}
         </div>
 
-        {!isCompact && (
+        {isDone && !isMini && activity.hasDeadline && activity.statusChangeAt && (
+          <div style={{ fontSize: 10, fontWeight: 600, color: "#10B981", lineHeight: 1.5, marginTop: 1 }}>
+            Finished at: {formatCompletionTime(activity.statusChangeAt)}
+          </div>
+        )}
+
+        {!isCompact && !hasDeadline && (
           <div style={{ fontSize: 10, fontWeight: 500, color: es.titleColor, opacity: 0.85, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.5, marginTop: 2, pointerEvents: "none" }}>
             {formatDisplayTime(displayStart)} – {formatDisplayTime(displayEnd)}
           </div>

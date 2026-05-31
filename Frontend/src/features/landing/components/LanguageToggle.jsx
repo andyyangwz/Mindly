@@ -1,20 +1,22 @@
 import { useTranslation } from "react-i18next";
-import { Sun, Moon } from "lucide-react";
-import { useTheme } from "../../../theme/ThemeProvider";
 
-export default function ThemeToggle() {
-  const { t } = useTranslation();
-  const { resolvedTheme, toggleTheme } = useTheme();
-  const isLight = resolvedTheme === "light";
+export default function LanguageToggle() {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language?.startsWith("id") ? "id" : "en";
+
+  function toggle() {
+    const next = currentLang === "en" ? "id" : "en";
+    i18n.changeLanguage(next);
+  }
 
   return (
     <button
-      onClick={toggleTheme}
-      aria-label={isLight ? t("landing.themeToggle.darkMode") : t("landing.themeToggle.lightMode")}
+      onClick={toggle}
+      aria-label={`Switch to ${currentLang === "en" ? "Indonesian" : "English"}`}
       style={{
         position: "fixed",
         top: 24,
-        right: 24,
+        right: 76,
         zIndex: 100,
         width: 44,
         height: 44,
@@ -30,6 +32,10 @@ export default function ThemeToggle() {
         WebkitBackdropFilter: "blur(12px)",
         transition: "all 0.3s ease",
         boxShadow: "var(--landing-shadow-sm)",
+        fontSize: 14,
+        fontWeight: 600,
+        letterSpacing: "0.02em",
+        fontFamily: "'Inter', system-ui, sans-serif",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = "var(--landing-accent)";
@@ -42,7 +48,7 @@ export default function ThemeToggle() {
         e.currentTarget.style.transform = "scale(1)";
       }}
     >
-      {isLight ? <Moon size={16} /> : <Sun size={16} />}
+      {currentLang === "en" ? "EN" : "ID"}
     </button>
   );
 }
