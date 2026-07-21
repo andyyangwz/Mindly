@@ -13,6 +13,7 @@ import AddActivityModal from "../modals/AddActivityModal"
 import AddTaskModal from "../tasks/AddTaskModal"
 import ActivityDetailModal from "../modals/ActivityDetailModal"
 import ActivityContextMenu from "../interactions/ActivityContextMenu"
+import { notifyTasksUpdated } from "../../../utils/events"
 import VoiceRecorderModal from "../modals/VoiceRecorderModal"
 import {
   toDateStr,
@@ -326,8 +327,7 @@ useImperativeHandle(ref, () => ({
     async (data) => {
       if (editingActivity) {
         const prev = localActivitiesRef.current.find((e) => e.id === editingActivity.id)
-        if (!prev) return
-        const prevSnapshot = { ...prev }
+        const prevSnapshot = prev ? { ...prev } : null
 
         let payload = { ...data }
         let startDt = data.startDatetime || editingActivity.startDatetime
@@ -342,24 +342,29 @@ useImperativeHandle(ref, () => ({
           payload.endTime = endDt.slice(11)
         }
 
-        const next = { ...prev, ...payload }
-        setLocalActivities((prevActivities) =>
-          prevActivities.map((e) => (e.id === editingActivity.id ? next : e))
-        )
-        record({ type: "edit", prev: prevSnapshot, next })
+        if (prev) {
+          const next = { ...prev, ...payload }
+          setLocalActivities((prevActivities) =>
+            prevActivities.map((e) => (e.id === editingActivity.id ? next : e))
+          )
+          record({ type: "edit", prev: prevSnapshot, next })
+        }
 
         try {
           const result = await updateActivity(editingActivity.id, payload)
-          if (result) {
+          if (result && prev) {
             setLocalActivities((prevActivities) =>
               prevActivities.map((e) => (e.id === editingActivity.id ? result : e))
             )
           }
           setUseRealData(true)
         } catch (err) {
-          setLocalActivities((prevActivities) =>
-            prevActivities.map((e) => (e.id === editingActivity.id ? prevSnapshot : e))
-          )
+          if (prev) {
+            setLocalActivities((prevActivities) =>
+              prevActivities.map((e) => (e.id === editingActivity.id ? prevSnapshot : e))
+            )
+          }
+          throw err
         }
       } else {
         let payload = { ...data }
@@ -725,6 +730,7 @@ useImperativeHandle(ref, () => ({
     setLocalActivities(events)
     setUseRealData(true)
     onActivityUpdated?.()
+    notifyTasksUpdated()
     setTimeout(() => setIsSyncing(false), 600)
   }, [currentDate, fetchActivities, onActivityUpdated])
 

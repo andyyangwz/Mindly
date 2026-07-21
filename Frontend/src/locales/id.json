@@ -252,6 +252,8 @@
       "smartSuggestions": "Saran Cerdas",
       "optimize": "Optimalkan Rencanaku →",
       "todaysPlan": "Rencana Hari Ini",
+      "tomorrowsPlan": "Rencana Besok",
+      "yesterdaysPlan": "Rencana Kemarin",
       "yourTasks": "Tugasmu",
       "loading": "Memuat...",
       "noPlan": "Belum ada rencana hari ini",

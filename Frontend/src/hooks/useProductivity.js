@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { productivityService } from "../services/productivityService"
+import { notifyTasksUpdated } from "../utils/events"
 
 function toDateStr(date) {
   const y = date.getFullYear()
@@ -35,6 +36,7 @@ export function useProductivity() {
     setActivities((prev) => {
       return [...prev, event].sort((a, b) => a.startTime.localeCompare(b.startTime))
     })
+    notifyTasksUpdated()
     return event
   }, [])
 
@@ -43,12 +45,14 @@ export function useProductivity() {
     setActivities((prev) => {
       return prev.map((e) => (e.id === id ? event : e))
     })
+    notifyTasksUpdated()
     return event
   }, [])
 
   const deleteActivity = useCallback(async (id) => {
     const result = await productivityService.delete(id)
     setActivities((prev) => prev.filter((e) => !result.deletedIds.includes(e.id)))
+    notifyTasksUpdated()
   }, [])
 
   return {

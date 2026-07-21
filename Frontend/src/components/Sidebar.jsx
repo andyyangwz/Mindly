@@ -118,7 +118,7 @@ function LanguageSwitcher() {
   );
 }
 
-export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameChat, onDeleteChat }) {
+export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameChat, onDeleteChat, onNavClick }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme: currentTheme, setTheme } = useTheme();
@@ -207,7 +207,7 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
           return (
             <button
               key={item.id}
-              onClick={() => navigate(`/app/${item.id}`)}
+              onClick={() => { navigate(`/app/${item.id}`); onNavClick?.() }}
               style={{
                 width: "100%", display: "flex", alignItems: "center", gap: 10,
                 padding: "10px 12px", borderRadius: 8, border: "none",
@@ -295,7 +295,7 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
             chat={chat}
             active={activeSessionId === chat.id}
             newSessionId={newSessionId}
-            onSelect={(id) => navigate(`/app/spill/${id}`)}
+            onSelect={(id) => { navigate(`/app/spill/${id}`); onNavClick?.() }}
             onRename={onRenameChat}
             onDelete={onDeleteChat}
           />

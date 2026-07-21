@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next"
 import { Target, TrendingUp } from "lucide-react"
 import { theme } from "../../../theme"
 import InfoButton from "../../../components/tutorial/InfoButton"
 import { statsService } from "../services/statsService";
+import { EVENT_TASKS_UPDATED } from "../../../utils/events";
 
 export default function StatsGrid() {
   const { t } = useTranslation()
@@ -25,7 +26,7 @@ export default function StatsGrid() {
 
   const [stats, setStats] = useState(defaultStats);
 
-  useEffect(() => {
+  const fetchStats = useCallback(() => {
     let cancelled = false;
     statsService.getHomeStats().then((data) => {
       if (cancelled) return;
@@ -49,15 +50,26 @@ export default function StatsGrid() {
     return () => { cancelled = true; };
   }, [t]);
 
+  useEffect(() => {
+    const cancel = fetchStats();
+    return () => cancel?.();
+  }, [fetchStats]);
+
+  useEffect(() => {
+    const handler = () => fetchStats();
+    window.addEventListener(EVENT_TASKS_UPDATED, handler);
+    return () => window.removeEventListener(EVENT_TASKS_UPDATED, handler);
+  }, [fetchStats]);
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, height: "100%" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
       {stats.map((s, i) => {
         const tutorialId = i === 0 ? "task-completed" : "productivity-score"
         return (
           <div key={i} data-tutorial-target={tutorialId} style={{
             background: "var(--color-card)",
             borderRadius: 14,
-            padding: "8px",
+            padding: "20px",
             boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
             display: "flex",
             flexDirection: "column",

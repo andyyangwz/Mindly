@@ -55,19 +55,14 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
         startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
         deadlineDate: editingActivity.endDatetime ? editingActivity.endDatetime.slice(0, 10) : "",
         deadlineTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
-        color: editingActivity.color || "#7C3AED",
+        color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
         priority: editingActivity.priority || "medium",
         productivityLevel: editingActivity.productivityLevel || null,
       })
     } else if (selectedSlot) {
-      const now = new Date()
-      const hh = String(now.getHours()).padStart(2, "0")
-      const mm = String(now.getMinutes()).padStart(2, "0")
-      const currentTime = `${hh}:${mm}`
       setForm({
         ...INITIAL_STATE,
         startDate: toDateStr(selectedSlot.date),
-        startTime: selectedSlot.startTime || currentTime,
         deadlineDate: toDateStr(selectedSlot.date),
         deadlineTime: "23:59",
       })

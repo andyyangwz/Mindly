@@ -1,17 +1,14 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Clock3, ChevronDown, Check } from "lucide-react";
+import { Clock3, ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { theme } from "../../theme";
 import { productivityService } from "../../services/productivityService";
 import { STATUS_META } from "./utils/calendarConstants";
-import FocusTimer from "./timer/FocusTimer";
 import ProductivityCalendar from "./calendar/ProductivityCalendar";
 import AIPlanningAssistant from "./components/AIPlanningAssistant";
 import QuickAddModal from "./components/QuickAddModal";
 import ActivityDetailModal from "./modals/ActivityDetailModal";
-
-const d = new Date();
-const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+import { notifyTasksUpdated } from "../../utils/events";
 
 const priorityColor = {
   high: theme.primary,
@@ -19,14 +16,17 @@ const priorityColor = {
   low: theme.accent,
 };
 
-function formatDate(dateStr) {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
 
 function formatFinishDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function formatDateRange(startDateStr, endDateStr) {
+  if (!startDateStr) return "";
+  const start = formatFinishDate(startDateStr);
+  if (!endDateStr || startDateStr === endDateStr) return start;
+  return `${start} \u2013 ${formatFinishDate(endDateStr)}`;
 }
 
 export default function ProductivityPage() {
@@ -41,6 +41,47 @@ export default function ProductivityPage() {
   const calendarRef = useRef(null);
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [selectedPlanDate, setSelectedPlanDate] = useState(() => new Date());
+  const datePickerRef = useRef(null);
+  const [isCompact, setIsCompact] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState("all");
+
+  function toDateStr(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function isSameDay(a, b) {
+    return toDateStr(a) === toDateStr(b);
+  }
+
+  function getNoPlanMessage(date) {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (isSameDay(date, today)) return "No plan for today.";
+    if (isSameDay(date, tomorrow)) return "No plan for tomorrow.";
+    if (isSameDay(date, yesterday)) return "No plan for yesterday.";
+    return `No plan for ${date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}.`;
+  }
+
+  function getPlanTitle(date) {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (isSameDay(date, today)) return t("productivity.page.todaysPlan");
+    if (isSameDay(date, tomorrow)) return t("productivity.page.tomorrowsPlan");
+    if (isSameDay(date, yesterday)) return t("productivity.page.yesterdaysPlan");
+    return date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" }) + "'s Plan";
+  }
 
   const DONE_PAGE_SIZE = 10;
 
@@ -74,6 +115,7 @@ export default function ProductivityPage() {
       );
       setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, status: newStatus } : prev);
       setCalendarRefreshKey(k => k + 1);
+      notifyTasksUpdated();
     } catch {
     }
   }, []);
@@ -84,6 +126,7 @@ export default function ProductivityPage() {
       setAllTasks(prev => prev.filter(t => t.id !== id));
       setDetailEvent(null);
       setCalendarRefreshKey(k => k + 1);
+      notifyTasksUpdated();
     } catch {
     }
   }, []);
@@ -100,6 +143,14 @@ export default function ProductivityPage() {
   useEffect(() => {
     setDonePage(1);
   }, [activeTaskTab, allTasks.length]);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1000px)")
+    setIsCompact(mql.matches)
+    const handler = (e) => setIsCompact(e.matches)
+    mql.addEventListener("change", handler)
+    return () => mql.removeEventListener("change", handler)
+  }, [])
 
   const handleDoneScroll = useCallback(() => {
     const el = doneScrollRef.current;
@@ -125,6 +176,7 @@ export default function ProductivityPage() {
         prev.map(t => (t.id === item.id ? { ...t, status: nextStatus } : t))
       );
       setCalendarRefreshKey(k => k + 1);
+      notifyTasksUpdated();
     } catch {
     }
   }, []);
@@ -137,6 +189,7 @@ export default function ProductivityPage() {
       if (activeTaskTab === "To Do") return t.status === "To Do";
       return false;
     })
+    .filter(t => priorityFilter === "all" || t.priority === priorityFilter)
     .sort((a, b) => {
       if (activeTaskTab === "Done") {
         const tsA = a.statusChangeAt ? new Date(a.statusChangeAt).getTime() : 0;
@@ -155,14 +208,15 @@ export default function ProductivityPage() {
     : filteredTasks;
 
   const planItems = useMemo(() => {
+    const dateStr = toDateStr(selectedPlanDate);
     return allTasks
-      .filter(e => (e.startDatetime ? e.startDatetime.slice(0, 10) : "") === todayStr && !e.hasDeadline)
+      .filter(e => (e.startDatetime ? e.startDatetime.slice(0, 10) : "") === dateStr && !e.hasDeadline)
       .sort((a, b) => {
         if (!a.startTime) return 1;
         if (!b.startTime) return -1;
         return a.startTime.localeCompare(b.startTime);
       });
-  }, [allTasks]);
+  }, [allTasks, selectedPlanDate]);
 
   const planLoading = tasksLoading;
 
@@ -174,7 +228,7 @@ export default function ProductivityPage() {
   }, [])
 
   return (
-    <div style={{ padding: "28px 32px", maxWidth: 1200, margin: "0 auto" }}>
+    <div style={{ padding: isCompact ? "20px 16px" : "28px 32px", maxWidth: 1200, margin: "0 auto" }}>
       <button
         onClick={scrollToOverview}
         style={{
@@ -216,13 +270,81 @@ export default function ProductivityPage() {
         <AIPlanningAssistant />
       </div>
 
-      <div id="overview-cards" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, marginTop: 24, alignItems: "start" }}>
+      <div id="overview-cards" style={{ display: "grid", gridTemplateColumns: isCompact ? "1fr" : "1fr 1fr", gap: 20, marginTop: 24, alignItems: "start" }}>
         <div style={{ background: "var(--color-card, white)", borderRadius: 16, border: `1px solid ${theme.border}`, padding: "18px 20px", display: "flex", flexDirection: "column", maxHeight: 500, overflow: "hidden" }}>
-          <h3 style={{           fontSize: 12, fontWeight: 600, color: theme.dark, marginBottom: 14, flexShrink: 0 }}>{t("productivity.page.todaysPlan")}</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexShrink: 0 }}>
+            <h3 style={{ fontSize: 12, fontWeight: 600, color: theme.dark, flex: 1 }}>{getPlanTitle(selectedPlanDate)}</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <button
+                onClick={() => {
+                  const prev = new Date(selectedPlanDate);
+                  prev.setDate(prev.getDate() - 1);
+                  setSelectedPlanDate(prev);
+                }}
+                style={{
+                  width: 26, height: 26, borderRadius: 6, border: `1px solid ${theme.border}`,
+                  background: "var(--color-card, white)", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: theme.muted, transition: "all 0.15s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.muted }}
+                aria-label="Previous day"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={() => datePickerRef.current?.click()}
+                  style={{
+                    padding: "0 8px", height: 26, borderRadius: 6, border: `1px solid ${theme.border}`,
+                    background: "var(--color-card, white)", cursor: "pointer",
+                    fontSize: 11, fontWeight: 500, color: theme.dark,
+                    display: "flex", alignItems: "center", gap: 4,
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border }}
+                >
+                  {selectedPlanDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </button>
+                <input
+                  ref={datePickerRef}
+                  type="date"
+                  value={toDateStr(selectedPlanDate)}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const parts = e.target.value.split("-");
+                      setSelectedPlanDate(new Date(+parts[0], +parts[1] - 1, +parts[2]));
+                    }
+                  }}
+                  style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
+                />
+              </div>
+              <button
+                onClick={() => {
+                  const next = new Date(selectedPlanDate);
+                  next.setDate(next.getDate() + 1);
+                  setSelectedPlanDate(next);
+                }}
+                style={{
+                  width: 26, height: 26, borderRadius: 6, border: `1px solid ${theme.border}`,
+                  background: "var(--color-card, white)", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: theme.muted, transition: "all 0.15s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.muted }}
+                aria-label="Next day"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
           <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           {planLoading && <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{t("productivity.page.loading")}</p>}
           {!planLoading && planItems.length === 0 && (
-            <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{t("productivity.page.noPlan")}</p>
+            <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{getNoPlanMessage(selectedPlanDate)}</p>
           )}
           {planItems.map((item, i) => {
             const sm = STATUS_META[item.status] || null;
@@ -259,6 +381,13 @@ export default function ProductivityPage() {
               </button>
             ))}
           </div>
+          <div style={{ display: "flex", gap: 4, background: theme.bg, borderRadius: 10, padding: 3, marginBottom: 14, flexShrink: 0 }}>
+            {["all", "high"].map(p => (
+              <button key={p} onClick={() => setPriorityFilter(p)} style={{ flex: 1, padding: "6px 4px", borderRadius: 8, border: "none", cursor: "pointer", background: priorityFilter === p ? "var(--color-card, white)" : "transparent", color: priorityFilter === p ? theme.primaryText : theme.muted, fontSize: 11, fontWeight: 500, transition: "all 0.15s", boxShadow: priorityFilter === p ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
+                {p === "all" ? "All" : `${t("productivity.eventForm.priority_high")} Priority`}
+              </button>
+            ))}
+          </div>
           <div ref={doneScrollRef} onScroll={handleDoneScroll} style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
             {filteredTasks.length === 0 && !tasksLoading && (
               <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{t("productivity.page.noTasks")}</p>
@@ -268,11 +397,11 @@ export default function ProductivityPage() {
                 style={{ padding: "10px 12px", borderRadius: 10, border: `1px solid ${theme.border}`, marginBottom: 6, cursor: "pointer", transition: "all 0.15s" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <p style={{ fontSize: 13, fontWeight: 500, color: theme.dark, textDecoration: "none", opacity: task.status === "Done" ? 0.6 : 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.title}</p>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: priorityColor[task.priority] || theme.secondary, flexShrink: 0, marginLeft: 8 }} />
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: task.color || priorityColor[task.priority] || theme.secondary, flexShrink: 0, marginLeft: 8 }} />
                 </div>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <span style={{ fontSize: 10, color: theme.muted, display: "flex", alignItems: "center", gap: 3 }}>
-                    <Clock3 size={10} />{task.status === "Done" && task.endDatetime ? `${t("productivity.page.finishOn")} ${formatFinishDate(task.endDatetime.slice(0, 10))}` : formatDate(task.startDatetime ? task.startDatetime.slice(0, 10) : "")}
+                    <Clock3 size={10} />{task.status === "Done" && task.statusChangeAt ? `${t("productivity.page.finishOn")} ${formatFinishDate(task.statusChangeAt.slice(0, 10))}` : formatDateRange(task.startDatetime?.slice(0, 10), task.endDatetime?.slice(0, 10))}
                   </span>
                   {STATUS_META[task.status] && (
                     <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 6px", borderRadius: 3, background: STATUS_META[task.status].bg, color: STATUS_META[task.status].color, border: `1px solid ${STATUS_META[task.status].border}`, lineHeight: 1.4, letterSpacing: "0.01em" }}>
@@ -288,7 +417,6 @@ export default function ProductivityPage() {
           </div>
         </div>
 
-        <FocusTimer />
       </div>
 
       <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />

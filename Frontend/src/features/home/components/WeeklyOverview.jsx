@@ -4,6 +4,7 @@ import { Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import { theme } from "../../../theme"
 import InfoButton from "../../../components/tutorial/InfoButton"
 import { statsService } from "../services/statsService"
+import { EVENT_TASKS_UPDATED } from "../../../utils/events"
 
 function formatDate(d) {
   const y = d.getFullYear();
@@ -66,6 +67,34 @@ export default function WeeklyOverview() {
       setError(true)
       setLoading(false)
     })
+  }, [weekStart])
+
+  useEffect(() => {
+    const handler = () => {
+      const id = ++fetchId.current
+      setLoading(true)
+      setError(false)
+      statsService.getWeeklyStats(weekStart).then((res) => {
+        if (id !== fetchId.current) return
+        setData({
+          weekDays: res.weekDays.map((d) => ({
+            ...d,
+            hours: +(d.minutes / 60).toFixed(1),
+          })),
+          totalHours: res.totalHours,
+          tasksDone: res.tasksDone,
+          avgHours: res.avgHours,
+          dateRange: res.dateRange,
+        })
+        setLoading(false)
+      }).catch(() => {
+        if (id !== fetchId.current) return
+        setError(true)
+        setLoading(false)
+      })
+    }
+    window.addEventListener(EVENT_TASKS_UPDATED, handler)
+    return () => window.removeEventListener(EVENT_TASKS_UPDATED, handler)
   }, [weekStart])
 
   const apiDays = data?.weekDays ?? null

@@ -61,7 +61,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
         endDate: ed,
         startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
         endTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
-        color: editingActivity.color || "#7C3AED",
+        color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
         priority: editingActivity.priority || "medium",
         productivityLevel: editingActivity.productivityLevel || "neutral",
       })
