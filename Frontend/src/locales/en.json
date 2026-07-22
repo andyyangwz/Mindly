@@ -5,9 +5,9 @@
   "nav": {
     "mainMenu": "Main Menu",
     "home": "Home",
-    "journals": "My Journals",
-    "productivity": "Productivity",
-    "insight": "My Insight",
+    "journals": "Journals",
+    "productivity": "Schedule",
+    "insight": "Insights",
     "recentChats": "Recent Chats",
     "noChats": "No chats yet",
     "theme": "Theme",

@@ -14,8 +14,8 @@ const ICONS = { Home, PenLine, Calendar, BarChart3 };
 
 const NAV_ITEMS = [
   { icon: "Home", id: "home" },
-  { icon: "PenLine", id: "journals" },
   { icon: "Calendar", id: "productivity" },
+  { icon: "PenLine", id: "journals" },
   { icon: "BarChart3", id: "insight" },
 ];
 

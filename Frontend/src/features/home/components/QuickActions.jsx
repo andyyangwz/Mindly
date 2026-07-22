@@ -8,9 +8,9 @@ export default function QuickActions() {
   const navigate = useNavigate()
 
   const actions = [
-    { label: t("home.quickActions.addJournal"), icon: PenSquare, color: "#8B5CF6", to: "/app/journals/new" },
     { label: t("home.quickActions.addActivity"), icon: Calendar, color: "#3B82F6", to: "/app/productivity?action=createActivity" },
     { label: t("home.quickActions.addTask"), icon: CheckSquare, color: "#10B981", to: "/app/productivity?action=createTask" },
+    { label: t("home.quickActions.addJournal"), icon: PenSquare, color: "#8B5CF6", to: "/app/journals/new" },
     { label: t("home.quickActions.spillAI"), icon: MessageCircle, color: "#8B5CF6", to: "/app/spill" },
   ]
 

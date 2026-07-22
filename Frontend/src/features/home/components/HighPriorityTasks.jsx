@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Flag, Clock3, AlertCircle } from "lucide-react";
+import { Flag, Clock3, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { theme } from "../../../theme";
 import { productivityService } from "../../../services/productivityService";
 import { STATUS_META } from "../../productivity/utils/calendarConstants";
-import { EVENT_TASKS_UPDATED } from "../../../utils/events";
+import { EVENT_TASKS_UPDATED, notifyTasksUpdated } from "../../../utils/events";
+import ActivityDetailModal from "../../productivity/modals/ActivityDetailModal";
 
 const MAX_VISIBLE = 5;
-const ITEM_HEIGHT = 51;
+const EXPANDED_HEIGHT = 400;
 
 function formatFinishDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
@@ -20,9 +21,64 @@ function formatDateRange(startDateStr, endDateStr) {
   return `${start} \u2013 ${formatFinishDate(endDateStr)}`;
 }
 
+function TaskItem({ task, onClick }) {
+  return (
+    <div onClick={() => onClick?.(task)} style={{
+      padding: "10px 12px",
+      borderRadius: 10,
+      border: `1px solid ${theme.border}`,
+      marginBottom: 6,
+      cursor: "pointer",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+        <p style={{
+          fontSize: 13,
+          fontWeight: 500,
+          color: theme.dark,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          margin: 0,
+        }}>
+          {task.title}
+        </p>
+        <div style={{
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: task.color || theme.primary,
+          flexShrink: 0,
+          marginLeft: 8,
+        }} />
+      </div>
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <span style={{ fontSize: 10, color: theme.muted, display: "flex", alignItems: "center", gap: 3 }}>
+          <Clock3 size={10} />
+          {formatDateRange(task.startDatetime?.slice(0, 10), task.endDatetime?.slice(0, 10))}
+        </span>
+        <span style={{
+          fontSize: 8,
+          fontWeight: 600,
+          padding: "1px 6px",
+          borderRadius: 3,
+          background: STATUS_META["In Progress"].bg,
+          color: STATUS_META["In Progress"].color,
+          border: `1px solid ${STATUS_META["In Progress"].border}`,
+          lineHeight: 1.4,
+          letterSpacing: "0.01em",
+        }}>
+          In Progress
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function HighPriorityTasks() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const [detailEvent, setDetailEvent] = useState(null);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -58,6 +114,35 @@ export default function HighPriorityTasks() {
         return aCreated < bCreated ? -1 : aCreated > bCreated ? 1 : 0;
       });
   }, [tasks]);
+
+  const showExpand = highPriorityTasks.length > MAX_VISIBLE;
+  const visibleTasks = expanded ? highPriorityTasks : highPriorityTasks.slice(0, MAX_VISIBLE);
+
+  const collapse = useCallback(() => {
+    setExpanded(false);
+  }, []);
+
+  const handleDetailStatusChange = useCallback(async (event, newStatus) => {
+    try {
+      await productivityService.update(event.id, { status: newStatus });
+      setTasks(prev =>
+        prev.map(t => (t.id === event.id ? { ...t, status: newStatus } : t))
+      );
+      setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, status: newStatus } : prev);
+      notifyTasksUpdated();
+    } catch {
+    }
+  }, []);
+
+  const handleDetailDelete = useCallback(async (id) => {
+    try {
+      await productivityService.delete(id);
+      setTasks(prev => prev.filter(t => t.id !== id));
+      setDetailEvent(null);
+      notifyTasksUpdated();
+    } catch {
+    }
+  }, []);
 
   return (
     <div style={{
@@ -110,64 +195,71 @@ export default function HighPriorityTasks() {
           </p>
         </div>
       ) : (
-        <div style={{
-          maxHeight: MAX_VISIBLE * ITEM_HEIGHT,
-          overflowY: highPriorityTasks.length > MAX_VISIBLE ? "auto" : "visible",
-          marginRight: highPriorityTasks.length > MAX_VISIBLE ? -4 : 0,
-          paddingRight: highPriorityTasks.length > MAX_VISIBLE ? 4 : 0,
-        }}>
-          {highPriorityTasks.map(task => (
-            <div key={task.id} style={{
-              padding: "10px 12px",
-              borderRadius: 10,
-              border: `1px solid ${theme.border}`,
-              marginBottom: 6,
-              transition: "all 0.15s",
+        <>
+          {expanded ? (
+            <div style={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              maxHeight: EXPANDED_HEIGHT,
             }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                <p style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: theme.dark,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  margin: 0,
-                }}>
-                  {task.title}
-                </p>
-                <div style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: task.color || theme.primary,
-                  flexShrink: 0,
-                  marginLeft: 8,
-                }} />
-              </div>
-              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                <span style={{ fontSize: 10, color: theme.muted, display: "flex", alignItems: "center", gap: 3 }}>
-                  <Clock3 size={10} />
-                  {formatDateRange(task.startDatetime?.slice(0, 10), task.endDatetime?.slice(0, 10))}
-                </span>
-                <span style={{
-                  fontSize: 8,
-                  fontWeight: 600,
-                  padding: "1px 6px",
-                  borderRadius: 3,
-                  background: STATUS_META["In Progress"].bg,
-                  color: STATUS_META["In Progress"].color,
-                  border: `1px solid ${STATUS_META["In Progress"].border}`,
-                  lineHeight: 1.4,
-                  letterSpacing: "0.01em",
-                }}>
-                  In Progress
-                </span>
-              </div>
+              {highPriorityTasks.map(task => (
+                <TaskItem key={task.id} task={task} onClick={setDetailEvent} />
+              ))}
             </div>
-          ))}
-        </div>
+          ) : (
+            visibleTasks.map(task => (
+              <TaskItem key={task.id} task={task} onClick={setDetailEvent} />
+            ))
+          )}
+
+          {showExpand && (
+            <button
+              onClick={() => expanded ? collapse() : setExpanded(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                width: "100%",
+                padding: "8px 0",
+                marginTop: 14,
+                border: "none",
+                borderTop: `1px solid ${theme.border}`,
+                background: "transparent",
+                color: theme.primary,
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                borderRadius: "0 0 8px 8px",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = `color-mix(in srgb, ${theme.primary} 6%, transparent)` }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+            >
+              {expanded ? (
+                <>
+                  <ChevronUp size={14} />
+                  View Less
+                </>
+              ) : (
+                <>
+                  <ChevronDown size={14} />
+                  View More ({highPriorityTasks.length - MAX_VISIBLE} more)
+                </>
+              )}
+            </button>
+          )}
+        </>
       )}
+
+      <ActivityDetailModal
+        activity={detailEvent}
+        open={!!detailEvent}
+        onClose={() => setDetailEvent(null)}
+        onStatusChange={handleDetailStatusChange}
+        onDelete={handleDetailDelete}
+      />
     </div>
   );
 }
