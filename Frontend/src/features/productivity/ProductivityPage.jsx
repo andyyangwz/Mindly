@@ -8,7 +8,8 @@ import ProductivityCalendar from "./calendar/ProductivityCalendar";
 import AIPlanningAssistant from "./components/AIPlanningAssistant";
 import QuickAddModal from "./components/QuickAddModal";
 import ActivityDetailModal from "./modals/ActivityDetailModal";
-import { notifyTasksUpdated } from "../../utils/events";
+import { notifyTasksUpdated, EVENT_TASKS_UPDATED } from "../../utils/events";
+import TaskProgressBar from "../home/components/TaskProgressBar";
 
 const priorityColor = {
   high: theme.primary,
@@ -107,13 +108,36 @@ export default function ProductivityPage() {
     fetchAllTasks();
   }, [fetchAllTasks]);
 
+  useEffect(() => {
+    const handler = () => fetchAllTasks();
+    window.addEventListener(EVENT_TASKS_UPDATED, handler);
+    return () => window.removeEventListener(EVENT_TASKS_UPDATED, handler);
+  }, [fetchAllTasks]);
+
   const handleDetailStatusChange = useCallback(async (event, newStatus) => {
     try {
-      await productivityService.update(event.id, { status: newStatus });
+      const update = { status: newStatus };
+      if (newStatus === "Done" && event.hasDeadline) {
+        update.progress = 100;
+      }
+      await productivityService.update(event.id, update);
       setAllTasks(prev =>
-        prev.map(t => (t.id === event.id ? { ...t, status: newStatus } : t))
+        prev.map(t => (t.id === event.id ? { ...t, ...update } : t))
       );
-      setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, status: newStatus } : prev);
+      setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, ...update } : prev);
+      setCalendarRefreshKey(k => k + 1);
+      notifyTasksUpdated();
+    } catch {
+    }
+  }, []);
+
+  const handleDetailProgressChange = useCallback(async (event, newProgress) => {
+    try {
+      await productivityService.update(event.id, { progress: newProgress });
+      setAllTasks(prev =>
+        prev.map(t => (t.id === event.id ? { ...t, progress: newProgress } : t))
+      );
+      setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, progress: newProgress } : prev);
       setCalendarRefreshKey(k => k + 1);
       notifyTasksUpdated();
     } catch {
@@ -394,7 +418,7 @@ export default function ProductivityPage() {
             )}
             {visibleTasks.map(task => (
               <div key={task.id} onClick={() => handleTaskClick(task)}
-                style={{ padding: "10px 12px", borderRadius: 10, border: `1px solid ${theme.border}`, marginBottom: 6, cursor: "pointer", transition: "all 0.15s" }}>
+                style={{ position: "relative", padding: "10px 12px", borderRadius: 10, border: `1px solid ${theme.border}`, marginBottom: 6, cursor: "pointer", transition: "all 0.15s", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <p style={{ fontSize: 13, fontWeight: 500, color: theme.dark, textDecoration: "none", opacity: task.status === "Done" ? 0.6 : 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.title}</p>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: task.color || priorityColor[task.priority] || theme.secondary, flexShrink: 0, marginLeft: 8 }} />
@@ -409,6 +433,7 @@ export default function ProductivityPage() {
                     </span>
                   )}
                 </div>
+                <TaskProgressBar progress={task.progress ?? 0} color={task.color || "#6366F1"} />
               </div>
             ))}
             {doneLoading && activeTaskTab === "Done" && (
@@ -426,6 +451,7 @@ export default function ProductivityPage() {
         open={!!detailEvent}
         onClose={() => setDetailEvent(null)}
         onStatusChange={handleDetailStatusChange}
+        onProgressChange={handleDetailProgressChange}
         onEdit={handleDetailEdit}
         onDelete={handleDetailDelete}
       />

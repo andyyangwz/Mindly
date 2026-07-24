@@ -153,6 +153,13 @@ export default function WeeklyOverview() {
             )
           }
           const day = apiDays[i]
+          if (!day) {
+            return (
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
+                <div style={{ width: "100%", maxWidth: 40, height: 40, borderRadius: 6, background: theme.border, opacity: 0.3 }} />
+              </div>
+            )
+          }
           const barH = day.isFuture ? 4 : Math.max((day.hours / maxHours) * 160, 12)
           return (
             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>

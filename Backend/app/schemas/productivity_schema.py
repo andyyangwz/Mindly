@@ -55,4 +55,12 @@ def validate_event_data(data, require_all=True):
     if "status" in data and data["status"] not in VALID_STATUSES:
         errors["status"] = f"Status must be one of: {', '.join(sorted(VALID_STATUSES))}"
 
+    if "progress" in data:
+        val = data["progress"]
+        if isinstance(val, float):
+            val = int(val)
+            data["progress"] = val
+        if not isinstance(val, int) or val < 0 or val > 100:
+            errors["progress"] = "Progress must be an integer between 0 and 100"
+
     return errors

@@ -142,6 +142,21 @@ def sync_day_statuses(user_id):
     return jsonify(result)
 
 
+@productivity_bp.route("/<event_id>", methods=["GET"])
+@require_auth
+def get_event(user_id, event_id):
+    try:
+        eid = uuid.UUID(event_id)
+    except ValueError:
+        return jsonify({"error": "Invalid event ID"}), 400
+
+    event = ProductivityService.get_event_by_id(eid, user_id)
+    if not event:
+        return jsonify({"error": "Event not found"}), 404
+
+    return jsonify({"event": event.to_dict()})
+
+
 @productivity_bp.route("/<event_id>", methods=["PUT"])
 @require_auth
 def update_event(user_id, event_id):
@@ -158,8 +173,8 @@ def update_event(user_id, event_id):
     except ValueError:
         return jsonify({"error": "Invalid event ID"}), 400
 
-    logger.info("Updating event %s (user %s): start_datetime=%s end_datetime=%s",
-                event_id, user_id, data.get("start_datetime"), data.get("end_datetime"))
+    logger.info("Updating event %s (user %s): start_datetime=%s end_datetime=%s progress=%s",
+                event_id, user_id, data.get("start_datetime"), data.get("end_datetime"), data.get("progress"))
 
     try:
         result = ProductivityService.update_event(eid, user_id, data)
@@ -173,8 +188,8 @@ def update_event(user_id, event_id):
     if not result:
         return jsonify({"error": "Event not found"}), 404
 
-    logger.info("Event %s updated successfully: start_datetime=%s end_datetime=%s",
-                event_id, result["event"].start_datetime, result["event"].end_datetime)
+    logger.info("Event %s updated successfully: start_datetime=%s end_datetime=%s progress=%s",
+                event_id, result["event"].start_datetime, result["event"].end_datetime, result["event"].progress)
     return jsonify({"event": result["event"].to_dict()})
 
 

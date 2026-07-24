@@ -1,7 +1,10 @@
 from datetime import datetime, timedelta, date as date_type
+import logging
 
 from app.extensions import db
 from app.models.productivity import ProductivityEvent
+
+logger = logging.getLogger(__name__)
 
 
 def _parse_datetime(value):
@@ -26,6 +29,7 @@ def _build_event(user_id, data):
         productivity_level=data.get("productivity_level", "neutral"),
         has_deadline=data.get("has_deadline", False),
         status=data.get("status", "To Do"),
+        progress=data.get("progress", 0) if data.get("has_deadline") else 0,
     )
 
 
@@ -72,6 +76,10 @@ class ProductivityService:
         )
 
     @staticmethod
+    def get_event_by_id(event_id, user_id):
+        return ProductivityEvent.query.filter_by(id=event_id, user_id=user_id).first()
+
+    @staticmethod
     def create_event(user_id, data):
         event = _build_event(user_id, data)
         db.session.add(event)
@@ -104,6 +112,16 @@ class ProductivityService:
                 raise ValueError(f"Invalid status: {val}")
             event.status = val
             event.status_change_at = datetime.utcnow()
+        if "has_deadline" in data:
+            event.has_deadline = bool(data["has_deadline"])
+        if "progress" in data and event.has_deadline:
+            val = data["progress"]
+            if isinstance(val, float):
+                val = int(val)
+            if not isinstance(val, int) or val < 0 or val > 100:
+                raise ValueError("Progress must be an integer between 0 and 100")
+            logger.info("Updating progress for event %s: %s -> %s", event.id, event.progress, val)
+            event.progress = val
         if "start_datetime" in data:
             event.start_datetime = _parse_datetime(data["start_datetime"])
         if "end_datetime" in data:

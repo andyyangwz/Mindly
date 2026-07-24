@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Flag, Clock3, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { theme } from "../../../theme";
 import { productivityService } from "../../../services/productivityService";
 import { STATUS_META } from "../../productivity/utils/calendarConstants";
 import { EVENT_TASKS_UPDATED, notifyTasksUpdated } from "../../../utils/events";
 import ActivityDetailModal from "../../productivity/modals/ActivityDetailModal";
+import AddTaskModal from "../../productivity/tasks/AddTaskModal";
+import TaskProgressBar from "./TaskProgressBar";
 
 const MAX_VISIBLE = 5;
 const EXPANDED_HEIGHT = 400;
@@ -24,11 +26,13 @@ function formatDateRange(startDateStr, endDateStr) {
 function TaskItem({ task, onClick }) {
   return (
     <div onClick={() => onClick?.(task)} style={{
+      position: "relative",
       padding: "10px 12px",
       borderRadius: 10,
       border: `1px solid ${theme.border}`,
       marginBottom: 6,
       cursor: "pointer",
+      overflow: "hidden",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
         <p style={{
@@ -51,7 +55,7 @@ function TaskItem({ task, onClick }) {
           marginLeft: 8,
         }} />
       </div>
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
         <span style={{ fontSize: 10, color: theme.muted, display: "flex", alignItems: "center", gap: 3 }}>
           <Clock3 size={10} />
           {formatDateRange(task.startDatetime?.slice(0, 10), task.endDatetime?.slice(0, 10))}
@@ -70,6 +74,7 @@ function TaskItem({ task, onClick }) {
           In Progress
         </span>
       </div>
+      <TaskProgressBar progress={task.progress ?? 0} color={task.color || "#6366F1"} />
     </div>
   );
 }
@@ -79,6 +84,8 @@ export default function HighPriorityTasks() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [detailEvent, setDetailEvent] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
+  const editingTaskRef = useRef(null);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -124,11 +131,27 @@ export default function HighPriorityTasks() {
 
   const handleDetailStatusChange = useCallback(async (event, newStatus) => {
     try {
-      await productivityService.update(event.id, { status: newStatus });
+      const update = { status: newStatus };
+      if (newStatus === "Done" && event.hasDeadline) {
+        update.progress = 100;
+      }
+      await productivityService.update(event.id, update);
       setTasks(prev =>
-        prev.map(t => (t.id === event.id ? { ...t, status: newStatus } : t))
+        prev.map(t => (t.id === event.id ? { ...t, ...update } : t))
       );
-      setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, status: newStatus } : prev);
+      setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, ...update } : prev);
+      notifyTasksUpdated();
+    } catch {
+    }
+  }, []);
+
+  const handleDetailProgressChange = useCallback(async (event, newProgress) => {
+    try {
+      await productivityService.update(event.id, { progress: newProgress });
+      setTasks(prev =>
+        prev.map(t => (t.id === event.id ? { ...t, progress: newProgress } : t))
+      );
+      setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, progress: newProgress } : prev);
       notifyTasksUpdated();
     } catch {
     }
@@ -141,6 +164,25 @@ export default function HighPriorityTasks() {
       setDetailEvent(null);
       notifyTasksUpdated();
     } catch {
+    }
+  }, []);
+
+  const handleEdit = useCallback((task) => {
+    editingTaskRef.current = task;
+    setEditingTask(task);
+  }, []);
+
+  const handleTaskSave = useCallback(async (data) => {
+    const task = editingTaskRef.current;
+    if (!task) return;
+    try {
+      const updated = await productivityService.update(task.id, data);
+      setTasks(prev => prev.map(t => t.id === task.id ? updated : t));
+      setEditingTask(null);
+      editingTaskRef.current = null;
+      notifyTasksUpdated();
+    } catch (err) {
+      console.error("Failed to update task:", err);
     }
   }, []);
 
@@ -258,7 +300,16 @@ export default function HighPriorityTasks() {
         open={!!detailEvent}
         onClose={() => setDetailEvent(null)}
         onStatusChange={handleDetailStatusChange}
+        onProgressChange={handleDetailProgressChange}
         onDelete={handleDetailDelete}
+        onEdit={handleEdit}
+      />
+
+      <AddTaskModal
+        open={!!editingTask}
+        onClose={() => { setEditingTask(null); editingTaskRef.current = null; }}
+        onSave={handleTaskSave}
+        editingActivity={editingTask}
       />
     </div>
   );

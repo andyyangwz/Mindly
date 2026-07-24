@@ -303,7 +303,7 @@ export default function HabitRelics() {
 
       <EditHabitRelicModal
         relic={editingRelic}
-        onClose={() => setEditingRelic(null)}
+        onClose={() => setEditingGoal(null)}
         onUpdated={updateRelic}
         onDeleted={deleteRelic}
       />

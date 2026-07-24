@@ -254,15 +254,31 @@ useImperativeHandle(ref, () => ({
       return
     }
     const prev = { ...activity }
-    const next = { ...activity, status: newStatus }
+    const update = { status: newStatus }
+    if (newStatus === "Done" && activity.hasDeadline) {
+      update.progress = 100
+    }
+    const next = { ...activity, ...update }
     setLocalActivities((prevActivities) =>
       prevActivities.map((e) => (e.id === activity.id ? next : e))
     )
     setViewingActivity(next)
     record({ type: "edit", prev, next })
-    await updateActivity(activity.id, { status: newStatus })
+    await updateActivity(activity.id, update)
     onActivityUpdated?.()
   }, [updateActivity, onActivityUpdated, record, isTutorialDemoMode, setViewingActivity])
+
+  const handleProgressChange = useCallback(async (activity, newProgress) => {
+    const prev = { ...activity }
+    const next = { ...activity, progress: newProgress }
+    setLocalActivities((prevActivities) =>
+      prevActivities.map((e) => (e.id === activity.id ? next : e))
+    )
+    setViewingActivity(next)
+    record({ type: "edit", prev, next })
+    await updateActivity(activity.id, { progress: newProgress })
+    onActivityUpdated?.()
+  }, [updateActivity, onActivityUpdated, record, setViewingActivity])
 
   const handleContextMenu = useCallback((activity, pos) => {
     if (isTutorialDemoMode) {
@@ -325,70 +341,73 @@ useImperativeHandle(ref, () => ({
 
   const handleSave = useCallback(
     async (data) => {
-      if (editingActivity) {
-        const prev = localActivitiesRef.current.find((e) => e.id === editingActivity.id)
-        const prevSnapshot = prev ? { ...prev } : null
+      try {
+        if (editingActivity) {
+          const prev = localActivitiesRef.current.find((e) => e.id === editingActivity.id)
+          const prevSnapshot = prev ? { ...prev } : null
 
-        let payload = { ...data }
-        let startDt = data.startDatetime || editingActivity.startDatetime
-        let endDt = data.endDatetime || editingActivity.endDatetime
-        if ((!startDt || !endDt) && data.startDate && data.endDate && data.startTime && data.endTime) {
-          startDt = `${data.startDate}T${data.startTime}`
-          endDt = `${data.endDate}T${data.endTime}`
-        }
-        if (startDt && endDt) {
-          payload = { ...data, startDatetime: startDt, endDatetime: endDt }
-          payload.startTime = startDt.slice(11)
-          payload.endTime = endDt.slice(11)
-        }
-
-        if (prev) {
-          const next = { ...prev, ...payload }
-          setLocalActivities((prevActivities) =>
-            prevActivities.map((e) => (e.id === editingActivity.id ? next : e))
-          )
-          record({ type: "edit", prev: prevSnapshot, next })
-        }
-
-        try {
-          const result = await updateActivity(editingActivity.id, payload)
-          if (result && prev) {
-            setLocalActivities((prevActivities) =>
-              prevActivities.map((e) => (e.id === editingActivity.id ? result : e))
-            )
-          }
-          setUseRealData(true)
-        } catch (err) {
-          if (prev) {
-            setLocalActivities((prevActivities) =>
-              prevActivities.map((e) => (e.id === editingActivity.id ? prevSnapshot : e))
-            )
-          }
-          throw err
-        }
-      } else {
-        let payload = { ...data }
-        if (!data.hasDeadline) {
-          let startDt = data.startDatetime
-          let endDt = data.endDatetime
+          let payload = { ...data }
+          let startDt = data.startDatetime || editingActivity.startDatetime
+          let endDt = data.endDatetime || editingActivity.endDatetime
           if ((!startDt || !endDt) && data.startDate && data.endDate && data.startTime && data.endTime) {
             startDt = `${data.startDate}T${data.startTime}`
             endDt = `${data.endDate}T${data.endTime}`
           }
           if (startDt && endDt) {
             payload = { ...data, startDatetime: startDt, endDatetime: endDt }
+            payload.startTime = startDt.slice(11)
+            payload.endTime = endDt.slice(11)
           }
+
+          if (prev) {
+            const next = { ...prev, ...payload }
+            setLocalActivities((prevActivities) =>
+              prevActivities.map((e) => (e.id === editingActivity.id ? next : e))
+            )
+            record({ type: "edit", prev: prevSnapshot, next })
+          }
+
+          try {
+            const result = await updateActivity(editingActivity.id, payload)
+            if (result && prev) {
+              setLocalActivities((prevActivities) =>
+                prevActivities.map((e) => (e.id === editingActivity.id ? result : e))
+              )
+            }
+            setUseRealData(true)
+          } catch (err) {
+            if (prev) {
+              setLocalActivities((prevActivities) =>
+                prevActivities.map((e) => (e.id === editingActivity.id ? prevSnapshot : e))
+              )
+            }
+            throw err
+          }
+        } else {
+          let payload = { ...data }
+          if (!data.hasDeadline) {
+            let startDt = data.startDatetime
+            let endDt = data.endDatetime
+            if ((!startDt || !endDt) && data.startDate && data.endDate && data.startTime && data.endTime) {
+              startDt = `${data.startDate}T${data.startTime}`
+              endDt = `${data.endDate}T${data.endTime}`
+            }
+            if (startDt && endDt) {
+              payload = { ...data, startDatetime: startDt, endDatetime: endDt }
+            }
+          }
+          const created = await createActivity(payload)
+          setLocalActivities((prevActivities) => [...prevActivities, created])
+          record({ type: "create", prev: null, next: { ...created } })
+          setUseRealData(true)
         }
-        const created = await createActivity(payload)
-        setLocalActivities((prevActivities) => [...prevActivities, created])
-        record({ type: "create", prev: null, next: { ...created } })
-        setUseRealData(true)
+        setActivityFormOpen(false)
+        setTaskFormOpen(false)
+        setEditingActivity(null)
+        setSelectedSlot(null)
+      } finally {
+        onActivityUpdated?.()
       }
-      setActivityFormOpen(false)
-      setTaskFormOpen(false)
-      setEditingActivity(null)
-      setSelectedSlot(null)
-      onActivityUpdated?.()
     },
     [editingActivity, updateActivity, createActivity, onActivityUpdated, record]
   )
@@ -857,6 +876,7 @@ useImperativeHandle(ref, () => ({
         open={!!viewingActivity}
         onClose={() => { setViewingActivity(null) }}
         onStatusChange={handleStatusChange}
+        onProgressChange={handleProgressChange}
         onEdit={(activity) => { setEditingActivity(activity); setSelectedSlot(null); if (activity.hasDeadline) setTaskFormOpen(true); else setActivityFormOpen(true); setViewingActivity(null) }}
         onDelete={(id) => { handleDelete(id); setViewingActivity(null) }}
       />

@@ -17,6 +17,7 @@ function toFrontend(e) {
     hasDeadline: e.has_deadline || false,
     status: e.status || "To Do",
     statusChangeAt: e.status_change_at || null,
+    progress: e.progress ?? 0,
   }
 }
 
@@ -31,6 +32,7 @@ function toBackend(data) {
   if (data.endDatetime !== undefined) body.end_datetime = data.endDatetime
   if (data.hasDeadline !== undefined) body.has_deadline = data.hasDeadline
   if (data.status !== undefined) body.status = data.status
+  if (data.progress !== undefined) body.progress = data.progress
   return body
 }
 

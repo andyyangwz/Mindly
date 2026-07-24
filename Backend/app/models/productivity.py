@@ -18,6 +18,7 @@ class ProductivityEvent(db.Model):
     has_deadline = db.Column(db.Boolean, default=False, nullable=False)
     status = db.Column(db.String(20), default="To Do", nullable=False)
     status_change_at = db.Column(db.DateTime, nullable=True)
+    progress = db.Column(db.Integer, default=0, nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
@@ -38,6 +39,7 @@ class ProductivityEvent(db.Model):
             "has_deadline": self.has_deadline,
             "status": self.status,
             "status_change_at": self.status_change_at.isoformat() if self.status_change_at else None,
+            "progress": self.progress,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Edit3, Trash2, Clock, Flag, Play, X } from "lucide-react"
 import { theme } from "../../../theme"
 import { Portal } from "../../../utils/portal"
 import { formatTime, STATUS_META } from "../utils/calendarConstants"
+import InteractiveProgressBar from "../components/InteractiveProgressBar"
 
 function formatDateTime(datetimeStr, timeStr) {
   if (!datetimeStr) return ""
@@ -16,25 +17,30 @@ function formatDateTime(datetimeStr, timeStr) {
 
 const STATUS_OPTIONS = ["To Do", "In Progress", "Done"]
 
-export default function ActivityDetailModal({ activity, open, onClose, onStatusChange, onEdit, onDelete }) {
+export default function ActivityDetailModal({ activity, open, onClose, onStatusChange, onProgressChange, onEdit, onDelete }) {
   const { t } = useTranslation()
   const [showStatusOptions, setShowStatusOptions] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-
-  if (!open || !activity) return null
+  const [localProgress, setLocalProgress] = useState(null)
 
   const viewingActivity = activity
+  const taskColor = viewingActivity?.color || "#6366F1"
+  const savedProgress = viewingActivity?.progress ?? 0
+  const hasUnsavedProgress = localProgress !== null && localProgress !== savedProgress
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
+    setLocalProgress(null)
     setConfirmDelete(false)
     setShowStatusOptions(false)
     onClose()
-  }
+  }, [onClose])
 
-  const tStatus = (s) => {
+  const tStatus = useCallback((s) => {
     const k = { "To Do": "todo", "In Progress": "inProgress", "Done": "done" }
     return t(`productivity.status.${k[s]}`)
-  }
+  }, [t])
+
+  if (!open || !activity) return null
 
   return (
     <Portal>
@@ -74,7 +80,7 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
               }}>
                 {viewingActivity.hasDeadline ? (
-                  <Play size={22} color="#6366F1" />
+                  <Play size={22} color={taskColor} />
                 ) : (
                   <Clock size={22} color={viewingActivity.color} />
                 )}
@@ -133,8 +139,8 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
             </span>
 
             {viewingActivity.hasDeadline && (
-              <span style={{ fontSize: 11, background: "rgba(99,102,241,0.1)", color: "#6366F1", borderRadius: 20, padding: "5px 14px", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
-                <Play size={11} fill="#6366F1" /> {t("productivity.event.taskStart")}
+              <span style={{ fontSize: 11, background: `${taskColor}14`, color: taskColor, borderRadius: 20, padding: "5px 14px", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+                <Play size={11} fill={taskColor} /> {t("productivity.event.taskStart")}
               </span>
             )}
           </div>
@@ -146,13 +152,57 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
             </div>
           )}
 
+          {/* Progress (tasks only) — full width, between description and dates */}
+          {viewingActivity.hasDeadline && (
+            <div style={{ marginBottom: 28, width: "100%" }}>
+              <InteractiveProgressBar
+                value={hasUnsavedProgress ? localProgress : savedProgress}
+                baselineValue={savedProgress}
+                color={taskColor}
+                onChange={onProgressChange ? (v) => setLocalProgress(v) : undefined}
+                headerSuffix={hasUnsavedProgress ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() => { onProgressChange(viewingActivity, localProgress); setLocalProgress(null) }}
+                      style={{
+                        padding: "3px 10px", borderRadius: 6,
+                        border: "none", background: taskColor, color: "white",
+                        fontSize: 11, fontWeight: 600, cursor: "pointer",
+                        transition: "opacity 0.15s",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85" }}
+                      onMouseLeave={(e) => { e.currentTarget.style.opacity = "1" }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLocalProgress(null)}
+                      style={{
+                        padding: "3px 10px", borderRadius: 6,
+                        border: `1px solid ${taskColor}30`, background: "transparent",
+                        color: taskColor, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                        transition: "all 0.15s",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = `${taskColor}10` }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : null}
+              />
+            </div>
+          )}
+
           {/* Task time range */}
           {viewingActivity.hasDeadline && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "#6366F108", borderRadius: 10, border: "1px solid #6366F120" }}>
-                <Play size={14} color="#6366F1" />
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: `${taskColor}08`, borderRadius: 10, border: `1px solid ${taskColor}20` }}>
+                <Play size={14} color={taskColor} />
                 <div>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: "#6366F1", textTransform: "uppercase", letterSpacing: "0.04em" }}>{t("productivity.event.start")}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: taskColor, textTransform: "uppercase", letterSpacing: "0.04em" }}>{t("productivity.event.start")}</span>
                   <p style={{ fontSize: 13, color: theme.dark, fontWeight: 500, margin: 0 }}>{formatDateTime(viewingActivity.startDatetime, viewingActivity.startTime)}</p>
                 </div>
               </div>

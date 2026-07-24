@@ -10,6 +10,7 @@ import {
   toDateStr,
 } from "../utils/calendarConstants"
 import { Field, In, Pill, Row, Grid, Actions, Error, ErrMsg } from "../modals/ActivityFormFields"
+import InteractiveProgressBar from "../components/InteractiveProgressBar"
 
 const TASK_ACCENT = "#6366F1"
 
@@ -23,6 +24,7 @@ const INITIAL_STATE = {
   color: "#7C3AED",
   priority: "medium",
   productivityLevel: null,
+  progress: 0,
 }
 
 export default function AddTaskModal({ open, onClose, onSave, editingActivity, selectedSlot, voiceAutofill }) {
@@ -30,12 +32,14 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
   const [form, setForm] = useState(INITIAL_STATE)
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
+  const [initialProgress, setInitialProgress] = useState(0)
   const titleRef = useRef(null)
   const isEdit = !!editingActivity
 
   useEffect(() => {
     if (!open) return
     if (voiceAutofill) {
+      setInitialProgress(0)
       setForm({
         title: voiceAutofill.title || "",
         description: voiceAutofill.description || "",
@@ -48,6 +52,8 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
         productivityLevel: voiceAutofill.productivity_level || null,
       })
     } else if (editingActivity) {
+      const prog = editingActivity.progress ?? 0
+      setInitialProgress(prog)
       setForm({
         title: editingActivity.title,
         description: editingActivity.description || "",
@@ -58,8 +64,10 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
         color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
         priority: editingActivity.priority || "medium",
         productivityLevel: editingActivity.productivityLevel || null,
+        progress: prog,
       })
     } else if (selectedSlot) {
+      setInitialProgress(0)
       setForm({
         ...INITIAL_STATE,
         startDate: toDateStr(selectedSlot.date),
@@ -67,6 +75,7 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
         deadlineTime: "23:59",
       })
     } else {
+      setInitialProgress(0)
       setForm(INITIAL_STATE)
     }
     setErrors({})
@@ -94,6 +103,13 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
       if (deadline <= start) errs.deadlineTime = "Deadline must be after start"
     }
 
+    if (isEdit) {
+      const p = Number(form.progress)
+      if (isNaN(p) || p < 0 || p > 100 || !Number.isInteger(p)) {
+        errs.progress = "Progress must be a whole number between 0 and 100"
+      }
+    }
+
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -112,6 +128,7 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
         productivityLevel: editingActivity?.productivityLevel ?? null,
         status: editingActivity?.status || "To Do",
         hasDeadline: true,
+        ...(isEdit ? { progress: Math.round(Number(form.progress) || 0) } : {}),
       })
       onClose()
     } catch (err) {
@@ -294,6 +311,18 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
               </Field>
             </div>
           </div>
+
+          {isEdit && (
+            <div style={{ marginBottom: 20, marginTop: 4 }}>
+              <InteractiveProgressBar
+                value={Number(form.progress) || 0}
+                baselineValue={initialProgress}
+                color={form.color}
+                onChange={(v) => set("progress", v)}
+              />
+              {errors.progress && <ErrMsg msg={errors.progress} />}
+            </div>
+          )}
 
           <Actions
             saving={saving}
