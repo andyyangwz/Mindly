@@ -11,6 +11,7 @@ import {
   Plus,
   Loader2,
   MoreHorizontal,
+  Folder,
 } from "lucide-react"
 import DOMPurify from "dompurify"
 import { theme } from "../../../theme"
@@ -38,8 +39,10 @@ export default function JournalDetail({
   const [showFolderPicker, setShowFolderPicker] = useState(false)
   const [showActions, setShowActions] = useState(false)
   const [folderAssigning, setFolderAssigning] = useState(false)
+  const [showFolderFab, setShowFolderFab] = useState(false)
   const folderPickerRef = useRef(null)
   const actionsRef = useRef(null)
+  const folderFabRef = useRef(null)
 
   useEffect(() => {
     if (!showFolderPicker) return
@@ -76,6 +79,25 @@ export default function JournalDetail({
       document.removeEventListener("keydown", handleKey)
     }
   }, [showActions])
+
+  useEffect(() => {
+    if (!showFolderFab) return
+    const handleClick = (e) => {
+      if (folderFabRef.current && !folderFabRef.current.contains(e.target) &&
+          !e.target.closest("[data-folder-fab-btn]")) {
+        setShowFolderFab(false)
+      }
+    }
+    const handleKey = (e) => {
+      if (e.key === "Escape") setShowFolderFab(false)
+    }
+    document.addEventListener("mousedown", handleClick)
+    document.addEventListener("keydown", handleKey)
+    return () => {
+      document.removeEventListener("mousedown", handleClick)
+      document.removeEventListener("keydown", handleKey)
+    }
+  }, [showFolderFab])
 
   const handleToggleFolder = async (folderId) => {
     setFolderAssigning(true)
@@ -188,6 +210,33 @@ export default function JournalDetail({
             />
           </button>
 
+          {/* Share with Spill AI toggle */}
+          <button
+            onClick={() => toggleAllowAI(journal.id)}
+            aria-label={journal.allowAI ? t("journal.detail.stopSharing") : t("journal.detail.allowSharing")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 30,
+              height: 30,
+              borderRadius: 6,
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              color: journal.allowAI ? theme.primary : theme.muted,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+          >
+            <MessageCircle
+              size={15}
+              fill={journal.allowAI ? theme.primary : "none"}
+              color={journal.allowAI ? theme.primary : theme.muted}
+            />
+          </button>
+
           {/* Favorite toggle */}
           <button
             onClick={() => toggleFavorite(journal.id)}
@@ -268,91 +317,47 @@ export default function JournalDetail({
 
       {/* Document area */}
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 32px 80px" }}>
-        {/* Share with Spill AI toggle */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "10px 14px",
-            borderRadius: 8,
-            marginBottom: 28,
-            background: "var(--color-card)",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MessageCircle
-              size={15}
-              color={journal.allowAI ? theme.primary : theme.muted}
-            />
-            <span style={{ fontSize: 13, fontWeight: 500, color: theme.dark }}>
-              {journal.allowAI
-                ? t("journal.detail.stopSharing")
-                : t("journal.detail.allowSharing")}
-            </span>
-          </div>
-          <button
-            onClick={() => toggleAllowAI(journal.id)}
-            aria-label={journal.allowAI ? t("journal.detail.stopSharing") : t("journal.detail.allowSharing")}
-            style={{
-              width: 36,
-              height: 22,
-              borderRadius: 11,
-              border: "none",
-              background: journal.allowAI ? theme.primary : theme.border,
-              cursor: "pointer",
-              position: "relative",
-              transition: "all 0.2s",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: 2,
-                left: journal.allowAI ? 16 : 2,
-                width: 18,
-                height: 18,
-                borderRadius: "50%",
-                background: "white",
-                transition: "all 0.2s",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-              }}
-            />
-          </button>
-        </div>
-        {/* Page icons */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
-          {journal.emojis.map((e, i) =>
-            e ? <span key={i} style={{ fontSize: 48, lineHeight: 1 }}>{e}</span> : null
-          )}
-        </div>
-
         {/* Title */}
         <h1
           style={{
-            fontSize: 32,
+            fontSize: 38,
             fontWeight: 700,
             color: theme.dark,
-            margin: "0 0 8px",
-            lineHeight: 1.3,
+            margin: "0 0 16px",
+            lineHeight: 1.25,
             letterSpacing: "-0.02em",
           }}
         >
           {journal.title}
         </h1>
 
-        {/* Date */}
-        <p
-          style={{
-            fontSize: 13,
-            color: theme.muted,
-            margin: "0 0 32px",
-            fontWeight: 400,
-          }}
-        >
-          {formatDate(journal.date)}
-        </p>
+        {/* Emoji circle + Date row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
+          <div style={{
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            border: `1.5px solid ${theme.border}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 26, lineHeight: 1 }}>
+              {journal.emojis.find(Boolean) || "📖"}
+            </span>
+          </div>
+          <p
+            style={{
+              fontSize: 13,
+              color: theme.muted,
+              margin: 0,
+              fontWeight: 400,
+            }}
+          >
+            {formatDate(journal.date)}
+          </p>
+        </div>
 
         {/* Folder tags */}
         <div
@@ -404,96 +409,6 @@ export default function JournalDetail({
               </span>
             )
           })}
-          <div style={{ position: "relative" }}>
-            <button
-              type="button"
-              onClick={() => setShowFolderPicker(!showFolderPicker)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "3px 8px",
-                borderRadius: 4,
-                border: "none",
-                background: "transparent",
-                color: theme.muted,
-                fontSize: 12,
-                fontWeight: 500,
-                cursor: "pointer",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-hover)" }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
-            >
-              {folderAssigning ? (
-                <Loader2 size={11} className="jd-folder-spin" />
-              ) : (
-                <Plus size={11} />
-              )}
-              {showFolderPicker || (journal.folderIds || []).length > 0
-                ? "Folder"
-                : "Add to Folder"}
-            </button>
-
-            {showFolderPicker && folders && folders.length > 0 && (
-              <div
-                ref={folderPickerRef}
-                style={{
-                  position: "absolute",
-                  top: "calc(100% + 6px)",
-                  left: 0,
-                  zIndex: 50,
-                  background: "var(--color-card, white)",
-                  borderRadius: 10,
-                  border: `1px solid ${theme.border}`,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-                  padding: 6,
-                  minWidth: 200,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 2,
-                }}
-              >
-                {folders.map((f) => {
-                  const isSelected = (journal.folderIds || []).includes(f.id)
-                  return (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => handleToggleFolder(f.id)}
-                      disabled={folderAssigning}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "7px 10px",
-                        borderRadius: 8,
-                        border: "none",
-                        background: isSelected ? "var(--color-hover)" : "transparent",
-                        color: isSelected ? theme.dark : theme.dark,
-                        fontSize: 13,
-                        fontWeight: isSelected ? 500 : 400,
-                        cursor: folderAssigning ? "not-allowed" : "pointer",
-                        textAlign: "left",
-                        transition: "all 0.1s",
-                        opacity: folderAssigning ? 0.6 : 1,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isSelected) e.currentTarget.style.background = "var(--color-hover)"
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSelected) e.currentTarget.style.background = "transparent"
-                      }}
-                    >
-                      <span style={{ fontSize: 16 }}>{f.emoji}</span>
-                      <span style={{ flex: 1 }}>{f.name}</span>
-                      {isSelected && <span style={{ fontSize: 11, color: theme.primary }}>✓</span>}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Content */}
@@ -615,6 +530,119 @@ export default function JournalDetail({
           </div>
         )}
       </div>
+
+      {/* Floating Folder FAB */}
+      <button
+        data-folder-fab-btn
+        onClick={() => setShowFolderFab((v) => !v)}
+        aria-label="Manage folder"
+        style={{
+          position: "fixed",
+          bottom: 32,
+          right: 88,
+          zIndex: 50,
+          width: 48,
+          height: 48,
+          borderRadius: "50%",
+          border: "none",
+          background: showFolderFab ? theme.primary : "var(--color-card, white)",
+          cursor: "pointer",
+          color: showFolderFab ? "white" : theme.primary,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: showFolderFab
+            ? `0 4px 16px color-mix(in srgb, ${theme.primary} 44%, transparent)`
+            : "0 4px 16px rgba(0,0,0,0.1)",
+          transition: "all 0.2s",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.05)" }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)" }}
+      >
+        <Folder size={20} fill={showFolderFab ? "white" : "none"} />
+      </button>
+
+      {/* Folder FAB popup */}
+      {showFolderFab && (
+        <div
+          ref={folderFabRef}
+          style={{
+            position: "fixed",
+            bottom: 90,
+            right: 88,
+            zIndex: 60,
+            background: "var(--color-card, white)",
+            borderRadius: 12,
+            border: `1px solid ${theme.border}`,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            padding: 14,
+            minWidth: 220,
+          }}
+        >
+          <p style={{
+            fontSize: 11, fontWeight: 600, color: theme.muted,
+            textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8,
+          }}>
+            Current Folder
+          </p>
+          {(journal.folderIds || []).length === 0 ? (
+            <p style={{ fontSize: 12, color: theme.muted, margin: "0 0 10px", fontStyle: "italic" }}>
+              No folder assigned
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 10 }}>
+              {(journal.folderIds || []).map((fid) => {
+                const f = folders?.find((x) => x.id === fid)
+                if (!f) return null
+                return (
+                  <span key={fid} style={{
+                    fontSize: 12, background: "var(--color-hover)",
+                    borderRadius: 4, padding: "3px 8px", fontWeight: 500,
+                  }}>
+                    {f.emoji} {f.name}
+                  </span>
+                )
+              })}
+            </div>
+          )}
+          <div style={{ borderTop: `1px solid ${theme.border}`, paddingTop: 8, marginTop: 4 }}>
+            <p style={{
+              fontSize: 11, fontWeight: 600, color: theme.muted,
+              textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6,
+            }}>
+              Move to
+            </p>
+            {folders?.map((f) => {
+              const isSelected = (journal.folderIds || []).includes(f.id)
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => handleToggleFolder(f.id)}
+                  disabled={folderAssigning}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "6px 8px", borderRadius: 6, border: "none",
+                    background: isSelected ? "var(--color-hover)" : "transparent",
+                    cursor: folderAssigning ? "not-allowed" : "pointer",
+                    width: "100%", textAlign: "left",
+                    fontSize: 13, color: theme.dark,
+                    fontWeight: isSelected ? 500 : 400,
+                    opacity: folderAssigning ? 0.6 : 1,
+                    transition: "all 0.1s",
+                  }}
+                  onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "var(--color-hover)" }}
+                  onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "transparent" }}
+                >
+                  <span style={{ fontSize: 15 }}>{f.emoji}</span>
+                  <span style={{ flex: 1 }}>{f.name}</span>
+                  {isSelected && <span style={{ fontSize: 11, color: theme.primary }}>✓</span>}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Spill AI FAB */}
       <button

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Loader, FolderOpen, X } from "lucide-react"
 import { useJournals } from "../../hooks/useJournals"
+import { refreshPinnedJournals } from "../../hooks/usePinnedJournals"
 import { theme } from "../../theme"
 import JournalList from "./components/JournalList"
 import JournalDetail from "./components/JournalDetail"
@@ -160,6 +161,7 @@ export default function JournalsPage() {
     const j = journals.find((x) => x.id === id)
     if (!j) return
     await updateJournal(id, { isPinned: !j.isPinned })
+    refreshPinnedJournals()
   }
 
   const handleToggleAllowAI = async (id) => {

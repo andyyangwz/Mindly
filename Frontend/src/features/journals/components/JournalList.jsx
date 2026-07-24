@@ -74,6 +74,7 @@ export default function JournalList({
   const { tutorialId, tutorialStep } = useTutorial()
   const [tutorialJournal, setTutorialJournal] = useState(null)
   const [hoveredId, setHoveredId] = useState(null)
+  const [pressedId, setPressedId] = useState(null)
   const [displayCount, setDisplayCount] = useState(8)
   const sentinelRef = useRef(null)
   const contextAutoOpened = useRef(false)
@@ -682,7 +683,12 @@ export default function JournalList({
           )}
         </div>
       ) : (
-        <div data-tutorial-target="journal-list-container" style={{ display: "grid", gap: 20 }}>
+        <>
+        <style>{`
+          .journal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 48px 36px; }
+          @media (max-width: 700px) { .journal-grid { grid-template-columns: 1fr; } }
+        `}</style>
+        <div data-tutorial-target="journal-list-container" className="journal-grid">
           {displayJournals.slice(0, displayCount).map((j) => {
             const isTutorial = j.id === "tutorial-journal"
             const isHovered = hoveredId === j.id
@@ -690,6 +696,17 @@ export default function JournalList({
             const isFav = j.isFavorite
             const showActions = isHovered || isPinned || isFav
             const emojis = j.emojis
+
+            const isPressed = pressedId === j.id
+
+            const rotationPairs = [
+              { front: -1.8, back: 2.2 },
+              { front: 1.5, back: -2.0 },
+              { front: -1.3, back: 2.1 },
+              { front: 1.9, back: -1.7 },
+              { front: -1.5, back: 1.8 },
+            ]
+            const rot = rotationPairs[j.id.charCodeAt(0) % rotationPairs.length]
 
             return (
               <div
@@ -700,80 +717,163 @@ export default function JournalList({
                 onDragEnd={!isTutorial ? handleDragEnd : undefined}
                 onContextMenu={(e) => handleContextMenu(e, j)}
                 onClick={() => isTutorial ? null : onViewDetail(j.id)}
+                onMouseDown={() => !isTutorial && setPressedId(j.id)}
+                onMouseUp={() => setPressedId(null)}
+                onMouseLeave={() => { setHoveredId(null); setPressedId(null) }}
                 onMouseEnter={() => setHoveredId(j.id)}
-                onMouseLeave={() => setHoveredId(null)}
                 style={{
-                  background: "var(--color-card)",
-                  borderRadius: 16,
-                  padding: "20px 24px",
-                  cursor: "grab",
-                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-                  border: `1px solid ${isHovered ? `color-mix(in srgb, ${theme.primary} 20%, ${theme.border})` : `color-mix(in srgb, ${theme.border} 60%, transparent)`}`,
-                  borderLeft: `3px solid ${isHovered ? `color-mix(in srgb, ${theme.primary} 50%, transparent)` : `color-mix(in srgb, ${theme.primary} 12%, transparent)`}`,
-                  boxShadow: isHovered
-                    ? `0 8px 32px color-mix(in srgb, ${theme.primary} 6%, rgba(0,0,0,0.06))`
-                    : "0 1px 3px rgba(0,0,0,0.04)",
-                  transform: isHovered ? "translateY(-2px)" : "translateY(0)",
+                  position: "relative",
+                  cursor: isTutorial ? "default" : "grab",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
-                  {emojis && emojis.some(Boolean) && (
-                    <div style={{ display: "flex", gap: 3, flexShrink: 0, marginTop: 2 }}>
-                      {emojis.map((e, i) => e && <span key={i} style={{ fontSize: 20, lineHeight: 1 }}>{e}</span>)}
-                    </div>
-                  )}
-                  <h3 style={{ fontSize: 16, fontWeight: 600, color: theme.dark, margin: 0, lineHeight: 1.4 }}>
-                    {j.title}
-                  </h3>
-                </div>
+                {/* Back layer — second page underneath, always partially visible */}
+                <div style={{
+                  position: "absolute",
+                  top: 7,
+                  left: 14,
+                  right: 2,
+                  bottom: 0,
+                  borderRadius: "3px 12px 12px 3px",
+                  background: "color-mix(in srgb, var(--color-card, #fff) 88%, #d4cfc9)",
+                  border: "1px solid rgba(0,0,0,0.06)",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                  transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  transform: `rotate(${rot.back}deg) ${isHovered ? "translateY(14px)" : "translateY(4px)"}`,
+                  transformOrigin: "center center",
+                  zIndex: 0,
+                }} />
 
-                {j.preview && (
-                  <p style={{
-                    fontSize: 14,
-                    color: `color-mix(in srgb, ${theme.muted} 90%, ${theme.dark})`,
-                    lineHeight: 1.6,
-                    margin: "0 0 16px 0",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
+                {/* Front layer — visible journal page */}
+                <div style={{
+                  position: "relative",
+                  background: "var(--color-card, #fff)",
+                  border: "1px solid rgba(0,0,0,0.04)",
+                  borderRadius: "3px 12px 12px 3px",
+                  padding: "44px 36px 40px",
+                  boxShadow: isHovered
+                    ? "0 6px 20px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.03)"
+                    : "0 1px 4px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)",
+                  transition: isPressed
+                    ? "transform 0.1s ease, box-shadow 0.1s ease"
+                    : "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  transform: isPressed
+                    ? "rotate(0deg) scale(0.98) translateY(-1px)"
+                    : isHovered
+                      ? "rotate(0deg) translateY(-4px) scale(1.015)"
+                      : `rotate(${rot.front}deg) translateY(0) scale(1)`,
+                  transformOrigin: "center center",
+                  zIndex: 1,
+                }}>
+                  {/* Pin / Favorite indicators — upper right */}
+                  <div style={{
+                    position: "absolute",
+                    top: 20,
+                    right: 24,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
                   }}>
-                    {cleanPreview(j.preview)}
-                  </p>
-                )}
+                    {(isPinned || isFav) && !showActions && (
+                      <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                        {isPinned && <Pin size={13} color={theme.primary} fill={theme.primary} />}
+                        {isFav && <Star size={13} color="#F59E0B" fill="#F59E0B" />}
+                      </div>
+                    )}
+                    <div style={{
+                      display: "flex",
+                      gap: 2,
+                      opacity: showActions ? 1 : 0,
+                      transform: showActions ? "translateY(0)" : "translateY(3px)",
+                      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                    }}>
+                      <button
+                        onClick={(ev) => { ev.stopPropagation(); togglePinned?.(j.id) }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: 4,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: isPinned ? theme.primary : "#9CA3AF",
+                          transition: "color 0.15s",
+                        }}
+                        onMouseEnter={(e) => { if (!isPinned) e.currentTarget.style.color = theme.dark }}
+                        onMouseLeave={(e) => { if (!isPinned) e.currentTarget.style.color = "#9CA3AF" }}
+                      >
+                        <Pin size={14} color="currentColor" fill={isPinned ? "currentColor" : "none"} />
+                      </button>
+                      <button
+                        onClick={(ev) => { ev.stopPropagation(); toggleFavorite(j.id) }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: 4,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: isFav ? "#F59E0B" : "#9CA3AF",
+                          transition: "color 0.15s",
+                        }}
+                        onMouseEnter={(e) => { if (!isFav) e.currentTarget.style.color = theme.dark }}
+                        onMouseLeave={(e) => { if (!isFav) e.currentTarget.style.color = "#9CA3AF" }}
+                      >
+                        <Star size={14} color="currentColor" fill={isFav ? "currentColor" : "none"} />
+                      </button>
+                    </div>
+                  </div>
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 24 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 12, color: theme.muted, letterSpacing: "0.01em" }}>
+                  {/* Main content — centered */}
+                  <div style={{ textAlign: "center", paddingTop: 4 }}>
+                    {emojis && emojis.some(Boolean) && (
+                      <div style={{ fontSize: 36, lineHeight: 1, marginBottom: 14 }}>
+                        {emojis.find(Boolean)}
+                      </div>
+                    )}
+
+                    <h3 style={{
+                      fontSize: 21,
+                      fontWeight: 700,
+                      color: theme.dark,
+                      margin: "0 0 8px 0",
+                      lineHeight: 1.35,
+                    }}>
+                      {j.title}
+                    </h3>
+
+                    <p style={{
+                      fontSize: 13,
+                      color: isHovered ? "rgba(0,0,0,0.42)" : "rgba(0,0,0,0.25)",
+                      margin: 0,
+                      letterSpacing: "0.01em",
+                      transition: "color 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                    }}>
                       {formatDate(j.date)}
-                    </span>
-                    {isPinned && (
-                      <span style={{ color: theme.primary, display: "flex", alignItems: "center" }}>
-                        <Pin size={11} color="currentColor" fill="currentColor" />
-                      </span>
-                    )}
-                    {isFav && (
-                      <span style={{ color: "#F59E0B", display: "flex", alignItems: "center" }}>
-                        <Star size={11} color="currentColor" fill="currentColor" />
-                      </span>
-                    )}
+                    </p>
+
                     {j.folderIds && j.folderIds.length > 0 && (
-                      <>
-                        <span style={{ fontSize: 9, color: theme.muted, opacity: 0.35 }}>·</span>
+                      <div style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: 5,
+                        marginTop: 16,
+                        flexWrap: "wrap",
+                      }}>
                         {j.folderIds.slice(0, 2).map((fid) => {
                           const folder = folderMap[fid]
                           if (!folder) return null
                           return (
                             <span key={fid} style={{
-                              fontSize: 12,
+                              fontSize: 11,
                               background: `color-mix(in srgb, ${theme.muted} 8%, transparent)`,
-                              color: `color-mix(in srgb, ${theme.muted} 90%, ${theme.dark})`,
+                              color: theme.muted,
                               borderRadius: 6,
-                              padding: "1px 6px",
+                              padding: "2px 8px",
                               fontWeight: 450,
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 3,
                             }}>
                               {folder.emoji} {folder.name}
                             </span>
@@ -784,55 +884,8 @@ export default function JournalList({
                             +{j.folderIds.length - 2}
                           </span>
                         )}
-                      </>
+                      </div>
                     )}
-                  </div>
-
-                  <div style={{
-                    display: "flex",
-                    gap: 2,
-                    opacity: showActions ? 1 : 0,
-                    transform: showActions ? "translateY(0)" : "translateY(4px)",
-                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                  }}>
-                    <button
-                      onClick={(ev) => { ev.stopPropagation(); togglePinned?.(j.id) }}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        borderRadius: 6,
-                        padding: 4,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: isPinned ? theme.primary : "#9CA3AF",
-                        transition: "color 0.15s",
-                      }}
-                      onMouseEnter={(e) => { if (!isPinned) e.currentTarget.style.color = theme.dark }}
-                      onMouseLeave={(e) => { if (!isPinned) e.currentTarget.style.color = "#9CA3AF" }}
-                    >
-                      <Pin size={14} color="currentColor" fill={isPinned ? "currentColor" : "none"} />
-                    </button>
-                    <button
-                      onClick={(ev) => { ev.stopPropagation(); toggleFavorite(j.id) }}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        borderRadius: 6,
-                        padding: 4,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: isFav ? "#F59E0B" : "#9CA3AF",
-                        transition: "color 0.15s",
-                      }}
-                      onMouseEnter={(e) => { if (!isFav) e.currentTarget.style.color = theme.dark }}
-                      onMouseLeave={(e) => { if (!isFav) e.currentTarget.style.color = "#9CA3AF" }}
-                    >
-                      <Star size={14} color="currentColor" fill={isFav ? "currentColor" : "none"} />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -842,6 +895,7 @@ export default function JournalList({
             <div ref={sentinelRef} style={{ height: 1 }} />
           )}
         </div>
+        </>
       )}
 
       <FolderAssignMenu

@@ -9,6 +9,7 @@ import { useTheme } from "../theme/ThemeProvider";
 import { useAuth } from "../context/AuthContext";
 import ChatListItem from "../features/chats/ChatListItem";
 import { useTranslation } from "react-i18next";
+import { usePinnedJournals, refreshPinnedJournals } from "../hooks/usePinnedJournals";
 
 const ICONS = { Home, PenLine, Calendar, BarChart3 };
 
@@ -126,6 +127,7 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
   const { t } = useTranslation();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const accountRef = useRef(null);
+  const pinnedJournals = usePinnedJournals();
 
   useEffect(() => {
     const handler = (e) => {
@@ -137,9 +139,14 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  useEffect(() => {
+    refreshPinnedJournals();
+  }, []);
+
   const pathname = location.pathname;
   const activeTab = pathname.startsWith("/app") ? pathname.split("/")[2] || "home" : "home";
   const activeSessionId = pathname.startsWith("/app/spill/") ? pathname.split("/")[3] : null;
+  const activeJournalId = pathname.startsWith("/app/journals/") ? pathname.split("/")[3] : null;
 
   const initials = user?.first_name
     ? (user.first_name[0] + (user.last_name?.[0] || "")).toUpperCase()
@@ -205,32 +212,83 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
           const Icon = ICONS[item.icon];
           const active = activeTab === item.id;
           return (
-            <button
-              key={item.id}
-              onClick={() => { navigate(`/app/${item.id}`); onNavClick?.() }}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 12px", borderRadius: 8, border: "none",
-                cursor: "pointer", marginBottom: 4,
-                background: active ? theme.primary : "transparent",
-                color: active ? "white" : theme.muted,
-                fontWeight: active ? 600 : 500, fontSize: 14,
-                transition: "all 0.12s",
-                boxShadow: active
-                  ? `0 2px 8px color-mix(in srgb, ${theme.primary} 33%, transparent)`
-                  : "none",
-              }}
-              onMouseEnter={(e) => {
-                if (!active)
-                  e.currentTarget.style.background = "var(--color-hover, #F9FAFB)";
-              }}
-              onMouseLeave={(e) => {
-                if (!active) e.currentTarget.style.background = "transparent";
-              }}
-            >
-              <Icon size={17} />
-              {t(`nav.${item.id}`)}
-            </button>
+            <div key={item.id}>
+              <button
+                onClick={() => { navigate(`/app/${item.id}`); onNavClick?.() }}
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", gap: 10,
+                  padding: "10px 12px", borderRadius: 8, border: "none",
+                  cursor: "pointer", marginBottom: 4,
+                  background: active ? theme.primary : "transparent",
+                  color: active ? "white" : theme.muted,
+                  fontWeight: active ? 600 : 500, fontSize: 14,
+                  transition: "all 0.12s",
+                  boxShadow: active
+                    ? `0 2px 8px color-mix(in srgb, ${theme.primary} 33%, transparent)`
+                    : "none",
+                }}
+                onMouseEnter={(e) => {
+                  if (!active)
+                    e.currentTarget.style.background = "var(--color-hover, #F9FAFB)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <Icon size={17} />
+                {t(`nav.${item.id}`)}
+              </button>
+              {item.id === "journals" && (
+                <div style={{ paddingLeft: 20, marginTop: -1, marginBottom: 6 }}>
+                  <p style={{
+                    fontSize: 13, fontWeight: 600, color: theme.muted,
+                    letterSpacing: "0.02em", marginBottom: 8, paddingLeft: 12,
+                  }}>
+                    {t("nav.pinned")}
+                  </p>
+                  {pinnedJournals.length === 0 && (
+                    <p style={{
+                      fontSize: 13, color: theme.muted, margin: 0,
+                      paddingLeft: 12, opacity: 0.7,
+                    }}>
+                      {t("nav.noPinned")}
+                    </p>
+                  )}
+                  <div style={{
+                    maxHeight: pinnedJournals.length > 3 ? 108 : undefined,
+                    overflowY: pinnedJournals.length > 3 ? "auto" : "visible",
+                  }}>
+                    {pinnedJournals.map((journal) => {
+                      const isActive = activeJournalId === journal.id;
+                      const emoji = journal.emojis?.find(Boolean) || "📖";
+                      return (
+                        <button
+                          key={journal.id}
+                          onClick={() => { navigate(`/app/journals/${journal.id}`); onNavClick?.() }}
+                          style={{
+                            width: "100%", display: "flex", alignItems: "center", gap: 8,
+                            padding: "6px 12px", borderRadius: 6, border: "none",
+                            cursor: "pointer", marginBottom: 1,
+                            background: "var(--color-card, white)",
+                            color: isActive ? theme.primary : theme.muted,
+                            fontWeight: isActive ? 600 : 500, fontSize: 13,
+                            transition: "color 0.12s",
+                          }}
+                        >
+                          <span style={{ fontSize: 14, lineHeight: 1 }}>{emoji}</span>
+                          <span style={{
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                            flex: 1, textAlign: "left",
+                          }}>
+                            {journal.title}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
