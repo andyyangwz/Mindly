@@ -127,6 +127,7 @@ export default function JournalsPage() {
       if (folderIds !== undefined) {
         await assignJournalFolders(editId, folderIds)
       }
+      refreshPinnedJournals()
       setEditId(null)
       setForm({ title: "", content: "", emojis: ["", "", ""] })
       navigate(`/app/journals/${editId}`)

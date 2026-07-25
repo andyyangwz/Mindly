@@ -331,21 +331,25 @@ export default function JournalDetail({
           {journal.title}
         </h1>
 
-        {/* Emoji circle + Date row */}
+        {/* Emoji circles + Date row */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
-          <div style={{
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            border: `1.5px solid ${theme.border}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}>
-            <span style={{ fontSize: 26, lineHeight: 1 }}>
-              {journal.emojis.find(Boolean) || "📖"}
-            </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {(journal.emojis?.filter(Boolean).length ? journal.emojis.filter(Boolean) : ["📖"]).map((emoji, i) => (
+              <div key={i} style={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                border: `1.5px solid ${theme.border}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 26, lineHeight: 1 }}>
+                  {emoji}
+                </span>
+              </div>
+            ))}
           </div>
           <p
             style={{

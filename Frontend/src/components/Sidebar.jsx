@@ -11,13 +11,12 @@ import ChatListItem from "../features/chats/ChatListItem";
 import { useTranslation } from "react-i18next";
 import { usePinnedJournals, refreshPinnedJournals } from "../hooks/usePinnedJournals";
 
-const ICONS = { Home, PenLine, Calendar, BarChart3 };
+const ICONS = { Home, PenLine, Calendar };
 
 const NAV_ITEMS = [
   { icon: "Home", id: "home" },
   { icon: "Calendar", id: "productivity" },
   { icon: "PenLine", id: "journals" },
-  { icon: "BarChart3", id: "insight" },
 ];
 
 function ThemeSwitcher({ currentTheme, onSelect }) {
@@ -198,7 +197,7 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
       </div>
 
       {/* Nav items */}
-      <div style={{ padding: "14px 10px 12px" }}>
+      <div style={{ padding: "14px 10px 4px" }}>
         <p
           style={{
             fontSize: 10, fontWeight: 700, color: theme.muted,
@@ -294,11 +293,11 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
       </div>
 
       {/* Chat list */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 10px" }}>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "0 10px", marginTop: 6 }}>
         <div
           style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "10px 6px 8px", marginTop: 6,
+            padding: "10px 6px 8px",
           }}
         >
           <p
@@ -329,42 +328,44 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
           </button>
         </div>
 
-        {sessions.length === 0 && (
-          <div style={{ padding: "28px 12px", textAlign: "center" }}>
-            <div
-              style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: `color-mix(in srgb, ${theme.primary} 18%, transparent)`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 10px",
-              }}
-            >
-              <MessageSquare size={14} color={theme.primaryText} />
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+          {sessions.length === 0 && (
+            <div style={{ padding: "28px 12px", textAlign: "center" }}>
+              <div
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  background: `color-mix(in srgb, ${theme.primary} 18%, transparent)`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 10px",
+                }}
+              >
+                <MessageSquare size={14} color={theme.primaryText} />
+              </div>
+              <p style={{ fontSize: 12, color: theme.muted, margin: 0, lineHeight: 1.5 }}>
+                {t("nav.noChats")}
+              </p>
             </div>
-            <p style={{ fontSize: 12, color: theme.muted, margin: 0, lineHeight: 1.5 }}>
-              {t("nav.noChats")}
-            </p>
-          </div>
-        )}
+          )}
 
-        {sessions.map((chat) => (
-          <ChatListItem
-            key={chat.id}
-            chat={chat}
-            active={activeSessionId === chat.id}
-            newSessionId={newSessionId}
-            onSelect={(id) => { navigate(`/app/spill/${id}`); onNavClick?.() }}
-            onRename={onRenameChat}
-            onDelete={onDeleteChat}
-          />
-        ))}
+          {sessions.map((chat) => (
+            <ChatListItem
+              key={chat.id}
+              chat={chat}
+              active={activeSessionId === chat.id}
+              newSessionId={newSessionId}
+              onSelect={(id) => { navigate(`/app/spill/${id}`); onNavClick?.() }}
+              onRename={onRenameChat}
+              onDelete={onDeleteChat}
+            />
+          ))}
+        </div>
       </div>
 
       {/* User footer */}
       <div
         ref={accountRef}
         style={{
-          position: "relative", padding: "12px 10px",
+          position: "relative", padding: "16px 10px 12px",
           borderTop: `1px solid ${theme.border}`,
         }}
       >
@@ -441,6 +442,27 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
             </p>
             <LanguageSwitcher />
 
+            <div style={{ height: 12 }} />
+            <button
+              onClick={() => { setShowAccountMenu(false); navigate("/app/insight"); onNavClick?.() }}
+              style={{
+                width: "100%", display: "flex", alignItems: "center",
+                gap: 8, padding: "10px 12px", borderRadius: 8,
+                border: "none", cursor: "pointer",
+                background: "transparent", color: theme.dark,
+                fontSize: 13, fontWeight: 600,
+                transition: "all 0.12s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--color-hover, #F3F4F6)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
+            >
+              <BarChart3 size={15} />
+              {t("nav.insight")}
+            </button>
             <div style={{ height: 12 }} />
             <button
               onClick={handleLogout}
