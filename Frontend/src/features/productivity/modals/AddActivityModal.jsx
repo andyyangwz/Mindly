@@ -27,7 +27,7 @@ const INITIAL_STATE = {
   productivityLevel: "neutral",
 }
 
-export default function AddActivityModal({ open, onClose, onSave, editingActivity, selectedSlot, voiceAutofill }) {
+export default function AddActivityModal({ open, onClose, onSave, editingActivity, selectedSlot, voiceAutofill, voiceMode, onSaveDraft, hasMoreUndrafted }) {
   const { t } = useTranslation()
   const [form, setForm] = useState(INITIAL_STATE)
   const [errors, setErrors] = useState({})
@@ -124,6 +124,24 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
     } finally {
       setSaving(false)
     }
+  }
+
+  const toDraftData = () => ({
+    title: form.title,
+    description: form.description,
+    start_date: form.startDate,
+    end_date: form.endDate,
+    start_time: form.startTime,
+    end_time: form.endTime,
+    color: form.color,
+    priority: form.priority,
+    productivity_level: form.productivityLevel,
+    _voiceId: voiceAutofill?._voiceId,
+    type: "activity",
+  })
+
+  const handleSaveDraft = () => {
+    onSaveDraft?.(toDraftData())
   }
 
   const set = (field, value) => {
@@ -308,14 +326,75 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
             </div>
           </div>
 
-          <Actions
-            saving={saving}
-            isEdit={isEdit}
-            accent={theme.primary}
-            submitLabel={isEdit ? "Update Activity" : "Create Activity"}
-            onCancel={onClose}
-            onSubmit={handleSubmit}
-          />
+          {voiceMode ? (
+            <div style={{ display: "flex", gap: 8, justifyContent: "space-between", marginTop: 20 }}>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={saving}
+                style={{
+                  padding: "8px 18px",
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`,
+                  background: "var(--color-card, white)",
+                  color: theme.dark,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: saving ? "not-allowed" : "pointer",
+                  opacity: saving ? 0.5 : 1,
+                }}
+              >
+                {t("common.cancel")}
+              </button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={handleSaveDraft}
+                  disabled={saving}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: 8,
+                    border: `1px solid ${ACTIVITY_ACCENT}`,
+                    background: "transparent",
+                    color: ACTIVITY_ACCENT,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: saving ? "not-allowed" : "pointer",
+                    opacity: saving ? 0.5 : 1,
+                  }}
+                >
+                  {hasMoreUndrafted ? "Save Draft & Next" : "Save Draft"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={saving}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: saving ? theme.muted : ACTIVITY_ACCENT,
+                    color: "white",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: saving ? "not-allowed" : "pointer",
+                    opacity: saving ? 0.7 : 1,
+                  }}
+                >
+                  {saving ? t("common.saving") : "Create Now"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Actions
+              saving={saving}
+              isEdit={isEdit}
+              accent={theme.primary}
+              submitLabel={isEdit ? "Update Activity" : "Create Activity"}
+              onCancel={onClose}
+              onSubmit={handleSubmit}
+            />
+          )}
         </div>
       </div>
     </Portal>

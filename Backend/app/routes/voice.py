@@ -20,77 +20,81 @@ voice_bp = Blueprint("voice", __name__, url_prefix="/api/voice")
 TRANSCRIPTION_MODEL = "whisper-large-v3-turbo"
 PARSER_MODEL = "llama-3.3-70b-versatile"
 
-PARSER_SYSTEM_PROMPT = """You are a calendar form parser. Your ONLY job is to extract structured form data from natural language.
+PARSER_SYSTEM_PROMPT = """OUTPUT FORMAT — MANDATORY. READ THIS FIRST.
+
+Your output MUST be exactly ONE JSON object. Nothing else. No text before, no text after.
+The object MUST have this exact shape:
+
+{{"activities": [ <one or more objects here> ]}}
+
+If the input describes nothing useful, return: {{"activities": []}}
+
+NEVER return multiple top-level JSON objects.
+NEVER return a bare JSON object without the "activities" wrapper.
+NEVER return two separate JSON objects on separate lines.
+ALWAYS wrap every item inside the "activities" array.
+
+SCHEMA — each item inside "activities" is an object with these fields:
+- "type": "activity" | "task"
+  - "activity" = time-block event (gym, meeting, study, dinner, work session)
+  - "task" = deadline-oriented goal (assignment due, submit report)
+- "title": string (required)
+- "description": string or null
+- "start_date": "YYYY-MM-DD" or null
+- "start_time": "HH:MM" (24h) or null
+- "end_date": "YYYY-MM-DD" or null — only set when end_time crosses midnight
+- "end_time": "HH:MM" (24h) or null
+- "color": "purple"|"blue"|"green"|"yellow"|"orange"|"red"|"pink"|"teal" or null
+- "productivity_level": "productive"|"neutral"|"unproductive" or null
 
 RULES:
-- Return ONLY valid JSON, no explanation, no markdown, no code blocks.
-- If the utterance describes a time-block activity (gym, meeting, study session, etc.), set "type": "activity".
-- If the utterance describes a deadline-oriented objective (assignment due, submit report, finish project, etc.), set "type": "task".
-- For relative dates (tomorrow, tonight, next Monday, etc.), resolve them against the current date provided.
-- If a field is not mentioned, set it to null (not an empty string).
+- Return ONLY valid JSON. No explanation, no markdown, no code blocks.
+- For relative dates (tomorrow, tonight, next Monday), resolve against the current date provided.
+- If a field is not mentioned, set it to null. Do NOT use empty strings.
 - Do NOT hallucinate values.
 
-TEMPORAL REASONING (critical — apply BEFORE outputting times):
-- Use the reference date as the anchor for "today". All dates are resolved relative to this reference, not the real system date.
-- Convert colloquial times to 24-hour HH:MM format: "midnight" = 00:00, "noon" = 12:00, "7 PM" = 19:00, "12 AM" = 00:00, etc.
-- If the user says "until 1 AM", "till 2 AM", "to midnight", or similar, the end time is in the early morning — determine whether the end date should be the next day.
-- If start_time and end_time ARE both provided and end_time (in 24h) is numerically LESS than start_time, then the end crosses midnight: set start_date to the reference/anchor date and end_date to the FOLLOWING day.
-- If only one time is mentioned (e.g. "at 7 PM"), leave the other time null. Do NOT invent a second time.
-- If only times are mentioned without explicit dates, anchor start_date to the reference date provided.
-- Understand natural range connectors: "until", "to", "till", "from ... to", "from ... until", "from ... till", "around", "~".
-- Understand time-of-day words: "morning" → 06:00-11:59, "afternoon" → 12:00-17:59, "evening" → 18:00-21:59, "night" → 22:00-23:59 or 00:00-05:00.
+TEMPORAL REASONING:
+- Use the reference date as the anchor for "today". All dates are relative to this reference.
+- Convert colloquial times to 24h HH:MM: "midnight" = 00:00, "noon" = 12:00, "7 PM" = 19:00.
+- If end_time is numerically less than start_time (e.g. "from 10 PM to 1 AM"), the end crosses midnight: set start_date to the reference date and end_date to the following day.
+- If only one time is mentioned, leave the other null. Do NOT invent a second time.
+- Understand connectors: "until", "to", "till", "from ... to", "from ... until", "~".
+- Understand time-of-day: "morning" = 06:00-11:59, "afternoon" = 12:00-17:59, "evening" = 18:00-21:59, "night" = 22:00-05:00.
 
-Current date and time for reference: {current_datetime}
+CURRENT DATE AND TIME: {current_datetime}
 
-ACTIVITY fields (when type="activity"):
-- title (string): clear concise title
-- description (string or null)
-- start_date (string: YYYY-MM-DD or null)
-- start_time (string: HH:MM or null)
-- end_date (string: YYYY-MM-DD or null) — only set to next day when end_time crosses midnight (otherwise null)
-- end_time (string: HH:MM or null)
-- color (string: one of "purple", "blue", "green", "yellow", "orange", "red", "pink", "teal" or null) — extract when user explicitly mentions a color
-- productivity_level (string: one of "productive", "neutral", "unproductive" or null)
-
-TASK fields (when type="task"):
-- title (string): clear concise title
-- description (string or null)
-- start_date (string: YYYY-MM-DD or null) — when the user plans to start
-- start_time (string: HH:MM or null)
-- end_date (string: YYYY-MM-DD or null) — the deadline date
-- end_time (string: HH:MM or null) — the deadline time
-- color (string: one of "purple", "blue", "green", "yellow", "orange", "red", "pink", "teal" or null) — extract when user explicitly mentions a color
-- productivity_level (string: one of "productive", "neutral" or null)
+MULTI-ACTIVITY RULES:
+- Only split into multiple items when there are CLEARLY DISTINCT time blocks.
+- If unsure, keep it as a single item.
+- Each item gets its own time range. Overlapping times are fine — the user decides.
 
 EXAMPLES:
+
 Input: "Gym tomorrow at 7 PM"
-Output: {{"type": "activity", "title": "Gym Session", "description": null, "start_date": "2026-05-25", "start_time": "19:00", "end_time": null, "color": null, "productivity_level": "productive"}}
+Output: {{"activities": [{{"type": "activity", "title": "Gym Session", "description": null, "start_date": "2026-05-25", "start_time": "19:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "productive"}}]}}
 
 Input: "Create a blue study session from 8 to 10"
-Output: {{"type": "activity", "title": "Study Session", "description": null, "start_date": "2026-05-24", "start_time": "08:00", "end_time": "10:00", "color": "blue", "productivity_level": "productive"}}
+Output: {{"activities": [{{"type": "activity", "title": "Study Session", "description": null, "start_date": "2026-05-24", "start_time": "08:00", "end_date": null, "end_time": "10:00", "color": "blue", "productivity_level": "productive"}}]}}
 
 Input: "I play Counter Strike from 10:30 until 1 AM"
-Output: {{"type": "activity", "title": "Counter Strike", "description": null, "start_date": "2026-05-24", "start_time": "22:30", "end_date": "2026-05-25", "end_time": "01:00", "color": null, "productivity_level": null}}
-
-Input: "study from 9 PM until 2 AM"
-Output: {{"type": "activity", "title": "Study", "description": null, "start_date": "2026-05-24", "start_time": "21:00", "end_date": "2026-05-25", "end_time": "02:00", "color": null, "productivity_level": "productive"}}
-
-Input: "movie marathon from 8 PM to 3 AM"
-Output: {{"type": "activity", "title": "Movie Marathon", "description": null, "start_date": "2026-05-24", "start_time": "20:00", "end_date": "2026-05-25", "end_time": "03:00", "color": null, "productivity_level": null}}
+Output: {{"activities": [{{"type": "activity", "title": "Counter Strike", "description": null, "start_date": "2026-05-24", "start_time": "22:30", "end_date": "2026-05-25", "end_time": "01:00", "color": null, "productivity_level": null}}]}}
 
 Input: "Finish database assignment before Friday midnight"
-Output: {{"type": "task", "title": "Database Assignment", "description": null, "start_date": "2026-05-24", "start_time": null, "end_date": "2026-05-29", "end_time": "23:59", "color": null, "productivity_level": "productive"}}
+Output: {{"activities": [{{"type": "task", "title": "Database Assignment", "description": null, "start_date": "2026-05-24", "start_time": null, "end_date": "2026-05-29", "end_time": "23:59", "color": null, "productivity_level": "productive"}}]}}
 
-Input: "Add a red gym workout tomorrow at 7"
-Output: {{"type": "activity", "title": "Gym Workout", "description": null, "start_date": "2026-05-25", "start_time": "19:00", "end_time": null, "color": "red", "productivity_level": "productive"}}
+Input: "Gym at 7 PM then dinner at 8:30"
+Output: {{"activities": [{{"type": "activity", "title": "Gym Session", "description": null, "start_date": "2026-05-24", "start_time": "19:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "productive"}}, {{"type": "activity", "title": "Dinner", "description": null, "start_date": "2026-05-24", "start_time": "20:30", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}]}}
 
-Input: "work from 11 PM to midnight"
-Output: {{"type": "activity", "title": "Work", "description": null, "start_date": "2026-05-24", "start_time": "23:00", "end_date": "2026-05-25", "end_time": "00:00", "color": null, "productivity_level": null}}
+Input: "Study from 9 to 11 then gym from 11:30 to 1"
+Output: {{"activities": [{{"type": "activity", "title": "Study", "description": null, "start_date": "2026-05-24", "start_time": "09:00", "end_date": null, "end_time": "11:00", "color": null, "productivity_level": "productive"}}, {{"type": "activity", "title": "Gym Session", "description": null, "start_date": "2026-05-24", "start_time": "11:30", "end_date": null, "end_time": "13:00", "color": null, "productivity_level": "productive"}}]}}
+
+Input: "Meeting at 10 AM, lunch at noon, and deep work from 2 to 5"
+Output: {{"activities": [{{"type": "activity", "title": "Meeting", "description": null, "start_date": "2026-05-24", "start_time": "10:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}, {{"type": "activity", "title": "Lunch", "description": null, "start_date": "2026-05-24", "start_time": "12:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}, {{"type": "activity", "title": "Deep Work", "description": null, "start_date": "2026-05-24", "start_time": "14:00", "end_date": null, "end_time": "17:00", "color": null, "productivity_level": "productive"}}]}}
 
 Input: "Study later"
-Output: {{"type": "activity", "title": "Study", "description": null, "start_date": null, "start_time": null, "end_time": null, "color": null, "productivity_level": null}}
+Output: {{"activities": [{{"type": "activity", "title": "Study", "description": null, "start_date": null, "start_time": null, "end_date": null, "end_time": null, "color": null, "productivity_level": null}}]}}
 
-Remember: JSON only. No extra text."""
+FINAL REMINDER: Output ONE JSON object. The top-level key is "activities". Every item goes inside that array. JSON only."""
 
 
 def _get_provider():
@@ -156,69 +160,210 @@ def process_voice(user_id):
         }), 500
 
     # Step 2: Parse with LLM
-    try:
-        ref_date_str = request.args.get("reference_date")
-        if ref_date_str:
-            try:
-                ref_date = datetime.strptime(ref_date_str, "%Y-%m-%d")
-                now_dt = datetime.now()
-                combined = ref_date.replace(hour=now_dt.hour, minute=now_dt.minute)
-                now = combined.strftime("%Y-%m-%d %H:%M %A")
-            except ValueError:
-                now = datetime.now().strftime("%Y-%m-%d %H:%M %A")
-        else:
+    ref_date_str = request.args.get("reference_date")
+    if ref_date_str:
+        try:
+            ref_date = datetime.strptime(ref_date_str, "%Y-%m-%d")
+            now_dt = datetime.now()
+            combined = ref_date.replace(hour=now_dt.hour, minute=now_dt.minute)
+            now = combined.strftime("%Y-%m-%d %H:%M %A")
+        except ValueError:
             now = datetime.now().strftime("%Y-%m-%d %H:%M %A")
-        system_prompt = PARSER_SYSTEM_PROMPT.format(current_datetime=now)
+    else:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M %A")
+    system_prompt = PARSER_SYSTEM_PROMPT.format(current_datetime=now)
 
-        provider = _get_provider()
-        logger.info("Parsing transcript with model=%s ...", PARSER_MODEL)
+    def _extract_json(text):
+        """Extract and parse JSON from LLM output, handling various malformed formats."""
+        import re
+        text = text.strip()
+
+        # Strip markdown code fences
+        if text.startswith("```"):
+            text = text.split("\n", 1)[-1]
+            text = text.rsplit("```", 1)[0]
+            text = text.strip()
+
+        # Direct parse attempt
+        try:
+            result = json.loads(text)
+            # If it's already the correct format, return it
+            if isinstance(result, dict) and "activities" in result:
+                return result
+            # If it's a bare activity/task object, wrap it
+            if isinstance(result, dict) and result.get("type") in ("activity", "task"):
+                logger.info("Wrapped bare object into activities array")
+                return {"activities": [result]}
+            # Return as-is (validation will check)
+            return result
+        except json.JSONDecodeError:
+            pass
+
+        # The LLM may have returned multiple separate JSON objects or a bare object
+        # without the "activities" wrapper. Find ALL JSON objects and merge them.
+        all_objects = []
+        pos = 0
+        while pos < len(text):
+            # Find next opening brace
+            obj_start = -1
+            while pos < len(text):
+                if text[pos] == "{":
+                    obj_start = pos
+                    break
+                pos += 1
+
+            if obj_start == -1:
+                break
+
+            # Find matching closing brace using depth tracking
+            depth = 0
+            in_string = False
+            escape = False
+            obj_end = -1
+            for i in range(obj_start, len(text)):
+                c = text[i]
+                if escape:
+                    escape = False
+                    continue
+                if c == "\\":
+                    escape = True
+                    continue
+                if c == '"':
+                    in_string = not in_string
+                    continue
+                if in_string:
+                    continue
+                if c == "{":
+                    depth += 1
+                elif c == "}":
+                    depth -= 1
+                    if depth == 0:
+                        obj_end = i
+                        break
+
+            if obj_end == -1:
+                break
+
+            obj_str = text[obj_start:obj_end + 1]
+            try:
+                obj = json.loads(obj_str)
+                if isinstance(obj, dict):
+                    all_objects.append(obj)
+            except json.JSONDecodeError:
+                pass
+
+            pos = obj_end + 1
+
+        if not all_objects:
+            return None
+
+        # Check if the first object is already the correct format
+        if len(all_objects) == 1 and "activities" in all_objects[0]:
+            return all_objects[0]
+
+        # If we have a single bare activity/task object, wrap it
+        if len(all_objects) == 1 and all_objects[0].get("type") in ("activity", "task"):
+            logger.info("Wrapped single object into activities array")
+            return {"activities": all_objects}
+
+        # Multiple objects: filter to activity/task items and merge into activities array
+        activity_items = [o for o in all_objects if o.get("type") in ("activity", "task")]
+        if activity_items:
+            logger.info("Merged %d separate objects into activities array", len(activity_items))
+            return {"activities": activity_items}
+
+        # Fallback: if we found objects but none are activities, return the first one
+        if all_objects:
+            first = all_objects[0]
+            if "activities" in first:
+                return first
+            return {"activities": [first]}
+
+        return None
+
+    provider = _get_provider()
+    logger.info("=== VOICE PIPELINE: Step 2 - LLM Parse ===")
+    logger.info("Transcript: %s", transcript)
+    logger.info("Reference date for prompt: %s", now)
+
+    raw = None
+    parsed = None
+
+    # First attempt
+    try:
         raw = provider.chat(
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": transcript},
             ],
-            max_tokens=500,
+            max_tokens=1000,
             temperature=0.1,
         )
+        logger.info("LLM raw response (attempt 1): %s", repr(raw[:500]))
+        parsed = _extract_json(raw)
+    except Exception as e:
+        logger.error("LLM call failed (attempt 1): %s: %s", type(e).__name__, str(e))
 
-        cleaned = raw.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1]
-            cleaned = cleaned.rsplit("```", 1)[0]
-        cleaned = cleaned.strip()
+    # Retry once if JSON parsing failed
+    if parsed is None and raw is not None:
+        logger.warning("JSON extraction failed on attempt 1. Raw was: %s", repr(raw[:500]))
+        logger.info("Retrying LLM with higher temperature...")
+        try:
+            raw = provider.chat(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": transcript},
+                ],
+                max_tokens=1000,
+                temperature=0.3,
+            )
+            logger.info("LLM raw response (attempt 2): %s", repr(raw[:500]))
+            parsed = _extract_json(raw)
+        except Exception as e:
+            logger.error("LLM call failed (attempt 2): %s: %s", type(e).__name__, str(e))
 
-        parsed = json.loads(cleaned)
-        logger.info("Parse result: %s", json.dumps(parsed, indent=2))
-
-    except json.JSONDecodeError as e:
-        logger.error("Parse JSON error: %s\nRaw output: %s", str(e), raw[:500])
+    if parsed is None:
+        logger.error("Failed to extract JSON from LLM output after retries. Raw: %s", repr((raw or "")[:500]))
         return jsonify({
             "error": "Failed to parse your request. Please try being more specific.",
             "step": "parsing",
-            "raw": raw[:500],
+            "raw": (raw or "")[:500],
         }), 422
-    except Exception as e:
-        logger.error("Parse error: %s: %s\n%s", type(e).__name__, str(e), traceback.format_exc())
-        return jsonify({
-            "error": f"Parsing failed: {str(e)}",
-            "step": "parsing",
-            "type": type(e).__name__,
-        }), 500
 
-    # Step 3: Validate the parsed structure
-    event_type = parsed.get("type")
-    if event_type not in ("activity", "task"):
+    logger.info("Parsed result: %s", json.dumps(parsed, indent=2))
+
+    # Step 3: Validate the parsed structure — always expect {"activities": [...]}
+    activities = parsed.get("activities")
+    logger.info("=== VOICE PIPELINE: Step 3 - Validation ===")
+
+    if not isinstance(activities, list):
+        logger.error("Response missing 'activities' array. parsed=%s", json.dumps(parsed))
         return jsonify({
-            "error": f"Could not determine if this is an activity or task. Got: {event_type}",
+            "error": "Invalid response format: expected 'activities' array.",
             "step": "validation",
         }), 422
 
-    logger.info(
-        "Voice process complete: user=%s type=%s title=%s",
-        user_id, event_type, parsed.get("title", ""),
-    )
+    for item in activities:
+        if not isinstance(item, dict):
+            logger.error("Non-object item in activities array: %s", json.dumps(item))
+            return jsonify({
+                "error": "Invalid item in activities array.",
+                "step": "validation",
+            }), 422
+        item_type = item.get("type")
+        if item_type not in ("activity", "task"):
+            logger.warning("Item missing valid type, defaulting to 'activity': %s", json.dumps(item))
+            item["type"] = "activity"
+
+    count = len(activities)
+    logger.info("=== VOICE PIPELINE: Complete - %d item(s) detected ===", count)
+    for i, item in enumerate(activities):
+        logger.info("Item %d: type=%s title=%s start=%s %s end=%s %s",
+            i + 1, item.get("type"), item.get("title"),
+            item.get("start_date"), item.get("start_time"),
+            item.get("end_date"), item.get("end_time"))
 
     return jsonify({
         "transcript": transcript,
-        "parsed": parsed,
+        "parsed": {"activities": activities},
     })

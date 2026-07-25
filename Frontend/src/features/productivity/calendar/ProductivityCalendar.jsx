@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom"
 
 import { theme } from "../../../theme"
 import { useTutorial } from "../../../components/tutorial/TutorialContext"
+import { useToast } from "../../../components/ui/Toast"
 import { useProductivity } from "../../../hooks/useProductivity"
 import { productivityService } from "../../../services/productivityService"
 import { useCalendarHistory } from "../hooks/useCalendarHistory"
@@ -15,8 +16,10 @@ import ActivityDetailModal from "../modals/ActivityDetailModal"
 import ActivityContextMenu from "../interactions/ActivityContextMenu"
 import { notifyTasksUpdated } from "../../../utils/events"
 import VoiceRecorderModal from "../modals/VoiceRecorderModal"
+import VoiceReviewPopup from "../modals/VoiceReviewPopup"
 import {
   toDateStr,
+  COLOR_NAME_MAP,
 } from "../utils/calendarConstants"
 import {
   getCachedDaySegment,
@@ -65,9 +68,15 @@ useImperativeHandle(ref, () => ({
   const [ctxMenu, setCtxMenu] = useState(null)
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [voiceAutofill, setVoiceAutofill] = useState(null)
+  const [voiceReviewActivities, setVoiceReviewActivities] = useState(null)
+  const [voiceReviewOpen, setVoiceReviewOpen] = useState(false)
+  const [voiceSelectedActivity, setVoiceSelectedActivity] = useState(null)
+  const [voiceSavedIds, setVoiceSavedIds] = useState(null)
+  const [voiceDrafts, setVoiceDrafts] = useState(null)
   const [dragOverrides, setDragOverrides] = useState({})
   const [inlineDraft, setInlineDraft] = useState(null)
   const { tutorialId, tutorialStep, closeTutorial, updateSpotlightTarget } = useTutorial()
+  const toast = useToast()
   const demoModeStep4 = tutorialId === "productivity-calendar" && tutorialStep === 5
   const demoModeStep5 = tutorialId === "productivity-calendar" && tutorialStep === 6
   const isTutorialDemoMode = demoModeStep4 || demoModeStep5
@@ -405,11 +414,20 @@ useImperativeHandle(ref, () => ({
         setTaskFormOpen(false)
         setEditingActivity(null)
         setSelectedSlot(null)
+        if (voiceSelectedActivity) {
+          setVoiceSavedIds((prev) => {
+            const next = new Set(prev)
+            next.add(voiceSelectedActivity._voiceId)
+            return next
+          })
+          setVoiceSelectedActivity(null)
+          setVoiceAutofill(null)
+        }
       } finally {
         onActivityUpdated?.()
       }
     },
-    [editingActivity, updateActivity, createActivity, onActivityUpdated, record]
+    [editingActivity, updateActivity, createActivity, onActivityUpdated, record, voiceSelectedActivity]
   )
 
   const handleDelete = useCallback(
@@ -720,26 +738,153 @@ useImperativeHandle(ref, () => ({
   }, [])
 
   const handleVoiceResult = useCallback((parsed) => {
-    const result = { ...parsed }
-    if (!result.start_date) {
-      result.start_date = toDateStr(currentDate)
+    console.log("[Voice] handleVoiceResult called with:", JSON.stringify(parsed, null, 2))
+
+    const activities = parsed.activities
+    if (!Array.isArray(activities)) {
+      console.error("[Voice] No activities array in parsed response:", parsed)
+      return
     }
-    if (result.type === "task" && !result.end_date) {
-      result.end_date = toDateStr(currentDate)
+
+    const filled = activities.map((item) => ({
+      ...item,
+      start_date: item.start_date || toDateStr(currentDate),
+      end_date: item.end_date || item.start_date || toDateStr(currentDate),
+    }))
+
+    if (filled.length === 0) {
+      console.log("[Voice] No activities detected")
+      toast.show("No activities detected. Try speaking more clearly.")
+      return
     }
-    setVoiceAutofill(result)
+
+    if (filled.length === 1) {
+      const single = filled[0]
+      console.log("[Voice] Single", single.type, "detected:", single.title)
+      setVoiceAutofill(single)
+      requestAnimationFrame(() => {
+        setSelectedSlot(null)
+        setEditingActivity(null)
+        if (single.type === "task") {
+          setTaskFormOpen(true)
+        } else {
+          setActivityFormOpen(true)
+        }
+      })
+      return
+    }
+
+    console.log("[Voice] Multi-activity detected:", filled.length, "items")
+    const withIds = filled.map((item, i) => ({
+      ...item,
+      _voiceId: `voice-${Date.now()}-${i}`,
+    }))
+    setVoiceReviewActivities(withIds)
+    setVoiceSavedIds(new Set())
+    setVoiceDrafts(new Map())
     requestAnimationFrame(() => {
-      if (result.type === "activity") {
-        setSelectedSlot(null)
-        setEditingActivity(null)
-        setActivityFormOpen(true)
-      } else {
-        setSelectedSlot(null)
-        setEditingActivity(null)
-        setTaskFormOpen(true)
-      }
+      setVoiceReviewOpen(true)
     })
   }, [currentDate])
+
+  const handleVoiceReviewSelect = useCallback((activity) => {
+    setVoiceSelectedActivity(activity)
+    const draft = voiceDrafts?.get(activity._voiceId)
+    setVoiceAutofill(draft || activity)
+    requestAnimationFrame(() => {
+      setSelectedSlot(null)
+      setEditingActivity(null)
+      setActivityFormOpen(true)
+    })
+  }, [voiceDrafts])
+
+  const handleVoiceReviewSaveAll = useCallback(() => {
+    onActivityUpdated?.()
+    notifyTasksUpdated()
+    setVoiceReviewActivities(null)
+    setVoiceReviewOpen(false)
+    setVoiceSelectedActivity(null)
+    setVoiceSavedIds(null)
+    setVoiceDrafts(null)
+  }, [onActivityUpdated])
+
+  const handleVoiceReviewDeleteAll = useCallback(() => {
+    setVoiceReviewActivities(null)
+    setVoiceReviewOpen(false)
+    setVoiceSelectedActivity(null)
+    setVoiceSavedIds(null)
+    setVoiceDrafts(null)
+  }, [])
+
+  const handleSaveDraft = useCallback((draftData) => {
+    const voiceId = draftData._voiceId
+    setVoiceDrafts((prev) => {
+      const next = new Map(prev)
+      next.set(voiceId, draftData)
+      return next
+    })
+    setActivityFormOpen(false)
+    setTaskFormOpen(false)
+    setVoiceSelectedActivity(null)
+    setVoiceAutofill(null)
+
+    const nextUndrafted = voiceReviewActivities?.find(
+      (a) =>
+        a._voiceId !== voiceId &&
+        !voiceSavedIds?.has(a._voiceId) &&
+        !(voiceDrafts && voiceDrafts.has(a._voiceId))
+    )
+    if (nextUndrafted) {
+      handleVoiceReviewSelect(nextUndrafted)
+    }
+  }, [voiceReviewActivities, voiceSavedIds, voiceDrafts, handleVoiceReviewSelect])
+
+  const handleVoiceCreateAll = useCallback(async () => {
+    if (!voiceReviewActivities) return
+    const toCreatePayload = (data) => {
+      const color = COLOR_NAME_MAP[data.color?.toLowerCase()] || data.color || "#7C3AED"
+      const startDate = data.start_date || data.startDate || ""
+      const endDate = data.end_date || data.endDate || startDate
+      const startTime = data.start_time || data.startTime || ""
+      const endTime = data.end_time || data.endTime || ""
+      const payload = {
+        title: (data.title || "").trim(),
+        description: (data.description || "").trim(),
+        color,
+        priority: data.priority || "medium",
+        productivityLevel: data.productivity_level || "neutral",
+        status: "To Do",
+        hasDeadline: data.type === "task",
+        startDatetime: startDate && startTime ? `${startDate}T${startTime}` : undefined,
+        endDatetime: endDate && endTime ? `${endDate}T${endTime}` : undefined,
+      }
+      return payload
+    }
+
+    for (const activity of voiceReviewActivities) {
+      if (voiceSavedIds?.has(activity._voiceId)) continue
+      const draft = voiceDrafts?.get(activity._voiceId)
+      const data = draft || activity
+      try {
+        const payload = toCreatePayload(data)
+        const created = await createActivity(payload)
+        setLocalActivities((prev) => [...prev, created])
+        setVoiceSavedIds((prev) => new Set(prev).add(activity._voiceId))
+      } catch (err) {
+        console.error("[Voice] Create All failed for:", activity.title, err)
+      }
+    }
+
+    setVoiceReviewOpen(false)
+    setVoiceReviewActivities(null)
+    setVoiceSavedIds(null)
+    setVoiceDrafts(null)
+    setVoiceSelectedActivity(null)
+    setVoiceAutofill(null)
+    setUseRealData(true)
+    onActivityUpdated?.()
+    notifyTasksUpdated()
+  }, [voiceReviewActivities, voiceSavedIds, voiceDrafts, createActivity, onActivityUpdated])
 
   const handleAutoSync = useCallback(async () => {
     setIsSyncing(true)
@@ -833,20 +978,46 @@ useImperativeHandle(ref, () => ({
 
       <AddActivityModal
         open={activityFormOpen}
-        onClose={() => { closeModals(); setVoiceAutofill(null) }}
+        onClose={() => {
+          closeModals()
+          setVoiceAutofill(null)
+          if (voiceSelectedActivity) {
+            setVoiceSelectedActivity(null)
+          }
+        }}
         onSave={handleSave}
         editingActivity={editingActivity && !editingActivity.hasDeadline ? editingActivity : null}
         selectedSlot={!editingActivity ? selectedSlot : null}
         voiceAutofill={voiceAutofill?.type === "activity" ? voiceAutofill : null}
+        voiceMode={!!voiceSelectedActivity}
+        onSaveDraft={handleSaveDraft}
+        hasMoreUndrafted={!!voiceReviewActivities && voiceReviewActivities.some(
+          (a) => a._voiceId !== voiceSelectedActivity?._voiceId &&
+            !voiceSavedIds?.has(a._voiceId) &&
+            !(voiceDrafts && voiceDrafts.has(a._voiceId))
+        )}
       />
 
       <AddTaskModal
         open={taskFormOpen}
-        onClose={() => { closeModals(); setVoiceAutofill(null) }}
+        onClose={() => {
+          closeModals()
+          setVoiceAutofill(null)
+          if (voiceSelectedActivity) {
+            setVoiceSelectedActivity(null)
+          }
+        }}
         onSave={handleSave}
         editingActivity={editingActivity && editingActivity.hasDeadline ? editingActivity : null}
         selectedSlot={!editingActivity ? selectedSlot : null}
         voiceAutofill={voiceAutofill?.type === "task" ? voiceAutofill : null}
+        voiceMode={!!voiceSelectedActivity}
+        onSaveDraft={handleSaveDraft}
+        hasMoreUndrafted={!!voiceReviewActivities && voiceReviewActivities.some(
+          (a) => a._voiceId !== voiceSelectedActivity?._voiceId &&
+            !voiceSavedIds?.has(a._voiceId) &&
+            !(voiceDrafts && voiceDrafts.has(a._voiceId))
+        )}
       />
 
       <VoiceRecorderModal
@@ -854,6 +1025,23 @@ useImperativeHandle(ref, () => ({
         onClose={() => setVoiceOpen(false)}
         onResult={handleVoiceResult}
         referenceDate={currentDate}
+      />
+
+      <VoiceReviewPopup
+        open={voiceReviewOpen}
+        onClose={() => {
+          setVoiceReviewOpen(false)
+          setVoiceReviewActivities(null)
+          setVoiceSavedIds(null)
+          setVoiceDrafts(null)
+          setVoiceSelectedActivity(null)
+          setVoiceAutofill(null)
+        }}
+        activities={voiceReviewActivities || []}
+        onSelect={handleVoiceReviewSelect}
+        savedIds={voiceSavedIds}
+        drafts={voiceDrafts}
+        onCreateAll={handleVoiceCreateAll}
       />
 
       {ctxMenu && (
