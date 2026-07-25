@@ -25,6 +25,7 @@ function toFrontend(j) {
     isFavorite: j.is_favorite,
     isPinned: j.is_pinned,
     allowAI: j.ai_enabled,
+    navbarOrder: j.navbar_order,
     folderIds: j.folder_ids || [],
     createdAt: j.created_at,
     updatedAt: j.updated_at,
@@ -39,6 +40,7 @@ function toBackend(data) {
   if (data.isFavorite !== undefined) body.is_favorite = data.isFavorite;
   if (data.isPinned !== undefined) body.is_pinned = data.isPinned;
   if (data.allowAI !== undefined) body.ai_enabled = data.allowAI;
+  if (data.navbarOrder !== undefined) body.navbar_order = data.navbarOrder;
   if (data.folderIds !== undefined) body.folder_ids = data.folderIds;
   return body;
 }
@@ -123,5 +125,9 @@ export const journalService = {
 
   async setJournalFolders(journalId, folderIds) {
     await api.post(`/journals/${journalId}/folders`, { folder_ids: folderIds });
+  },
+
+  async setNavbarOrders(orders) {
+    await api.put("/journals/navbar-orders", { orders });
   },
 };

@@ -72,15 +72,52 @@ class JournalService:
             journal.is_favorite = data["is_favorite"]
         if "is_pinned" in data:
             journal.is_pinned = data["is_pinned"]
+            if not data["is_pinned"]:
+                journal.navbar_order = None
         if "ai_enabled" in data:
             journal.ai_enabled = data["ai_enabled"]
+        if "navbar_order" in data:
+            journal.navbar_order = data["navbar_order"]
 
         db.session.commit()
         return journal
 
     @staticmethod
     def delete(journal):
+        user_id = journal.user_id
         db.session.delete(journal)
+        db.session.commit()
+        JournalService.reindex_navbar(user_id)
+
+    @staticmethod
+    def reindex_navbar(user_id):
+        journals = (
+            Journal.query
+            .filter_by(user_id=user_id)
+            .filter(Journal.navbar_order.isnot(None))
+            .order_by(Journal.navbar_order.asc())
+            .all()
+        )
+        for i, j in enumerate(journals, start=1):
+            j.navbar_order = i
+        db.session.commit()
+
+    @staticmethod
+    def set_navbar_orders(user_id, orders):
+        """Set navbar orders from a list of {id, order} dicts.
+        Clears all existing navbar orders first, then assigns new ones.
+        """
+        existing = Journal.query.filter_by(user_id=user_id).filter(
+            Journal.navbar_order.isnot(None)
+        ).all()
+        for j in existing:
+            j.navbar_order = None
+        db.session.flush()
+
+        for item in orders:
+            journal = Journal.query.filter_by(id=item["id"], user_id=user_id).first()
+            if journal:
+                journal.navbar_order = item["order"]
         db.session.commit()
 
     @staticmethod

@@ -117,6 +117,22 @@ def get_forwardable_journals(user_id):
     })
 
 
+@journals_bp.route("/navbar-orders", methods=["PUT"])
+@require_auth
+def set_navbar_orders(user_id):
+    data = request.get_json(silent=True)
+    if not data or "orders" not in data:
+        return jsonify({"error": "orders is required"}), 400
+    orders = data["orders"]
+    if not isinstance(orders, list):
+        return jsonify({"error": "orders must be a list"}), 400
+    for item in orders:
+        if not isinstance(item, dict) or "id" not in item or "order" not in item:
+            return jsonify({"error": "Each order must have id and order"}), 400
+    JournalService.set_navbar_orders(user_id, orders)
+    return jsonify({"message": "Navbar orders updated"}), 200
+
+
 # ---- Folder routes ----
 
 @journals_bp.route("/folders", methods=["GET"])

@@ -44,7 +44,7 @@ def validate_update(data):
     if not data:
         raise ValidationError("Request body is required")
 
-    allowed = {"title", "content", "emojis", "is_favorite", "is_pinned", "ai_enabled", "folder_ids"}
+    allowed = {"title", "content", "emojis", "is_favorite", "is_pinned", "ai_enabled", "folder_ids", "navbar_order"}
     invalid = set(data.keys()) - allowed
     if invalid:
         raise ValidationError(f"Unexpected fields: {', '.join(sorted(invalid))}")

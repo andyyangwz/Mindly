@@ -9,7 +9,8 @@ import { useTheme } from "../theme/ThemeProvider";
 import { useAuth } from "../context/AuthContext";
 import ChatListItem from "../features/chats/ChatListItem";
 import { useTranslation } from "react-i18next";
-import { usePinnedJournals, refreshPinnedJournals } from "../hooks/usePinnedJournals";
+import { useNavbarJournals, refreshPinnedJournals } from "../hooks/usePinnedJournals";
+import ManageNavbarJournals from "../features/journals/components/ManageNavbarJournals";
 
 const ICONS = { Home, PenLine, Calendar };
 
@@ -126,7 +127,8 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
   const { t } = useTranslation();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const accountRef = useRef(null);
-  const pinnedJournals = usePinnedJournals();
+  const navbarJournals = useNavbarJournals();
+  const [showManageNavbar, setShowManageNavbar] = useState(false);
 
   useEffect(() => {
     const handler = (e) => {
@@ -239,52 +241,58 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
               </button>
               {item.id === "journals" && (
                 <div style={{ paddingLeft: 20, marginTop: -1, marginBottom: 6 }}>
-                  <p style={{
-                    fontSize: 13, fontWeight: 600, color: theme.muted,
-                    letterSpacing: "0.02em", marginBottom: 8, paddingLeft: 12,
-                  }}>
+                  <button
+                    onClick={() => { setShowManageNavbar(true); onNavClick?.() }}
+                    style={{
+                      width: "100%", display: "flex", alignItems: "center", gap: 8,
+                      padding: "6px 12px", borderRadius: 6, border: "none",
+                      cursor: "pointer", marginBottom: 4,
+                      background: "transparent",
+                      color: theme.muted,
+                      fontWeight: 600, fontSize: 13,
+                      transition: "color 0.12s",
+                      textAlign: "left",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = theme.dark
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = theme.muted
+                    }}
+                  >
                     {t("nav.pinned")}
-                  </p>
-                  {pinnedJournals.length === 0 && (
-                    <p style={{
-                      fontSize: 13, color: theme.muted, margin: 0,
-                      paddingLeft: 12, opacity: 0.7,
-                    }}>
-                      {t("nav.noPinned")}
-                    </p>
+                  </button>
+                  {navbarJournals.length > 0 && (
+                    <div>
+                      {navbarJournals.map((journal) => {
+                        const isActive = activeJournalId === journal.id;
+                        const emoji = journal.emojis?.find(Boolean) || "📖";
+                        return (
+                          <button
+                            key={journal.id}
+                            onClick={() => { navigate(`/app/journals/${journal.id}`); onNavClick?.() }}
+                            style={{
+                              width: "100%", display: "flex", alignItems: "center", gap: 8,
+                              padding: "6px 12px", borderRadius: 6, border: "none",
+                              cursor: "pointer", marginBottom: 1,
+                              background: "var(--color-card, white)",
+                              color: isActive ? theme.primary : theme.muted,
+                              fontWeight: isActive ? 600 : 500, fontSize: 13,
+                              transition: "color 0.12s",
+                            }}
+                          >
+                            <span style={{ fontSize: 14, lineHeight: 1 }}>{emoji}</span>
+                            <span style={{
+                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                              flex: 1, textAlign: "left",
+                            }}>
+                              {journal.title}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
-                  <div style={{
-                    maxHeight: pinnedJournals.length > 3 ? 108 : undefined,
-                    overflowY: pinnedJournals.length > 3 ? "auto" : "visible",
-                  }}>
-                    {pinnedJournals.map((journal) => {
-                      const isActive = activeJournalId === journal.id;
-                      const emoji = journal.emojis?.find(Boolean) || "📖";
-                      return (
-                        <button
-                          key={journal.id}
-                          onClick={() => { navigate(`/app/journals/${journal.id}`); onNavClick?.() }}
-                          style={{
-                            width: "100%", display: "flex", alignItems: "center", gap: 8,
-                            padding: "6px 12px", borderRadius: 6, border: "none",
-                            cursor: "pointer", marginBottom: 1,
-                            background: "var(--color-card, white)",
-                            color: isActive ? theme.primary : theme.muted,
-                            fontWeight: isActive ? 600 : 500, fontSize: 13,
-                            transition: "color 0.12s",
-                          }}
-                        >
-                          <span style={{ fontSize: 14, lineHeight: 1 }}>{emoji}</span>
-                          <span style={{
-                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                            flex: 1, textAlign: "left",
-                          }}>
-                            {journal.title}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
               )}
             </div>
@@ -487,6 +495,13 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
           </div>
         )}
       </div>
+
+      {showManageNavbar && (
+        <ManageNavbarJournals
+          open={showManageNavbar}
+          onClose={() => setShowManageNavbar(false)}
+        />
+      )}
     </div>
   );
 }

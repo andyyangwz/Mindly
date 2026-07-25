@@ -145,6 +145,7 @@ export default function JournalsPage() {
     setDeleting(true)
     try {
       await deleteJournal(id)
+      refreshPinnedJournals()
       navigate("/app/journals")
     } catch {
     } finally {
