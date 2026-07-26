@@ -87,36 +87,28 @@ export default function HabitRelics() {
       data-tutorial-target="habit-relics"
       className="habit-relics-container"
       style={{
-        background: "var(--color-card)",
-        borderRadius: 18,
-        padding: "20px",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
         display: "flex",
         flexDirection: "column",
-        boxSizing: "border-box",
         userSelect: "none",
       }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
-              width: 34,
-              height: 34,
-              borderRadius: 10,
+              width: 28,
+              height: 28,
+              borderRadius: 8,
               background: "linear-gradient(135deg, #8B5CF6, #6D28D9)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
             }}>
-              <Target size={15} color="white" />
+              <Target size={13} color="white" />
             </div>
-            <div>
-              <h2 style={{ fontSize: 14, fontWeight: 600, color: theme.dark, margin: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                {t("home.habitRelics.title")}
-                <InfoButton tutorialId="habit-relics-onboarding" />
-              </h2>
-              <p style={{ fontSize: 11, color: theme.muted, margin: "1px 0 0 0" }}>{t("home.habitRelics.subtitle")}</p>
-            </div>
+            <h2 style={{ fontSize: 15, fontWeight: 650, color: theme.dark, margin: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              {t("home.habitRelics.title")}
+              <InfoButton tutorialId="habit-relics-onboarding" />
+            </h2>
           </div>
           <div style={{
             display: "flex",
@@ -124,7 +116,7 @@ export default function HabitRelics() {
             gap: 4,
             padding: "4px 10px",
             borderRadius: 20,
-            background: `color-mix(in srgb, ${theme.primary} 10%, transparent)`,
+            background: `color-mix(in srgb, ${theme.primary} 8%, transparent)`,
           }}>
             <Ribbon size={11} color={theme.primary} />
             <span style={{ fontSize: 10, color: theme.primary, fontStyle: "italic", fontWeight: 500 }}>
@@ -161,14 +153,17 @@ export default function HabitRelics() {
 
             return (
               <div key={goal.id} onDoubleClick={() => setEditingGoal(goal)} style={{
-                background: "var(--color-card)",
-                borderRadius: 14,
+                borderRadius: 10,
                 border: `1px solid ${theme.border}`,
                 padding: "14px",
                 display: "flex",
                 gap: 12,
                 cursor: "pointer",
-              }}>
+                transition: "border-color 0.15s, box-shadow 0.15s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = `color-mix(in srgb, ${theme.primary} 30%, ${theme.border})`; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)" }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.boxShadow = "none" }}
+              >
                 <div style={{ position: "relative", width: 44, height: 44, flexShrink: 0 }}>
                   <svg width={44} height={44} style={{ transform: "rotate(-90deg)", position: "absolute" }}>
                     <circle cx={22} cy={22} r={16} stroke={theme.border} strokeWidth="4" fill="none" />
@@ -230,67 +225,72 @@ export default function HabitRelics() {
         )}
       </div>
 
-      <div data-tutorial-target="habit-relics-actions" style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: 12, flexShrink: 0, gap: 10 }}>
+      <div data-tutorial-target="habit-relics-actions" style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: 16, flexShrink: 0, gap: 8 }}>
             <button
               onClick={() => setRelicManagerMode("change")}
               style={{
-                padding: "8px 16px",
-                borderRadius: 10,
+                padding: "7px 14px",
+                borderRadius: 8,
                 border: `1px solid ${theme.border}`,
                 background: "transparent",
                 color: theme.dark,
               fontSize: 12,
-              fontWeight: 600,
+              fontWeight: 500,
               cursor: "pointer",
-              transition: "all 0.2s",
+              transition: "all 0.15s",
               whiteSpace: "nowrap",
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
             }}
+            onMouseEnter={e => { e.currentTarget.style.background = `color-mix(in srgb, ${theme.dark} 5%, transparent)` }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent" }}
           >
-            <Settings size={14} />
+            <Settings size={13} />
             {t("home.habitRelics.changeRelics")}
           </button>
         <button
           onClick={() => setModalOpen(true)}
           style={{
-            width: 36,
-            height: 36,
+            width: 32,
+            height: 32,
             borderRadius: "50%",
-            border: `2px dashed ${theme.border}`,
+            border: `1.5px dashed ${theme.border}`,
             background: "transparent",
             color: theme.primary,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
-            fontSize: 18,
-            transition: "all 0.2s",
+            transition: "all 0.15s",
             flexShrink: 0,
           }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.background = `color-mix(in srgb, ${theme.primary} 5%, transparent)` }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.background = "transparent" }}
         >
-          <Plus size={18} />
+          <Plus size={16} />
         </button>
           <button
             onClick={() => setUpdateProgressOpen(true)}
             style={{
-              padding: "8px 16px",
-              borderRadius: 10,
+              padding: "7px 14px",
+              borderRadius: 8,
               border: `1px solid ${theme.border}`,
               background: "transparent",
               color: theme.dark,
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: 500,
             cursor: "pointer",
-            transition: "all 0.2s",
+            transition: "all 0.15s",
             whiteSpace: "nowrap",
             display: "inline-flex",
             alignItems: "center",
             gap: 6,
           }}
+          onMouseEnter={e => { e.currentTarget.style.background = `color-mix(in srgb, ${theme.dark} 5%, transparent)` }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent" }}
         >
-          <ArrowUp size={14} />
+          <ArrowUp size={13} />
           {t("home.habitRelics.updateProgress")}
         </button>
       </div>

@@ -1,26 +1,16 @@
 import { useRef, useEffect, useMemo, useCallback, useState } from "react"
 import { theme } from "../../../theme"
 import ActivityBlock from "./ActivityBlock"
-import { HOUR_HEIGHT, TIME_COL_WIDTH, formatHour, isSameDay, layoutEvents } from "../utils/calendarConstants"
+import { TIME_COL_WIDTH, HOUR_HEIGHT, formatHour, isSameDay, layoutEvents } from "../utils/calendarConstants"
 
 const HOURS = Array.from({ length: 25 }, (_, i) => i)
 const MIN_BLOCK_HEIGHT = 15
 const SNAP_MINUTES = 1
 const DRAG_THRESHOLD_PX = 5
 
-function calcScrollTarget(date, containerHeight) {
-  const today = new Date()
-  if (!isSameDay(date, today)) return 6 * HOUR_HEIGHT - 8
-  const now = new Date()
-  const currentMinute = now.getHours() * 60 + now.getMinutes()
-  const targetPx = (currentMinute / 60) * HOUR_HEIGHT
-  const centerOffset = containerHeight * 0.35
-  return Math.max(0, targetPx - centerOffset)
-}
-
 function posFromEvent(gridEl, clientY) {
   const rect = gridEl.getBoundingClientRect()
-  const y = clientY - rect.top + gridEl.scrollTop
+  const y = clientY - rect.top
   const totalMinutes = (y / HOUR_HEIGHT) * 60
   const clampedMinutes = Math.max(0, Math.min(24 * 60, Math.round(totalMinutes)))
   const snappedMinutes = Math.round(clampedMinutes / SNAP_MINUTES) * SNAP_MINUTES
@@ -58,7 +48,7 @@ function snapMinutes(mins) {
   return Math.round(mins / SNAP_MINUTES) * SNAP_MINUTES
 }
 
-export default function CalendarGrid({ activities, currentDate, dragOverrides, inlineDraftId, onViewDetails, onActivityContextMenu, onActivityResize, onDragUpdate, onDragEnd, onInlineCreate, onInlineSave, onInlineCancel, onStatusChange, interactionMode, isSyncing, scrollToHour }) {
+export default function CalendarGrid({ activities, currentDate, dragOverrides, inlineDraftId, onViewDetails, onActivityContextMenu, onActivityResize, onDragUpdate, onDragEnd, onInlineCreate, onInlineSave, onInlineCancel, onStatusChange, interactionMode, isSyncing }) {
   const gridRef = useRef(null)
   const [canvasWidth, setCanvasWidth] = useState(0)
 
@@ -73,18 +63,6 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
 
   // Cleanup ref for pointer listeners
   const pointerCleanupRef = useRef(null)
-
-  useEffect(() => {
-    const el = gridRef.current
-    if (!el) return
-    if (scrollToHour != null) {
-      const targetPx = scrollToHour * HOUR_HEIGHT
-      const centerOffset = el.clientHeight * 0.35
-      el.scrollTop = Math.max(0, targetPx - centerOffset)
-    } else {
-      el.scrollTop = calcScrollTarget(currentDate, el.clientHeight)
-    }
-  }, [scrollToHour, currentDate])
 
   useEffect(() => {
     const el = gridRef.current
@@ -110,7 +88,7 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
         }
         return act
       })
-      const result = layoutEvents(merged, canvasWidth)
+      const result = layoutEvents(merged, canvasWidth, HOUR_HEIGHT)
       return result
     },
     [activities, canvasWidth, dragOverrides]
@@ -319,8 +297,8 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
       onKeyDown={handleKeyDown}
       style={{
         display: "flex",
-        height: 540,
-        overflowY: "auto",
+        height: HOUR_HEIGHT * 25,
+        padding: "0 32px",
         userSelect: "none",
         WebkitUserSelect: "none",
         MozUserSelect: "none",
@@ -334,7 +312,7 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
           width: TIME_COL_WIDTH,
           flexShrink: 0,
           position: "relative",
-          height: 25 * HOUR_HEIGHT,
+          height: HOUR_HEIGHT * 25,
         }}
       >
         {HOURS.map((hour) => (
@@ -374,7 +352,7 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
         style={{
           flex: 1,
           position: "relative",
-          height: 25 * HOUR_HEIGHT,
+          height: HOUR_HEIGHT * 25,
           borderLeft: `1px solid ${theme.border}`,
           touchAction: "none",
         }}
@@ -382,7 +360,7 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
       >
         <div
           onDoubleClick={handleDoubleClick}
-          style={{ position: "relative", height: 25 * HOUR_HEIGHT }}
+          style={{ position: "relative", height: HOUR_HEIGHT * 25 }}
         >
           {/* Horizontal grid lines */}
           {HOURS.map((hour) => (

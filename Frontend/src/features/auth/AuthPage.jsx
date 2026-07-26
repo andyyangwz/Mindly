@@ -137,7 +137,7 @@ export default function AuthPage() {
           transition: "all 0.3s ease",
           fontSize: 14,
           fontWeight: 600,
-          fontFamily: "'Inter', system-ui, sans-serif",
+          fontFamily: "'Poppins', system-ui, sans-serif",
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.borderColor = isLight ? "rgba(124,92,252,0.3)" : "rgba(108,71,255,0.4)";

@@ -1,6 +1,5 @@
 import { theme } from "../../theme"
 import HeroTitle from "./components/HeroTitle"
-import StatsGrid from "./components/StatsGrid"
 import WeeklyOverview from "./components/WeeklyOverview"
 import QuickActions from "./components/QuickActions"
 import DailyInspiration from "./components/DailyInspiration"
@@ -11,14 +10,14 @@ import NextTasks from "./components/NextTasks"
 export default function HomeDesktop() {
   return (
     <div style={{
-      padding: "28px 32px",
+      padding: "36px 48px 80px",
       margin: "0 auto",
       background: theme.bg,
       minHeight: "100vh",
       overflowY: "auto",
       display: "flex",
       flexDirection: "column",
-      gap: 16,
+      gap: 44,
     }}>
       <HeroTitle />
       <DailyInspiration />
@@ -26,17 +25,16 @@ export default function HomeDesktop() {
 
       <div style={{
         display: "grid",
-        gridTemplateColumns: "calc((100% - 16px) * 0.55) calc((100% - 16px) * 0.45)",
-        gap: 16,
+        gridTemplateColumns: "calc((100% - 48px) * 0.55) calc((100% - 48px) * 0.45)",
+        gap: 48,
         alignItems: "start",
       }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 44 }}>
           <HighPriorityTasks />
           <WeeklyOverview />
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <StatsGrid />
+        <div style={{ display: "flex", flexDirection: "column", gap: 44 }}>
           <NextTasks />
           <HabitRelics />
         </div>

@@ -39,7 +39,7 @@ function loadSavedDate() {
   return new Date()
 }
 
-const ProductivityCalendar = forwardRef(function ProductivityCalendar({ onActivityUpdated, calendarRefreshKey, onQuickAdd }, ref) {
+const ProductivityCalendar = forwardRef(function ProductivityCalendar({ onActivityUpdated, calendarRefreshKey, onQuickAdd, onDrawerToggle }, ref) {
 
 useImperativeHandle(ref, () => ({
   editActivity(activity) {
@@ -933,12 +933,10 @@ useImperativeHandle(ref, () => ({
     <div
       ref={calendarRef}
       style={{
-        marginBottom: 32,
+        display: "flex",
+        flexDirection: "column",
         background: "var(--color-card, white)",
-        borderRadius: 16,
-        border: `1px solid ${theme.border}`,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-        overflow: "hidden",
+        borderRadius: 0,
         position: "relative",
       }}
     >
@@ -956,9 +954,10 @@ useImperativeHandle(ref, () => ({
         interactionMode={interactionMode}
         onModeChange={setInteractionMode}
         onAutoSync={handleAutoSync}
+        onDrawerToggle={onDrawerToggle}
       />
 
-      <div style={{ borderTop: `1px solid ${theme.border}` }}>
+      <div style={{ borderTop: `1px solid ${theme.border}`, display: "flex", flexDirection: "column" }}>
           <CalendarGrid
             activities={displayActivities}
             currentDate={currentDate}

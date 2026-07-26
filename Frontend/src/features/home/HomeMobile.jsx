@@ -11,14 +11,14 @@ import NextTasks from "./components/NextTasks"
 export default function HomeMobile() {
   return (
     <div style={{
-      padding: "20px 16px 40px",
+      padding: "24px 20px 72px",
       margin: "0 auto",
       background: theme.bg,
       minHeight: "100vh",
       overflowY: "auto",
       display: "flex",
       flexDirection: "column",
-      gap: 16,
+      gap: 36,
     }}>
       <HeroTitle />
       <DailyInspiration />

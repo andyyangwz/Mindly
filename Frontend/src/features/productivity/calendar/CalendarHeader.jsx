@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { Plus, ChevronLeft, ChevronRight, Undo, Redo, Waves, Target, Mic, Lock, Move, RefreshCw, Zap } from "lucide-react"
+import { Plus, ChevronLeft, ChevronRight, Undo, Redo, Waves, Target, Mic, Lock, Move, RefreshCw, Zap, PanelRightOpen } from "lucide-react"
 import { theme } from "../../../theme"
 import InfoButton from "../../../components/tutorial/InfoButton"
 import { isSameDay, toDateStr } from "../utils/calendarConstants"
@@ -87,7 +87,7 @@ function MonthPicker({ currentMonth, onSelect, onClose }) {
   )
 }
 
-export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRedo, canUndo, canRedo, onAddActivity, onAddTask, onVoice, onQuickAdd, showTutorial = true, interactionMode, onModeChange, onAutoSync }) {
+export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRedo, canUndo, canRedo, onAddActivity, onAddTask, onVoice, onQuickAdd, showTutorial = true, interactionMode, onModeChange, onAutoSync, onDrawerToggle }) {
   const { t } = useTranslation()
   const { tutorialStep } = useTutorial()
   const [showMonthPicker, setShowMonthPicker] = useState(false)
@@ -168,7 +168,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
   ]
 
   return (
-    <div data-tutorial-target="productivity-calendar" style={{ padding: "16px 20px 0 20px" }}>
+    <div data-tutorial-target="productivity-calendar" style={{ padding: "20px 32px 0 32px", position: "sticky", top: 0, zIndex: 10, background: "var(--color-card, white)", borderBottom: `1px solid ${theme.border}` }}>
       <div
         style={{
           display: "flex",
@@ -682,6 +682,35 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={onDrawerToggle}
+            aria-label="Open side panel"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              border: `1px solid ${theme.border}`,
+              background: "transparent",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.15s",
+              color: theme.dark,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = theme.bg
+              e.currentTarget.style.borderColor = theme.accent
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent"
+              e.currentTarget.style.borderColor = theme.border
+            }}
+          >
+            <PanelRightOpen size={15} />
+          </button>
         </div>
       </div>
 

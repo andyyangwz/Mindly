@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Clock3, ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Clock3, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { theme } from "../../theme";
 import { productivityService } from "../../services/productivityService";
 import { STATUS_META } from "./utils/calendarConstants";
 import ProductivityCalendar from "./calendar/ProductivityCalendar";
 import AIPlanningAssistant from "./components/AIPlanningAssistant";
 import QuickAddModal from "./components/QuickAddModal";
+import RightDrawer from "./components/RightDrawer";
 import ActivityDetailModal from "./modals/ActivityDetailModal";
 import { notifyTasksUpdated, EVENT_TASKS_UPDATED } from "../../utils/events";
 import TaskProgressBar from "../home/components/TaskProgressBar";
@@ -46,6 +47,9 @@ export default function ProductivityPage() {
   const datePickerRef = useRef(null);
   const [isCompact, setIsCompact] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerTab, setDrawerTab] = useState("plan");
+  const [isMobile, setIsMobile] = useState(false);
 
   function toDateStr(date) {
     const y = date.getFullYear();
@@ -176,6 +180,14 @@ export default function ProductivityPage() {
     return () => mql.removeEventListener("change", handler)
   }, [])
 
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1024px)")
+    setIsMobile(mql.matches)
+    const handler = (e) => setIsMobile(e.matches)
+    mql.addEventListener("change", handler)
+    return () => mql.removeEventListener("change", handler)
+  }, [])
+
   const handleDoneScroll = useCallback(() => {
     const el = doneScrollRef.current;
     if (!el || doneLoading) return;
@@ -244,181 +256,188 @@ export default function ProductivityPage() {
 
   const planLoading = tasksLoading;
 
-  const scrollToOverview = useCallback(() => {
-    const el = document.getElementById("overview-cards")
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
-  }, [])
-
   return (
-    <div style={{ padding: isCompact ? "20px 16px" : "28px 32px", maxWidth: 1200, margin: "0 auto" }}>
-      <button
-        onClick={scrollToOverview}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-            padding: "8px 16px",
-          marginBottom: 16,
-          background: "var(--color-card, white)",
-          border: `1px solid ${theme.border}`,
-          borderRadius: 12,
-          color: theme.dark,
-          fontSize: 12,
-          fontWeight: 600,
-          cursor: "pointer",
-          transition: "all 0.15s",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = theme.primary
-          e.currentTarget.style.color = theme.primary
-          e.currentTarget.style.background = `color-mix(in srgb, ${theme.primary} 8%, transparent)`
-          e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = theme.border
-          e.currentTarget.style.color = theme.dark
-          e.currentTarget.style.background = "var(--color-card, white)"
-          e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)"
-        }}
-      >
-        <ChevronDown size={16} />
-        {t("productivity.page.viewPlanAndTasks")}
-      </button>
+    <div style={{ background: theme.bg }}>
+      <ProductivityCalendar ref={calendarRef} onActivityUpdated={fetchAllTasks} calendarRefreshKey={calendarRefreshKey} onQuickAdd={() => setQuickAddOpen(true)} onDrawerToggle={() => setDrawerOpen(true)} />
 
-      <ProductivityCalendar ref={calendarRef} onActivityUpdated={fetchAllTasks} calendarRefreshKey={calendarRefreshKey} onQuickAdd={() => setQuickAddOpen(true)} />
+      <div style={{ height: 120 }} />
 
-      <div style={{ marginTop: 12 }}>
+      <div style={{
+        position: "fixed",
+        bottom: 0,
+        left: isMobile ? 0 : 260,
+        right: 0,
+        padding: isCompact ? "12px 16px" : "16px 32px",
+        background: theme.bg,
+        zIndex: 10,
+        borderTop: `1px solid ${theme.border}`,
+      }}>
         <AIPlanningAssistant />
       </div>
 
-      <div id="overview-cards" style={{ display: "grid", gridTemplateColumns: isCompact ? "1fr" : "1fr 1fr", gap: 20, marginTop: 24, alignItems: "start" }}>
-        <div style={{ background: "var(--color-card, white)", borderRadius: 16, border: `1px solid ${theme.border}`, padding: "18px 20px", display: "flex", flexDirection: "column", maxHeight: 500, overflow: "hidden" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexShrink: 0 }}>
-            <h3 style={{ fontSize: 12, fontWeight: 600, color: theme.dark, flex: 1 }}>{getPlanTitle(selectedPlanDate)}</h3>
-            <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <button
-                onClick={() => {
-                  const prev = new Date(selectedPlanDate);
-                  prev.setDate(prev.getDate() - 1);
-                  setSelectedPlanDate(prev);
-                }}
-                style={{
-                  width: 26, height: 26, borderRadius: 6, border: `1px solid ${theme.border}`,
-                  background: "var(--color-card, white)", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: theme.muted, transition: "all 0.15s",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.muted }}
-                aria-label="Previous day"
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <div style={{ position: "relative" }}>
+      <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
+
+      <ActivityDetailModal
+        activity={detailEvent}
+        open={!!detailEvent}
+        onClose={() => setDetailEvent(null)}
+        onStatusChange={handleDetailStatusChange}
+        onProgressChange={handleDetailProgressChange}
+        onEdit={handleDetailEdit}
+        onDelete={handleDetailDelete}
+      />
+
+      <RightDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        header={
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {/* Section Selector */}
+            <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${theme.border}`, marginBottom: drawerTab === "plan" ? 14 : 12 }}>
+              {[
+                { key: "plan", label: t("productivity.page.todaysPlan") },
+                { key: "tasks", label: t("productivity.page.yourTasks") },
+              ].map(({ key, label }) => (
                 <button
-                  onClick={() => datePickerRef.current?.click()}
+                  key={key}
+                  onClick={() => setDrawerTab(key)}
                   style={{
-                    padding: "0 8px", height: 26, borderRadius: 6, border: `1px solid ${theme.border}`,
-                    background: "var(--color-card, white)", cursor: "pointer",
-                    fontSize: 11, fontWeight: 500, color: theme.dark,
-                    display: "flex", alignItems: "center", gap: 4,
+                    flex: 1,
+                    padding: "8px 0",
+                    background: "none",
+                    border: "none",
+                    borderBottom: `2px solid ${drawerTab === key ? theme.primary : "transparent"}`,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: drawerTab === key ? 600 : 500,
+                    color: drawerTab === key ? theme.primary : theme.muted,
                     transition: "all 0.15s",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border }}
                 >
-                  {selectedPlanDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  {label}
                 </button>
-                <input
-                  ref={datePickerRef}
-                  type="date"
-                  value={toDateStr(selectedPlanDate)}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      const parts = e.target.value.split("-");
-                      setSelectedPlanDate(new Date(+parts[0], +parts[1] - 1, +parts[2]));
-                    }
-                  }}
-                  style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
-                />
-              </div>
-              <button
-                onClick={() => {
-                  const next = new Date(selectedPlanDate);
-                  next.setDate(next.getDate() + 1);
-                  setSelectedPlanDate(next);
-                }}
-                style={{
-                  width: 26, height: 26, borderRadius: 6, border: `1px solid ${theme.border}`,
-                  background: "var(--color-card, white)", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: theme.muted, transition: "all 0.15s",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.muted }}
-                aria-label="Next day"
-              >
-                <ChevronRight size={14} />
-              </button>
+              ))}
             </div>
-          </div>
-          <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-          {planLoading && <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{t("productivity.page.loading")}</p>}
-          {!planLoading && planItems.length === 0 && (
-            <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{getNoPlanMessage(selectedPlanDate)}</p>
-          )}
-          {planItems.map((item, i) => {
-            const sm = STATUS_META[item.status] || null;
-            return (
-              <div key={item.id} onClick={() => setDetailEvent(item)} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, marginBottom: 6, background: "var(--color-card, white)", opacity: item.status === "Done" ? 0.75 : 1 }}>
-                <div style={{ width: 6, height: 36, borderRadius: 3, background: item.color || theme.primary, flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 12, fontWeight: 500, color: theme.dark, textDecoration: item.status === "Done" ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
-                  {item.startTime && <p style={{ fontSize: 11, color: theme.muted }}>{item.startTime}</p>}
-                </div>
-                {sm && (
-                  <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 6px", borderRadius: 3, background: sm.bg, color: sm.color, border: `1px solid ${sm.border}`, flexShrink: 0, lineHeight: 1.4, letterSpacing: "0.01em" }}>
-                    {tStatus(item.status)}
-                  </span>
-                )}
-                <div onClick={(e) => handlePlanCircleToggle(e, item)} style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${priorityColor[item.priority] || theme.border}`, background: "transparent", flexShrink: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {item.status === "Done" && <Check size={11} strokeWidth={3} color={priorityColor[item.priority] || theme.border} />}
+
+            {/* Plan: date picker row */}
+            {drawerTab === "plan" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: theme.dark, flex: 1 }}>{getPlanTitle(selectedPlanDate)}</h3>
+                <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <button
+                    onClick={() => { const prev = new Date(selectedPlanDate); prev.setDate(prev.getDate() - 1); setSelectedPlanDate(prev); }}
+                    style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${theme.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: theme.muted, transition: "all 0.15s" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.muted }}
+                    aria-label="Previous day"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <div style={{ position: "relative" }}>
+                    <button
+                      onClick={() => datePickerRef.current?.click()}
+                      style={{ padding: "0 8px", height: 26, borderRadius: 6, border: `1px solid ${theme.border}`, background: "transparent", cursor: "pointer", fontSize: 11, fontWeight: 500, color: theme.dark, display: "flex", alignItems: "center", gap: 4, transition: "all 0.15s" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border }}
+                    >
+                      {selectedPlanDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </button>
+                    <input
+                      ref={datePickerRef}
+                      type="date"
+                      value={toDateStr(selectedPlanDate)}
+                      onChange={(e) => { if (e.target.value) { const parts = e.target.value.split("-"); setSelectedPlanDate(new Date(+parts[0], +parts[1] - 1, +parts[2])); } }}
+                      style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => { const next = new Date(selectedPlanDate); next.setDate(next.getDate() + 1); setSelectedPlanDate(next); }}
+                    style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${theme.border}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: theme.muted, transition: "all 0.15s" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.muted }}
+                    aria-label="Next day"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
                 </div>
               </div>
-            );
-          })}
-          </div>
-        </div>
+            )}
 
-        <div style={{ background: "var(--color-card, white)", borderRadius: 16, border: `1px solid ${theme.border}`, padding: "18px 20px", display: "flex", flexDirection: "column", maxHeight: 500, overflow: "hidden" }}>
-          <h3 style={{           fontSize: 12, fontWeight: 600, color: theme.dark, marginBottom: 12, flexShrink: 0 }}>
-            {t("productivity.page.yourTasks")}
-            {tasksLoading && <span style={{ fontSize: 11, fontWeight: 400, color: theme.muted, marginLeft: 6 }}>{t("productivity.page.loading")}</span>}
-          </h3>
-          <div style={{ display: "flex", gap: 4, background: theme.bg, borderRadius: 10, padding: 3, marginBottom: 14, flexShrink: 0 }}>
-            {tabs.map((tab) => (
-              <button key={tab} onClick={() => setActiveTaskTab(tab)} style={{ flex: 1, padding: "6px 4px", borderRadius: 8, border: "none", cursor: "pointer", background: activeTaskTab === tab ? "var(--color-card, white)" : "transparent", color: activeTaskTab === tab ? theme.primaryText : theme.muted, fontSize: 11, fontWeight: 500, transition: "all 0.15s", boxShadow: activeTaskTab === tab ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
-                {tStatus(tab)}
-              </button>
-            ))}
+            {/* Tasks: title + filters */}
+            {drawerTab === "tasks" && (
+              <>
+                <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
+                  <h3 style={{ fontSize: 12, fontWeight: 600, color: theme.dark, flex: 1 }}>
+                    {t("productivity.page.yourTasks")}
+                    {tasksLoading && <span style={{ fontSize: 11, fontWeight: 400, color: theme.muted, marginLeft: 6 }}>{t("productivity.page.loading")}</span>}
+                  </h3>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "10px 12px", borderRadius: 10, border: `1px solid ${theme.border}` }}>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {tabs.map((tab) => (
+                      <button key={tab} onClick={() => setActiveTaskTab(tab)} style={{ flex: 1, padding: "6px 4px", borderRadius: 8, border: "none", cursor: "pointer", background: activeTaskTab === tab ? "var(--color-card, white)" : "transparent", color: activeTaskTab === tab ? theme.primaryText : theme.muted, fontSize: 11, fontWeight: 500, transition: "all 0.15s", boxShadow: activeTaskTab === tab ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
+                        {tStatus(tab)}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ height: 1, background: theme.border }} />
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {["all", "high"].map(p => (
+                      <button key={p} onClick={() => setPriorityFilter(p)} style={{ flex: 1, padding: "6px 4px", borderRadius: 8, border: "none", cursor: "pointer", background: priorityFilter === p ? "var(--color-card, white)" : "transparent", color: priorityFilter === p ? theme.primaryText : theme.muted, fontSize: 11, fontWeight: 500, transition: "all 0.15s", boxShadow: priorityFilter === p ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
+                        {p === "all" ? "All" : `${t("productivity.eventForm.priority_high")} Priority`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-          <div style={{ display: "flex", gap: 4, background: theme.bg, borderRadius: 10, padding: 3, marginBottom: 14, flexShrink: 0 }}>
-            {["all", "high"].map(p => (
-              <button key={p} onClick={() => setPriorityFilter(p)} style={{ flex: 1, padding: "6px 4px", borderRadius: 8, border: "none", cursor: "pointer", background: priorityFilter === p ? "var(--color-card, white)" : "transparent", color: priorityFilter === p ? theme.primaryText : theme.muted, fontSize: 11, fontWeight: 500, transition: "all 0.15s", boxShadow: priorityFilter === p ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
-                {p === "all" ? "All" : `${t("productivity.eventForm.priority_high")} Priority`}
-              </button>
-            ))}
+        }
+      >
+        {/* Scrollable content */}
+        {drawerTab === "plan" && (
+          <div>
+            {planLoading && <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{t("productivity.page.loading")}</p>}
+            {!planLoading && planItems.length === 0 && (
+              <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{getNoPlanMessage(selectedPlanDate)}</p>
+            )}
+            {planItems.map((item) => {
+              const sm = STATUS_META[item.status] || null;
+              return (
+                <div key={item.id} onClick={() => setDetailEvent(item)} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, border: `1px solid ${theme.border}`, marginBottom: 8, transition: "all 0.15s", opacity: item.status === "Done" ? 0.75 : 1 }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.accent; e.currentTarget.style.background = theme.bg }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.background = "transparent" }}
+                >
+                  <div style={{ width: 4, height: 32, borderRadius: 2, background: item.color || theme.primary, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: theme.dark, textDecoration: item.status === "Done" ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
+                    {item.startTime && <p style={{ fontSize: 11, color: theme.muted }}>{item.startTime}</p>}
+                  </div>
+                  {sm && (
+                    <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 6px", borderRadius: 3, background: sm.bg, color: sm.color, border: `1px solid ${sm.border}`, flexShrink: 0, lineHeight: 1.4, letterSpacing: "0.01em" }}>
+                      {tStatus(item.status)}
+                    </span>
+                  )}
+                  <div onClick={(e) => handlePlanCircleToggle(e, item)} style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${priorityColor[item.priority] || theme.border}`, background: "transparent", flexShrink: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {item.status === "Done" && <Check size={11} strokeWidth={3} color={priorityColor[item.priority] || theme.border} />}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div ref={doneScrollRef} onScroll={handleDoneScroll} style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+        )}
+
+        {drawerTab === "tasks" && (
+          <div ref={doneScrollRef} onScroll={handleDoneScroll}>
             {filteredTasks.length === 0 && !tasksLoading && (
               <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{t("productivity.page.noTasks")}</p>
             )}
             {visibleTasks.map(task => (
               <div key={task.id} onClick={() => handleTaskClick(task)}
-                style={{ position: "relative", padding: "10px 12px", borderRadius: 10, border: `1px solid ${theme.border}`, marginBottom: 6, cursor: "pointer", transition: "all 0.15s", overflow: "hidden" }}>
+                style={{ position: "relative", padding: "10px 12px", borderRadius: 10, border: `1px solid ${theme.border}`, marginBottom: 8, cursor: "pointer", transition: "all 0.15s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.accent; e.currentTarget.style.background = theme.bg }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.background = "transparent" }}
+              >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <p style={{ fontSize: 13, fontWeight: 500, color: theme.dark, textDecoration: "none", opacity: task.status === "Done" ? 0.6 : 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.title}</p>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: task.color || priorityColor[task.priority] || theme.secondary, flexShrink: 0, marginLeft: 8 }} />
@@ -440,21 +459,8 @@ export default function ProductivityPage() {
               <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "12px 0" }}>{t("productivity.page.loading")}</p>
             )}
           </div>
-        </div>
-
-      </div>
-
-      <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
-
-      <ActivityDetailModal
-        activity={detailEvent}
-        open={!!detailEvent}
-        onClose={() => setDetailEvent(null)}
-        onStatusChange={handleDetailStatusChange}
-        onProgressChange={handleDetailProgressChange}
-        onEdit={handleDetailEdit}
-        onDelete={handleDetailDelete}
-      />
+        )}
+      </RightDrawer>
     </div>
   );
 }

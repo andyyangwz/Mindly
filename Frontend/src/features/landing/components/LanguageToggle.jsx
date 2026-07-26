@@ -35,7 +35,7 @@ export default function LanguageToggle() {
         fontSize: 14,
         fontWeight: 600,
         letterSpacing: "0.02em",
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: "'Poppins', system-ui, sans-serif",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = "var(--landing-accent)";

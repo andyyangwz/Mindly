@@ -1,10 +1,10 @@
-export const HOUR_HEIGHT = 60
+export const HOUR_HEIGHT = 72
 export const TIME_COL_WIDTH = 80
 export const EVENT_CANVAS_LEFT_PAD = 12
 export const RIGHT_PAD = 24
 export const COL_GAP = 4
 
-export function layoutEvents(events, canvasWidth) {
+export function layoutEvents(events, canvasWidth, hourHeight = 60) {
   if (!events.length) return []
   if (canvasWidth <= 0) return []
 
@@ -40,14 +40,14 @@ export function layoutEvents(events, canvasWidth) {
 
       const isDeadlineLinked = e.hasDeadline && e.continuesNext !== true
 
-      let rawHeight = ((baseEnd - start) / 60) * HOUR_HEIGHT
+      let rawHeight = ((baseEnd - start) / 60) * hourHeight
       if (isNaN(rawHeight) || rawHeight < 0) {
         console.warn("[layoutEvents] Invalid height for event", e.id, { rawHeight, start, baseEnd })
         rawHeight = 22
       }
       const _height = isDeadlineLinked ? 28 : Math.max(rawHeight, 22)
 
-      let rawTop = (start / 60) * HOUR_HEIGHT
+      let rawTop = (start / 60) * hourHeight
       if (isNaN(rawTop) || rawTop < 0) {
         console.warn("[layoutEvents] Invalid top for event", e.id, { rawTop, start })
         rawTop = 0

@@ -105,16 +105,11 @@ export default function WeeklyOverview() {
   const displayAvgHours = data?.avgHours ?? 0
 
   return (
-    <div data-tutorial-target="weekly-overview" style={{
-      background: "var(--color-card)",
-      borderRadius: 18,
-      padding: "22px",
-      boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+    <div data-tutorial-target="weekly-overview">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Calendar size={16} color={theme.muted} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: theme.dark, display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <Calendar size={14} color={theme.muted} />
+          <span style={{ fontSize: 15, fontWeight: 650, color: theme.dark, display: "inline-flex", alignItems: "center", gap: 6 }}>
             {t("home.weeklyOverview.title")}
             <InfoButton tutorialId="weekly-overview" />
           </span>
@@ -136,7 +131,14 @@ export default function WeeklyOverview() {
         </div>
       )}
 
-      <div data-tutorial-target="weekly-overview-chart" style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 200, marginBottom: 16 }}>
+      <div data-tutorial-target="weekly-overview-chart" style={{
+        display: "flex",
+        alignItems: "flex-end",
+        gap: 8,
+        height: 200,
+        marginBottom: 16,
+        padding: "16px 0 12px",
+      }}>
         {Array.from({ length: 7 }).map((_, i) => {
           if (loading || !apiDays) {
             return (
@@ -203,19 +205,18 @@ export default function WeeklyOverview() {
         display: "flex",
         justifyContent: "space-around",
         paddingTop: 14,
-        borderTop: `1px solid ${theme.border}`,
       }}>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: 16, fontWeight: 700, color: theme.primary, margin: 0 }}>{displayTotalHours}h</p>
-          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0" }}>{t("home.weeklyOverview.totalHours")}</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: theme.primary, margin: 0, letterSpacing: "-0.02em" }}>{displayTotalHours}h</p>
+          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0", fontWeight: 500 }}>{t("home.weeklyOverview.totalHours")}</p>
         </div>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: 16, fontWeight: 700, color: "#3B82F6", margin: 0 }}>{displayTasksDone}</p>
-          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0" }}>{t("home.weeklyOverview.tasksDone")}</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: "#3B82F6", margin: 0, letterSpacing: "-0.02em" }}>{displayTasksDone}</p>
+          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0", fontWeight: 500 }}>{t("home.weeklyOverview.tasksDone")}</p>
         </div>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: 16, fontWeight: 700, color: "#10B981", margin: 0 }}>{displayAvgHours}h</p>
-          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0" }}>{t("home.weeklyOverview.avgDay")}</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: "#10B981", margin: 0, letterSpacing: "-0.02em" }}>{displayAvgHours}h</p>
+          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0", fontWeight: 500 }}>{t("home.weeklyOverview.avgDay")}</p>
         </div>
       </div>
     </div>

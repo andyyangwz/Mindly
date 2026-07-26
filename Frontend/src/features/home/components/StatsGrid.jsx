@@ -62,49 +62,59 @@ export default function StatsGrid() {
   }, [fetchStats]);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-      {stats.map((s, i) => {
-        const tutorialId = i === 0 ? "task-completed" : "productivity-score"
-        return (
-          <div key={i} data-tutorial-target={tutorialId} style={{
-            background: "var(--color-card)",
-            borderRadius: 14,
-            padding: "20px",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            gap: 3,
-            position: "relative",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{
-                width: 28,
-                height: 28,
-                borderRadius: 10,
-                background: `${s.iconBg}14`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}>
-                <s.icon size={14} color={s.iconBg} />
+    <div>
+      <h2 style={{
+        fontSize: 13,
+        fontWeight: 600,
+        color: theme.muted,
+        textTransform: "uppercase",
+        letterSpacing: "0.06em",
+        margin: "0 0 16px 0",
+      }}>
+        {t("home.statsGrid.title", "Overview")}
+      </h2>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
+        {stats.map((s, i) => {
+          const tutorialId = i === 0 ? "task-completed" : "productivity-score"
+          return (
+            <div key={i} data-tutorial-target={tutorialId} style={{
+              padding: "20px 16px",
+              position: "relative",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              gap: 10,
+              borderRight: i === 0 ? `1px solid ${theme.border}` : "none",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 9,
+                  background: `${s.iconBg}12`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <s.icon size={15} color={s.iconBg} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: theme.dark, margin: 0, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                    {s.value}
+                  </p>
+                  <p style={{ fontSize: 11, color: theme.muted, margin: "2px 0 0 0", fontWeight: 500 }}>
+                    {s.label}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: theme.dark, margin: 0, letterSpacing: "-0.02em" }}>
-                  {s.value}
-                </p>
-                <p style={{ fontSize: 10, color: theme.muted, margin: "1px 0 0 0", fontWeight: 500 }}>
-                  {s.label}
-                </p>
+              <div style={{ position: "absolute", top: 8, right: 8 }}>
+                <InfoButton tutorialId={tutorialId} size={12} showTooltip={false} />
               </div>
             </div>
-            <div style={{ position: "absolute", top: 4, right: 4 }}>
-              <InfoButton tutorialId={tutorialId} size={12} showTooltip={false} />
-            </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }

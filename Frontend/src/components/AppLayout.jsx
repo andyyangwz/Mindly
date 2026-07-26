@@ -142,7 +142,7 @@ export default function AppLayout() {
             overflow: "hidden",
           }}
         >
-          <div style={{ display: isMobile ? "none" : "block" }}>
+          <div style={{ display: isMobile ? "none" : "block", position: "relative", zIndex: 20 }}>
             <Sidebar
               sessions={sessions}
               newSessionId={newSessionId}

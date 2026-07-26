@@ -27,13 +27,17 @@ function TaskItem({ task, onClick }) {
   return (
     <div onClick={() => onClick?.(task)} style={{
       position: "relative",
-      padding: "10px 12px",
+      padding: "12px 14px",
       borderRadius: 10,
       border: `1px solid ${theme.border}`,
-      marginBottom: 6,
+      marginBottom: 8,
       cursor: "pointer",
       overflow: "hidden",
-    }}>
+      transition: "border-color 0.15s, box-shadow 0.15s",
+    }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = `color-mix(in srgb, ${theme.primary} 30%, ${theme.border})`; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)" }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.boxShadow = "none" }}
+    >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
         <p style={{
           fontSize: 13,
@@ -188,38 +192,33 @@ export default function HighPriorityTasks() {
 
   return (
     <div style={{
-      background: "var(--color-card)",
-      borderRadius: 18,
-      padding: "20px",
-      boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
       display: "flex",
       flexDirection: "column",
-      boxSizing: "border-box",
       userSelect: "none",
     }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
-            width: 34,
-            height: 34,
-            borderRadius: 10,
+            width: 28,
+            height: 28,
+            borderRadius: 8,
             background: "linear-gradient(135deg, #EF4444, #DC2626)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
           }}>
-            <Flag size={15} color="white" />
+            <Flag size={13} color="white" />
           </div>
-          <div>
-            <h2 style={{ fontSize: 14, fontWeight: 600, color: theme.dark, margin: 0 }}>
-              High Priority In Progress Tasks
-            </h2>
-            <p style={{ fontSize: 11, color: theme.muted, margin: "1px 0 0 0" }}>
-              Tasks with high priority that are currently being worked on
-            </p>
-          </div>
+          <h2 style={{ fontSize: 15, fontWeight: 650, color: theme.dark, margin: 0 }}>
+            High Priority In Progress
+          </h2>
         </div>
+        {highPriorityTasks.length > 0 && (
+          <span style={{ fontSize: 11, color: theme.muted, fontWeight: 500 }}>
+            {highPriorityTasks.length}
+          </span>
+        )}
       </div>
 
       {loading ? (
@@ -264,8 +263,8 @@ export default function HighPriorityTasks() {
                 justifyContent: "center",
                 gap: 6,
                 width: "100%",
-                padding: "8px 0",
-                marginTop: 14,
+                padding: "10px 0",
+                marginTop: 8,
                 border: "none",
                 borderTop: `1px solid ${theme.border}`,
                 background: "transparent",
@@ -273,10 +272,10 @@ export default function HighPriorityTasks() {
                 fontSize: 12,
                 fontWeight: 500,
                 cursor: "pointer",
-                borderRadius: "0 0 8px 8px",
                 flexShrink: 0,
+                transition: "background 0.15s",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = `color-mix(in srgb, ${theme.primary} 6%, transparent)` }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = `color-mix(in srgb, ${theme.primary} 5%, transparent)` }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
             >
               {expanded ? (

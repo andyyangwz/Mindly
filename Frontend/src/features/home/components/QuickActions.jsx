@@ -29,12 +29,12 @@ export default function QuickActions() {
             padding: "6px 6px",
             borderRadius: 12,
             border: `1px solid ${theme.border}`,
-            background: theme.bg,
+            background: "var(--color-hover)",
             cursor: "pointer",
             transition: "all 0.15s",
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = `color-mix(in srgb, ${theme.primary} 10%, transparent)`; e.currentTarget.style.borderColor = `color-mix(in srgb, ${theme.primary} 40%, transparent)` }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = theme.bg; e.currentTarget.style.borderColor = theme.border }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-hover)"; e.currentTarget.style.borderColor = theme.border }}
         >
           <div style={{
             width: 24,

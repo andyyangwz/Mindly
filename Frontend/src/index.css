@@ -6,7 +6,7 @@ html, body {
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: "Poppins", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background 0.2s ease, color 0.2s ease;
@@ -45,6 +45,10 @@ a:focus-visible {
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {
   box-shadow: none;
+}
+
+input, textarea, select, button {
+  font-family: inherit;
 }
 
 input, textarea, select {
