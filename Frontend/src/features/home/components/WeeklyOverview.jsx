@@ -160,7 +160,7 @@ export default function WeeklyOverview() {
               </div>
             )
           }
-          const barH = day.isFuture ? 4 : Math.max((day.hours / maxHours) * 160, 12)
+          const barH = day.isFuture ? 4 : day.hours === 0 ? 2 : Math.max((day.hours / maxHours) * 160, 12)
           return (
             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
               <div style={{

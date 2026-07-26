@@ -350,7 +350,7 @@ export default function JournalList({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: 16,
+          marginBottom: 28,
           flexWrap: "wrap",
           gap: 10,
         }}

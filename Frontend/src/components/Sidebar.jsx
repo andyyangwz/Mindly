@@ -264,7 +264,7 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
                   </button>
                   {navbarJournals.length > 0 && (
                     <div>
-                      {navbarJournals.map((journal) => {
+                      {navbarJournals.slice(0, 3).map((journal) => {
                         const isActive = activeJournalId === journal.id;
                         const emoji = journal.emojis?.find(Boolean) || "📖";
                         return (

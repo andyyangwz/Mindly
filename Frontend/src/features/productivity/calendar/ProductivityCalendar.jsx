@@ -823,8 +823,6 @@ useImperativeHandle(ref, () => ({
       next.set(voiceId, draftData)
       return next
     })
-    setActivityFormOpen(false)
-    setTaskFormOpen(false)
     setVoiceSelectedActivity(null)
     setVoiceAutofill(null)
 
@@ -835,9 +833,14 @@ useImperativeHandle(ref, () => ({
         !(voiceDrafts && voiceDrafts.has(a._voiceId))
     )
     if (nextUndrafted) {
-      handleVoiceReviewSelect(nextUndrafted)
+      const draft = voiceDrafts?.get(nextUndrafted._voiceId)
+      setVoiceSelectedActivity(nextUndrafted)
+      setVoiceAutofill(draft || nextUndrafted)
+    } else {
+      setActivityFormOpen(false)
+      setTaskFormOpen(false)
     }
-  }, [voiceReviewActivities, voiceSavedIds, voiceDrafts, handleVoiceReviewSelect])
+  }, [voiceReviewActivities, voiceSavedIds, voiceDrafts])
 
   const handleVoiceCreateAll = useCallback(async () => {
     if (!voiceReviewActivities) return

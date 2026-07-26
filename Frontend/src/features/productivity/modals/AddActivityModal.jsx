@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { X, Waves } from "lucide-react"
 import { theme } from "../../../theme"
@@ -14,6 +14,22 @@ import {
 import { Field, In, Pill, Row, Grid, Actions, Error } from "./ActivityFormFields"
 
 const ACTIVITY_ACCENT = "#10B981"
+const ANIM_CHAR_MS = 38
+const ANIM_SHUFFLE_MS = 90
+const ANIM_SHUFFLE_COUNT = 5
+
+function randomTime() {
+  const h = String(Math.floor(Math.random() * 24)).padStart(2, "0")
+  const m = String(Math.floor(Math.random() * 60)).padStart(2, "0")
+  return `${h}:${m}`
+}
+
+function randomDateNear(base) {
+  if (!base) return base
+  const d = new Date(base + "T00:00:00")
+  d.setDate(d.getDate() + Math.floor(Math.random() * 5) - 2)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
 
 const INITIAL_STATE = {
   title: "",
@@ -35,56 +51,163 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
   const titleRef = useRef(null)
   const isEdit = !!editingActivity
 
+  const voiceTargetRef = useRef(null)
+  const voicePrevIdRef = useRef(null)
+  const voiceTimersRef = useRef([])
+  const [animTitle, setAnimTitle] = useState("")
+  const [animDescription, setAnimDescription] = useState("")
+  const [animStartDate, setAnimStartDate] = useState("")
+  const [animStartTime, setAnimStartTime] = useState("")
+  const [animEndDate, setAnimEndDate] = useState("")
+  const [animEndTime, setAnimEndTime] = useState("")
+  const [titleDone, setTitleDone] = useState(true)
+  const [descriptionDone, setDescriptionDone] = useState(true)
+  const [startDateDone, setStartDateDone] = useState(true)
+  const [startTimeDone, setStartTimeDone] = useState(true)
+  const [endDateDone, setEndDateDone] = useState(true)
+  const [endTimeDone, setEndTimeDone] = useState(true)
+
+  const clearVoiceTimers = useCallback(() => {
+    voiceTimersRef.current.forEach(clearTimeout)
+    voiceTimersRef.current = []
+  }, [])
+
+  useEffect(() => clearVoiceTimers, [clearVoiceTimers])
+
   useEffect(() => {
-    if (!open) return
-    if (voiceAutofill) {
-      const sd = voiceAutofill.start_date || ""
-      const ed = voiceAutofill.end_date || sd
-      setForm({
+    if (!open) {
+      voicePrevIdRef.current = null
+      clearVoiceTimers()
+      return
+    }
+
+    if (voiceAutofill && voiceAutofill._voiceId !== voicePrevIdRef.current) {
+      voicePrevIdRef.current = voiceAutofill._voiceId
+      clearVoiceTimers()
+
+      const target = {
         title: voiceAutofill.title || "",
         description: voiceAutofill.description || "",
-        startDate: sd,
-        endDate: ed,
+        startDate: voiceAutofill.start_date || "",
+        endDate: voiceAutofill.end_date || voiceAutofill.start_date || "",
         startTime: voiceAutofill.start_time || "",
         endTime: voiceAutofill.end_time || "",
         color: COLOR_NAME_MAP[voiceAutofill.color?.toLowerCase()] || "#7C3AED",
         priority: "medium",
         productivityLevel: voiceAutofill.productivity_level || "neutral",
-      })
-    } else if (editingActivity) {
-      const sd = editingActivity.startDate || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(0, 10) : "")
-      const ed = editingActivity.endDate || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(0, 10) : sd)
-      setForm({
-        title: editingActivity.title,
-        description: editingActivity.description || "",
-        startDate: sd,
-        endDate: ed,
-        startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
-        endTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
-        color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
-        priority: editingActivity.priority || "medium",
-        productivityLevel: editingActivity.productivityLevel || "neutral",
-      })
-    } else if (selectedSlot) {
-      const now = new Date()
-      const hh = String(now.getHours()).padStart(2, "0")
-      const mm = String(now.getMinutes()).padStart(2, "0")
-      const currentTime = `${hh}:${mm}`
-      const defaultEnd = `${String((now.getHours() + 1) % 24).padStart(2, "0")}:${mm}`
-      const dateStr = toDateStr(selectedSlot.date)
-      setForm({
-        ...INITIAL_STATE,
-        startDate: dateStr,
-        endDate: dateStr,
-        startTime: selectedSlot.startTime || currentTime,
-        endTime: selectedSlot.endTime || defaultEnd,
-      })
-    } else {
-      setForm(INITIAL_STATE)
+      }
+      voiceTargetRef.current = target
+
+      setAnimTitle("")
+      setAnimDescription("")
+      setAnimStartDate("")
+      setAnimStartTime("")
+      setAnimEndDate("")
+      setAnimEndTime("")
+      setTitleDone(false)
+      setDescriptionDone(false)
+      setStartDateDone(false)
+      setStartTimeDone(false)
+      setEndDateDone(false)
+      setEndTimeDone(false)
+
+      const title = target.title
+      const desc = target.description
+
+      if (!title) {
+        setTitleDone(true)
+      } else {
+        let i = 0
+        const id = setInterval(() => {
+          i++
+          setAnimTitle(title.slice(0, i))
+          if (i >= title.length) {
+            clearInterval(id)
+            setTitleDone(true)
+          }
+        }, ANIM_CHAR_MS)
+        voiceTimersRef.current.push(id)
+      }
+
+      if (!desc) {
+        setDescriptionDone(true)
+      } else {
+        let i = 0
+        const id = setInterval(() => {
+          i++
+          setAnimDescription(desc.slice(0, i))
+          if (i >= desc.length) {
+            clearInterval(id)
+            setDescriptionDone(true)
+          }
+        }, ANIM_CHAR_MS)
+        voiceTimersRef.current.push(id)
+      }
+
+      setAnimStartDate(target.startDate)
+      setAnimEndDate(target.endDate)
+      setStartDateDone(true)
+      setEndDateDone(true)
+
+      let count = 0
+      const id = setInterval(() => {
+        count++
+        if (count < ANIM_SHUFFLE_COUNT) {
+          setAnimStartTime(randomTime())
+          setAnimEndTime(randomTime())
+        } else {
+          setAnimStartTime(target.startTime)
+          setAnimEndTime(target.endTime)
+          clearInterval(id)
+          setStartTimeDone(true)
+          setEndTimeDone(true)
+          setForm(target)
+        }
+      }, ANIM_SHUFFLE_MS)
+      voiceTimersRef.current.push(id)
+    } else if (!voiceAutofill) {
+      voicePrevIdRef.current = null
+      setTitleDone(true)
+      setDescriptionDone(true)
+      setStartDateDone(true)
+      setStartTimeDone(true)
+      setEndDateDone(true)
+      setEndTimeDone(true)
+      if (editingActivity) {
+        const sd = editingActivity.startDate || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(0, 10) : "")
+        const ed = editingActivity.endDate || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(0, 10) : sd)
+        setForm({
+          title: editingActivity.title,
+          description: editingActivity.description || "",
+          startDate: sd,
+          endDate: ed,
+          startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
+          endTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
+          color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
+          priority: editingActivity.priority || "medium",
+          productivityLevel: editingActivity.productivityLevel || "neutral",
+        })
+      } else if (selectedSlot) {
+        const now = new Date()
+        const hh = String(now.getHours()).padStart(2, "0")
+        const mm = String(now.getMinutes()).padStart(2, "0")
+        const currentTime = `${hh}:${mm}`
+        const defaultEnd = `${String((now.getHours() + 1) % 24).padStart(2, "0")}:${mm}`
+        const dateStr = toDateStr(selectedSlot.date)
+        setForm({
+          ...INITIAL_STATE,
+          startDate: dateStr,
+          endDate: dateStr,
+          startTime: selectedSlot.startTime || currentTime,
+          endTime: selectedSlot.endTime || defaultEnd,
+        })
+      } else {
+        setForm(INITIAL_STATE)
+      }
     }
     setErrors({})
     setSaving(false)
-  }, [open, editingActivity, selectedSlot, voiceAutofill])
+  }, [open, editingActivity, selectedSlot, voiceAutofill, clearVoiceTimers])
 
   useEffect(() => {
     if (open && titleRef.current) {
@@ -153,6 +276,12 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
 
   return (
     <Portal>
+      <style>{`
+        @keyframes actFormSlideIn {
+          from { opacity: 0; transform: translateX(40px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
       <div
         onClick={onClose}
         style={{
@@ -179,6 +308,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
             width: "100%",
             boxShadow: "0 24px 64px rgba(0,0,0,0.15)",
             zIndex: theme.z.modal,
+            overflow: "hidden",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
@@ -205,133 +335,276 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
 
           {errors.submit && <Error msg={errors.submit} />}
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 24, alignItems: "start" }}>
-            <div>
-              <Field label="Start">
-                <Grid cols="1fr 1fr" gap={8}>
-                  <In
-                    type="date"
-                    value={form.startDate}
-                    onChange={(e) => set("startDate", e.target.value)}
-                    error={errors.startDate}
-                  />
-                  <In
-                    type="time"
-                    value={form.startTime}
-                    onChange={(e) => set("startTime", e.target.value)}
-                    error={errors.startTime}
-                  />
-                </Grid>
-              </Field>
-              <Field label="End">
-                <Grid cols="1fr 1fr" gap={8}>
-                  <In
-                    type="date"
-                    value={form.endDate}
-                    onChange={(e) => set("endDate", e.target.value)}
-                    error={errors.endDate}
-                  />
-                  <In
-                    type="time"
-                    value={form.endTime}
-                    onChange={(e) => set("endTime", e.target.value)}
-                    error={errors.endTime}
-                  />
-                </Grid>
-              </Field>
-              <Field label="Priority">
-                <Row gap={6} wrap>
-                  {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
-                    <Pill
-                      key={key}
-                      active={form.priority === key}
-                      accent={theme.primary}
-                      onClick={() => set("priority", key)}
-                      compact
-                    >
-                      {t(`productivity.eventForm.priority_${key}`)}
-                    </Pill>
-                  ))}
-                </Row>
-              </Field>
-            </div>
-            <div>
-              <Field label="Title" error={errors.title}>
-                <In
-                  ref={titleRef}
-                  value={form.title}
-                  onChange={(e) => set("title", e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) handleSubmit() }}
-                  placeholder="e.g. Gym Session, Deep Work"
-                  error={errors.title}
-                />
-              </Field>
-              <Field label="Description">
-                <textarea
-                  value={form.description}
-                  onChange={(e) => set("description", e.target.value)}
-                  placeholder="Optional notes..."
-                  rows={3}
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: 8,
-                    fontSize: 13,
-                    color: theme.dark,
-                    background: "var(--color-input)",
-                    outline: "none",
-                    boxSizing: "border-box",
-                    fontFamily: "inherit",
-                    resize: "vertical",
-                    lineHeight: 1.5,
-                  }}
-                />
-              </Field>
-              <Field label="Productivity Level">
-                <Row gap={6} wrap>
-                  {Object.entries(PRODUCTIVITY_LEVELS).map(([key, label]) => {
-                    const dotColor = PRODUCTIVITY_LEVEL_COLORS[key]
-                    const active = form.productivityLevel === key
-                    return (
-                      <Pill key={key} active={active} accent={dotColor} onClick={() => set("productivityLevel", key)}>
-                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
-                        {t(`productivity.eventForm.level_${key}`)}
-                      </Pill>
-                    )
-                  })}
-                </Row>
-              </Field>
-              <Field label="Color">
-                <Row gap={5} wrap>
-                  {ACTIVITY_COLORS.map((c) => (
-                    <button
-                      key={c.value}
-                      type="button"
-                      onClick={() => set("color", c.value)}
-                      aria-label={c.label}
+          {voiceMode && (
+            <div key={voiceAutofill?._voiceId || "static"} style={{ animation: "actFormSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 24, alignItems: "start" }}>
+                <div>
+                  <Field label="Start">
+                    <Grid cols="1fr 1fr" gap={8}>
+                      <In
+                        type="date"
+                        value={!startDateDone ? (animStartDate || form.startDate) : form.startDate}
+                        onChange={(e) => set("startDate", e.target.value)}
+                        error={errors.startDate}
+                        disabled={!startDateDone}
+                        style={!startDateDone ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+                      />
+                      <In
+                        type="time"
+                        value={!startTimeDone ? (animStartTime || form.startTime) : form.startTime}
+                        onChange={(e) => set("startTime", e.target.value)}
+                        error={errors.startTime}
+                        disabled={!startTimeDone}
+                        style={!startTimeDone ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+                      />
+                    </Grid>
+                  </Field>
+                  <Field label="End">
+                    <Grid cols="1fr 1fr" gap={8}>
+                      <In
+                        type="date"
+                        value={!endDateDone ? (animEndDate || form.endDate) : form.endDate}
+                        onChange={(e) => set("endDate", e.target.value)}
+                        error={errors.endDate}
+                        disabled={!endDateDone}
+                        style={!endDateDone ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+                      />
+                      <In
+                        type="time"
+                        value={!endTimeDone ? (animEndTime || form.endTime) : form.endTime}
+                        onChange={(e) => set("endTime", e.target.value)}
+                        error={errors.endTime}
+                        disabled={!endTimeDone}
+                        style={!endTimeDone ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+                      />
+                    </Grid>
+                  </Field>
+                  <Field label="Priority">
+                    <Row gap={6} wrap>
+                      {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
+                        <Pill
+                          key={key}
+                          active={form.priority === key}
+                          accent={theme.primary}
+                          onClick={() => set("priority", key)}
+                          compact
+                        >
+                          {t(`productivity.eventForm.priority_${key}`)}
+                        </Pill>
+                      ))}
+                    </Row>
+                  </Field>
+                </div>
+                <div>
+                  <Field label="Title" error={errors.title}>
+                    <In
+                      ref={titleRef}
+                      value={!titleDone ? animTitle : form.title}
+                      onChange={(e) => set("title", e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) handleSubmit() }}
+                      placeholder="e.g. Gym Session, Deep Work"
+                      error={errors.title}
+                      disabled={!titleDone}
+                      style={!titleDone ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+                    />
+                  </Field>
+                  <Field label="Description">
+                    <textarea
+                      value={!descriptionDone ? animDescription : form.description}
+                      onChange={(e) => set("description", e.target.value)}
+                      placeholder="Optional notes..."
+                      rows={3}
+                      disabled={!descriptionDone}
                       style={{
-                        width: 24, height: 24, borderRadius: "50%",
-                        background: c.value,
-                        border: form.color === c.value ? "2px solid white" : "2px solid transparent",
-                        outline: form.color === c.value ? `2px solid ${c.value}` : "none",
-                        cursor: "pointer", padding: 0, flexShrink: 0,
-                        transition: "transform 0.15s",
-                        transform: form.color === c.value ? "scale(1.15)" : "scale(1)",
+                        width: "100%",
+                        padding: "10px 12px",
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: 8,
+                        fontSize: 13,
+                        color: theme.dark,
+                        background: "var(--color-input)",
+                        outline: "none",
+                        boxSizing: "border-box",
+                        fontFamily: "inherit",
+                        resize: "vertical",
+                        lineHeight: 1.5,
+                        opacity: !descriptionDone ? 0.6 : 1,
+                        cursor: !descriptionDone ? "not-allowed" : "auto",
                       }}
                     />
-                  ))}
-                </Row>
-              </Field>
+                  </Field>
+                  <Field label="Productivity Level">
+                    <Row gap={6} wrap>
+                      {Object.entries(PRODUCTIVITY_LEVELS).map(([key, label]) => {
+                        const dotColor = PRODUCTIVITY_LEVEL_COLORS[key]
+                        const active = form.productivityLevel === key
+                        return (
+                          <Pill key={key} active={active} accent={dotColor} onClick={() => set("productivityLevel", key)}>
+                            <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
+                            {t(`productivity.eventForm.level_${key}`)}
+                          </Pill>
+                        )
+                      })}
+                    </Row>
+                  </Field>
+                  <Field label="Color">
+                    <Row gap={5} wrap>
+                      {ACTIVITY_COLORS.map((c) => (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => set("color", c.value)}
+                          aria-label={c.label}
+                          style={{
+                            width: 24, height: 24, borderRadius: "50%",
+                            background: c.value,
+                            border: form.color === c.value ? "2px solid white" : "2px solid transparent",
+                            outline: form.color === c.value ? `2px solid ${c.value}` : "none",
+                            cursor: "pointer", padding: 0, flexShrink: 0,
+                            transition: "transform 0.15s",
+                            transform: form.color === c.value ? "scale(1.15)" : "scale(1)",
+                          }}
+                        />
+                      ))}
+                    </Row>
+                  </Field>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {!voiceMode && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 24, alignItems: "start" }}>
+              <div>
+                <Field label="Start">
+                  <Grid cols="1fr 1fr" gap={8}>
+                    <In
+                      type="date"
+                      value={form.startDate}
+                      onChange={(e) => set("startDate", e.target.value)}
+                      error={errors.startDate}
+                    />
+                    <In
+                      type="time"
+                      value={form.startTime}
+                      onChange={(e) => set("startTime", e.target.value)}
+                      error={errors.startTime}
+                    />
+                  </Grid>
+                </Field>
+                <Field label="End">
+                  <Grid cols="1fr 1fr" gap={8}>
+                    <In
+                      type="date"
+                      value={form.endDate}
+                      onChange={(e) => set("endDate", e.target.value)}
+                      error={errors.endDate}
+                    />
+                    <In
+                      type="time"
+                      value={form.endTime}
+                      onChange={(e) => set("endTime", e.target.value)}
+                      error={errors.endTime}
+                    />
+                  </Grid>
+                </Field>
+                <Field label="Priority">
+                  <Row gap={6} wrap>
+                    {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
+                      <Pill
+                        key={key}
+                        active={form.priority === key}
+                        accent={theme.primary}
+                        onClick={() => set("priority", key)}
+                        compact
+                      >
+                        {t(`productivity.eventForm.priority_${key}`)}
+                      </Pill>
+                    ))}
+                  </Row>
+                </Field>
+              </div>
+              <div>
+                <Field label="Title" error={errors.title}>
+                  <In
+                    ref={titleRef}
+                    value={form.title}
+                    onChange={(e) => set("title", e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) handleSubmit() }}
+                    placeholder="e.g. Gym Session, Deep Work"
+                    error={errors.title}
+                  />
+                </Field>
+                <Field label="Description">
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => set("description", e.target.value)}
+                    placeholder="Optional notes..."
+                    rows={3}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: 8,
+                      fontSize: 13,
+                      color: theme.dark,
+                      background: "var(--color-input)",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      fontFamily: "inherit",
+                      resize: "vertical",
+                      lineHeight: 1.5,
+                    }}
+                  />
+                </Field>
+                <Field label="Productivity Level">
+                  <Row gap={6} wrap>
+                    {Object.entries(PRODUCTIVITY_LEVELS).map(([key, label]) => {
+                      const dotColor = PRODUCTIVITY_LEVEL_COLORS[key]
+                      const active = form.productivityLevel === key
+                      return (
+                        <Pill key={key} active={active} accent={dotColor} onClick={() => set("productivityLevel", key)}>
+                          <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
+                          {t(`productivity.eventForm.level_${key}`)}
+                        </Pill>
+                      )
+                    })}
+                  </Row>
+                </Field>
+                <Field label="Color">
+                  <Row gap={5} wrap>
+                    {ACTIVITY_COLORS.map((c) => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => set("color", c.value)}
+                        aria-label={c.label}
+                        style={{
+                          width: 24, height: 24, borderRadius: "50%",
+                          background: c.value,
+                          border: form.color === c.value ? "2px solid white" : "2px solid transparent",
+                          outline: form.color === c.value ? `2px solid ${c.value}` : "none",
+                          cursor: "pointer", padding: 0, flexShrink: 0,
+                          transition: "transform 0.15s",
+                          transform: form.color === c.value ? "scale(1.15)" : "scale(1)",
+                        }}
+                      />
+                    ))}
+                  </Row>
+                </Field>
+              </div>
+            </div>
+          )}
 
           {voiceMode ? (
-            <div style={{ display: "flex", gap: 8, justifyContent: "space-between", marginTop: 20 }}>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={saving}
+            (() => {
+              const anyAnimating = !titleDone || !descriptionDone || !startDateDone || !startTimeDone || !endDateDone || !endTimeDone
+              return (
+                <div style={{ display: "flex", gap: 8, justifyContent: "space-between", marginTop: 20, opacity: anyAnimating ? 0.4 : 1, pointerEvents: anyAnimating ? "none" : "auto", transition: "opacity 0.2s" }}>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    disabled={saving || anyAnimating}
                 style={{
                   padding: "8px 18px",
                   borderRadius: 8,
@@ -385,6 +658,8 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
                 </button>
               </div>
             </div>
+              )
+            })()
           ) : (
             <Actions
               saving={saving}

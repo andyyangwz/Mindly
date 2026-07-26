@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { X, Check, Clock, Sparkles, AlertTriangle, FileText, Zap } from "lucide-react"
 import { theme } from "../../../theme"
 import { Portal } from "../../../utils/portal"
@@ -46,7 +46,7 @@ function normalizeColor(raw) {
   return COLOR_NAME_MAP[raw.toLowerCase()] || raw
 }
 
-function ActivityCard({ activity, draft, status, onSelect }) {
+function ActivityCard({ activity, draft, status, onSelect, animDelay }) {
   const [hovered, setHovered] = useState(false)
   const isCreated = status === "created"
   const isDraft = status === "draft"
@@ -59,6 +59,9 @@ function ActivityCard({ activity, draft, status, onSelect }) {
   const prodColor = PRODUCTIVITY_LEVEL_COLORS[productivityLevel]
 
   return (
+    <div style={{
+      animation: `vrCardIn 1s cubic-bezier(0.16, 1, 0.3, 1) ${animDelay ?? 0}ms both`,
+    }}>
     <button
       type="button"
       onClick={() => !isCreated && onSelect(activity)}
@@ -168,10 +171,11 @@ function ActivityCard({ activity, draft, status, onSelect }) {
         </div>
       </div>
     </button>
+    </div>
   )
 }
 
-function CloseConfirmDialog({ createdCount, draftCount, totalCount, onConfirm, onCancel }) {
+function CloseConfirmDialog({ createdCount, draftCount, totalCount, onConfirm, onCancel, exiting }) {
   const hasDrafts = draftCount > 0
   const hasCreated = createdCount > 0
   const remaining = totalCount - createdCount
@@ -189,22 +193,31 @@ function CloseConfirmDialog({ createdCount, draftCount, totalCount, onConfirm, o
     <div
       style={{
         position: "absolute",
-        inset: 0,
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
         background: "var(--color-card, white)",
-        borderRadius: 20,
+        borderRadius: 14,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: 32,
-        zIndex: 1,
+        padding: "28px 32px",
+        zIndex: 3,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+        border: `1px solid ${theme.border}`,
+        maxWidth: 340,
+        width: "90%",
+        animation: exiting
+          ? "confirmPopupOut 0.28s ease-in forwards"
+          : "confirmPopupIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards",
       }}
     >
-      <AlertTriangle size={32} color="#F59E0B" style={{ marginBottom: 16 }} />
-      <h3 style={{ fontSize: 16, fontWeight: 600, color: theme.dark, margin: "0 0 8px", textAlign: "center" }}>
+      <AlertTriangle size={28} color="#F59E0B" style={{ marginBottom: 12 }} />
+      <h3 style={{ fontSize: 15, fontWeight: 600, color: theme.dark, margin: "0 0 6px", textAlign: "center" }}>
         Discard remaining Activities?
       </h3>
-      <p style={{ fontSize: 13, color: theme.muted, textAlign: "center", margin: "0 0 20px", lineHeight: 1.5 }}>
+      <p style={{ fontSize: 12.5, color: theme.muted, textAlign: "center", margin: "0 0 18px", lineHeight: 1.5 }}>
         {message}
       </p>
       <div style={{ display: "flex", gap: 8 }}>
@@ -212,7 +225,7 @@ function CloseConfirmDialog({ createdCount, draftCount, totalCount, onConfirm, o
           type="button"
           onClick={onCancel}
           style={{
-            padding: "8px 16px",
+            padding: "7px 16px",
             borderRadius: 8,
             border: `1px solid ${theme.border}`,
             background: "transparent",
@@ -228,7 +241,7 @@ function CloseConfirmDialog({ createdCount, draftCount, totalCount, onConfirm, o
           type="button"
           onClick={onConfirm}
           style={{
-            padding: "8px 16px",
+            padding: "7px 16px",
             borderRadius: 8,
             border: "none",
             background: "#EF4444",
@@ -245,27 +258,36 @@ function CloseConfirmDialog({ createdCount, draftCount, totalCount, onConfirm, o
   )
 }
 
-function CreateAllConfirmDialog({ remainingCount, onConfirm, onCancel }) {
+function CreateAllConfirmDialog({ remainingCount, onConfirm, onCancel, exiting }) {
   return (
     <div
       style={{
         position: "absolute",
-        inset: 0,
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
         background: "var(--color-card, white)",
-        borderRadius: 20,
+        borderRadius: 14,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: 32,
-        zIndex: 1,
+        padding: "28px 32px",
+        zIndex: 3,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+        border: `1px solid ${theme.border}`,
+        maxWidth: 340,
+        width: "90%",
+        animation: exiting
+          ? "confirmPopupOut 0.28s ease-in forwards"
+          : "confirmPopupIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards",
       }}
     >
-      <Zap size={32} color={ACCENT} style={{ marginBottom: 16 }} />
-      <h3 style={{ fontSize: 16, fontWeight: 600, color: theme.dark, margin: "0 0 8px", textAlign: "center" }}>
+      <Zap size={28} color={ACCENT} style={{ marginBottom: 12 }} />
+      <h3 style={{ fontSize: 15, fontWeight: 600, color: theme.dark, margin: "0 0 6px", textAlign: "center" }}>
         Create all remaining Activities?
       </h3>
-      <p style={{ fontSize: 13, color: theme.muted, textAlign: "center", margin: "0 0 20px", lineHeight: 1.5 }}>
+      <p style={{ fontSize: 12.5, color: theme.muted, textAlign: "center", margin: "0 0 18px", lineHeight: 1.5 }}>
         This will create {remainingCount} remaining Activit{remainingCount === 1 ? "y" : "ies"} in your calendar.
         {remainingCount === 1 ? " The latest draft will be used if one exists." : " The latest drafts will be used where available."}
       </p>
@@ -274,7 +296,7 @@ function CreateAllConfirmDialog({ remainingCount, onConfirm, onCancel }) {
           type="button"
           onClick={onCancel}
           style={{
-            padding: "8px 16px",
+            padding: "7px 16px",
             borderRadius: 8,
             border: `1px solid ${theme.border}`,
             background: "transparent",
@@ -290,7 +312,7 @@ function CreateAllConfirmDialog({ remainingCount, onConfirm, onCancel }) {
           type="button"
           onClick={onConfirm}
           style={{
-            padding: "8px 16px",
+            padding: "7px 16px",
             borderRadius: 8,
             border: "none",
             background: ACCENT,
@@ -310,11 +332,25 @@ function CreateAllConfirmDialog({ remainingCount, onConfirm, onCancel }) {
 export default function VoiceReviewPopup({ open, onClose, activities, onSelect, savedIds, drafts, onCreateAll }) {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false)
   const [showCreateAllConfirm, setShowCreateAllConfirm] = useState(false)
+  const [confirmExiting, setConfirmExiting] = useState(false)
+  const exitTimerRef = useRef(null)
   const createdCount = savedIds ? savedIds.size : 0
   const draftCount = drafts ? drafts.size : 0
   const totalCount = activities.length
   const allDone = createdCount === totalCount
   const hasRemaining = createdCount < totalCount
+
+  useEffect(() => {
+    return () => { if (exitTimerRef.current) clearTimeout(exitTimerRef.current) }
+  }, [])
+
+  const startExit = useCallback((onDone) => {
+    setConfirmExiting(true)
+    exitTimerRef.current = setTimeout(() => {
+      setConfirmExiting(false)
+      onDone()
+    }, 280)
+  }, [])
 
   const handleClose = useCallback(() => {
     if (hasRemaining) {
@@ -325,31 +361,65 @@ export default function VoiceReviewPopup({ open, onClose, activities, onSelect, 
   }, [hasRemaining, onClose])
 
   const handleConfirmClose = useCallback(() => {
-    setShowCloseConfirm(false)
-    onClose()
-  }, [onClose])
+    startExit(() => {
+      setShowCloseConfirm(false)
+      onClose()
+    })
+  }, [onClose, startExit])
 
   const handleCancelClose = useCallback(() => {
-    setShowCloseConfirm(false)
-  }, [])
+    startExit(() => setShowCloseConfirm(false))
+  }, [startExit])
 
   const handleCreateAll = useCallback(() => {
     setShowCreateAllConfirm(true)
   }, [])
 
   const handleConfirmCreateAll = useCallback(() => {
-    setShowCreateAllConfirm(false)
-    onCreateAll?.()
-  }, [onCreateAll])
+    startExit(() => {
+      setShowCreateAllConfirm(false)
+      onCreateAll?.()
+    })
+  }, [onCreateAll, startExit])
 
   const handleCancelCreateAll = useCallback(() => {
-    setShowCreateAllConfirm(false)
-  }, [])
+    startExit(() => setShowCreateAllConfirm(false))
+  }, [startExit])
 
   if (!open || totalCount === 0) return null
 
   return (
     <Portal>
+      <style>{`
+        @keyframes vrCardIn {
+          from { opacity: 0; transform: translateX(20px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes vrOverlayIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes vrDialogIn {
+          from { opacity: 0; transform: scale(0.97) translateY(6px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes confirmBackdropIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes confirmBackdropOut {
+          from { opacity: 1; }
+          to   { opacity: 0; }
+        }
+        @keyframes confirmPopupIn {
+          from { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+          to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes confirmPopupOut {
+          from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          to   { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+        }
+      `}</style>
       <div
         onClick={handleClose}
         style={{
@@ -362,6 +432,7 @@ export default function VoiceReviewPopup({ open, onClose, activities, onSelect, 
           justifyContent: "center",
           padding: 16,
           backdropFilter: "blur(4px)",
+          animation: "vrOverlayIn 0.35s ease-in-out",
         }}
       >
         <div
@@ -380,6 +451,7 @@ export default function VoiceReviewPopup({ open, onClose, activities, onSelect, 
             maxHeight: "80vh",
             display: "flex",
             flexDirection: "column",
+            animation: "vrDialogIn 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
           }}
         >
           <button
@@ -449,6 +521,7 @@ export default function VoiceReviewPopup({ open, onClose, activities, onSelect, 
                   draft={drafts?.get(activity._voiceId)}
                   status={status}
                   onSelect={onSelect}
+                  animDelay={60 + i * 100}
                 />
               )
             })}
@@ -497,6 +570,23 @@ export default function VoiceReviewPopup({ open, onClose, activities, onSelect, 
             </div>
           )}
 
+          {(showCloseConfirm || showCreateAllConfirm) && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "rgba(0,0,0,0.25)",
+                backdropFilter: "blur(2px)",
+                WebkitBackdropFilter: "blur(2px)",
+                borderRadius: 20,
+                zIndex: 2,
+                animation: confirmExiting
+                  ? "confirmBackdropOut 0.28s ease-in forwards"
+                  : "confirmBackdropIn 0.3s ease-out forwards",
+              }}
+            />
+          )}
+
           {showCloseConfirm && (
             <CloseConfirmDialog
               createdCount={createdCount}
@@ -504,6 +594,7 @@ export default function VoiceReviewPopup({ open, onClose, activities, onSelect, 
               totalCount={totalCount}
               onConfirm={handleConfirmClose}
               onCancel={handleCancelClose}
+              exiting={confirmExiting}
             />
           )}
 
@@ -512,6 +603,7 @@ export default function VoiceReviewPopup({ open, onClose, activities, onSelect, 
               remainingCount={totalCount - createdCount}
               onConfirm={handleConfirmCreateAll}
               onCancel={handleCancelCreateAll}
+              exiting={confirmExiting}
             />
           )}
         </div>
