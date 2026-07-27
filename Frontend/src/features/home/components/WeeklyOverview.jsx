@@ -5,6 +5,7 @@ import { theme } from "../../../theme"
 import InfoButton from "../../../components/tutorial/InfoButton"
 import { statsService } from "../services/statsService"
 import { EVENT_TASKS_UPDATED } from "../../../utils/events"
+import { formatMinutes } from "../../../utils/formatters"
 
 function formatDate(d) {
   const y = d.getFullYear();
@@ -17,12 +18,6 @@ function getRollingStart() {
   const d = new Date();
   d.setDate(d.getDate() - 6);
   return formatDate(d);
-}
-
-function formatMinutes(totalMin) {
-  const h = Math.floor(totalMin / 60)
-  const m = totalMin % 60
-  return `${h}h ${String(m).padStart(2, "0")}m`
 }
 
 export default function WeeklyOverview() {

@@ -14,6 +14,7 @@ class Journal(db.Model):
     is_pinned = db.Column(db.Boolean, default=False)
     ai_enabled = db.Column(db.Boolean, default=False)
     navbar_order = db.Column(db.Integer, nullable=True)
+    last_opened_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
@@ -30,6 +31,7 @@ class Journal(db.Model):
             "is_pinned": self.is_pinned,
             "ai_enabled": self.ai_enabled,
             "navbar_order": self.navbar_order,
+            "last_opened_at": self.last_opened_at.isoformat() if self.last_opened_at else None,
             "folder_ids": [str(f.id) for f in self.folders] if self.folders else [],
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,

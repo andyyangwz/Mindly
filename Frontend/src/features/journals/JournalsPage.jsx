@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { Loader, FolderOpen, X } from "lucide-react"
 import { useJournals } from "../../hooks/useJournals"
 import { refreshPinnedJournals } from "../../hooks/usePinnedJournals"
+import { journalService } from "../../services/journalService"
 import { theme } from "../../theme"
 import JournalList from "./components/JournalList"
 import JournalDetail from "./components/JournalDetail"
@@ -91,6 +92,12 @@ export default function JournalsPage() {
       }
     }
   }, [route.view, activeFolderId, fetchJournals])
+
+  useEffect(() => {
+    if (route.view === "detail" && route.id) {
+      journalService.recordOpen(route.id).catch(() => {})
+    }
+  }, [route.view, route.id])
 
   useEffect(() => {
     if (route.view === "create") {

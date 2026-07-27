@@ -132,3 +132,25 @@ class JournalService:
             .order_by(Journal.created_at.desc())
             .all()
         )
+
+    @staticmethod
+    def mark_opened(journal_id, user_id):
+        """Set last_opened_at to now for the given journal."""
+        journal = Journal.query.filter_by(id=journal_id, user_id=user_id).first()
+        if not journal:
+            raise NotFoundError(f"Journal with id '{journal_id}' not found")
+        from datetime import datetime, timezone
+        journal.last_opened_at = datetime.now(timezone.utc)
+        db.session.commit()
+        return journal
+
+    @staticmethod
+    def get_latest_opened(user_id):
+        """Return the most recently opened journal for the user, or None."""
+        return (
+            Journal.query
+            .filter_by(user_id=user_id)
+            .filter(Journal.last_opened_at.isnot(None))
+            .order_by(Journal.last_opened_at.desc())
+            .first()
+        )

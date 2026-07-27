@@ -29,10 +29,12 @@
     },
     "quickActions": {
       "title": "Aksi Cepat",
-      "addJournal": "Tambah Jurnal",
+      "addToCalendar": "Tambah ke Kalender",
       "addActivity": "Tambah Aktivitas",
       "addTask": "Tambah Tugas",
-      "spillAI": "Spill AI"
+      "addReminder": "Tambah Pengingat",
+      "writeJournal": "Tulis Jurnal",
+      "noRecentJournal": "Belum ada jurnal"
     },
     "statsGrid": {
       "title": "Ringkasan",

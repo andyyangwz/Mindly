@@ -31,10 +31,12 @@
     },
     "quickActions": {
       "title": "Quick Actions",
-      "addJournal": "Add Journal",
+      "addToCalendar": "Add to Calendar",
       "addActivity": "Add Activity",
       "addTask": "Add Task",
-      "spillAI": "Spill AI"
+      "addReminder": "Add Reminder",
+      "writeJournal": "Write Journal",
+      "noRecentJournal": "No journals yet"
     },
     "statsGrid": {
       "title": "Overview",

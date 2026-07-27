@@ -170,8 +170,8 @@ class StatsService:
                 "isFuture": day > today,
             })
 
-        total_hours_recorded = round(total_all_minutes / 60, 1)
-        total_productive_hours = round(total_productive_minutes / 60, 1)
+        total_hours_recorded = round(total_all_minutes)
+        total_productive_hours = round(total_productive_minutes)
 
         month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]

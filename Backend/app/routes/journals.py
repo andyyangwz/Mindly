@@ -133,6 +133,22 @@ def set_navbar_orders(user_id):
     return jsonify({"message": "Navbar orders updated"}), 200
 
 
+@journals_bp.route("/latest-opened", methods=["GET"])
+@require_auth
+def get_latest_opened(user_id):
+    journal = JournalService.get_latest_opened(user_id)
+    if not journal:
+        return jsonify({"journal": None})
+    return jsonify({"journal": journal.to_dict()})
+
+
+@journals_bp.route("/<uuid:journal_id>/open", methods=["PUT"])
+@require_auth
+def mark_journal_opened(user_id, journal_id):
+    journal = JournalService.mark_opened(journal_id, user_id)
+    return jsonify({"journal": journal.to_dict()})
+
+
 # ---- Folder routes ----
 
 @journals_bp.route("/folders", methods=["GET"])

@@ -26,6 +26,7 @@ function toFrontend(j) {
     isPinned: j.is_pinned,
     allowAI: j.ai_enabled,
     navbarOrder: j.navbar_order,
+    lastOpenedAt: j.last_opened_at,
     folderIds: j.folder_ids || [],
     createdAt: j.created_at,
     updatedAt: j.updated_at,
@@ -129,5 +130,15 @@ export const journalService = {
 
   async setNavbarOrders(orders) {
     await api.put("/journals/navbar-orders", { orders });
+  },
+
+  async recordOpen(id) {
+    const result = await api.put(`/journals/${id}/open`);
+    return toFrontend(result.journal);
+  },
+
+  async getLatestOpened() {
+    const result = await api.get("/journals/latest-opened");
+    return result.journal ? toFrontend(result.journal) : null;
   },
 };

@@ -156,6 +156,9 @@ useImperativeHandle(ref, () => ({
     } else if (action === "createTask") {
       setTaskFormOpen(true)
       setSearchParams({}, { replace: true })
+    } else if (action === "createReminder") {
+      setReminderFormOpen(true)
+      setSearchParams({}, { replace: true })
     }
   }, [searchParams, setSearchParams])
 

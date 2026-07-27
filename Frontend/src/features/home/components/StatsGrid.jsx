@@ -4,12 +4,7 @@ import { TrendingUp, Target, Clock } from "lucide-react"
 import { theme } from "../../../theme"
 import { statsService } from "../services/statsService";
 import { EVENT_TASKS_UPDATED } from "../../../utils/events";
-
-function formatMinutes(totalMin) {
-  const h = Math.floor(totalMin / 60)
-  const m = totalMin % 60
-  return `${h}h ${String(m).padStart(2, "0")}m`
-}
+import { formatMinutes } from "../../../utils/formatters";
 
 export default function StatsGrid() {
   const { t } = useTranslation()
