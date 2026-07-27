@@ -4,9 +4,9 @@ import StatsGrid from "./components/StatsGrid"
 import WeeklyOverview from "./components/WeeklyOverview"
 import QuickActions from "./components/QuickActions"
 import DailyInspiration from "./components/DailyInspiration"
-import HabitRelics from "./components/HabitRelics"
 import HighPriorityTasks from "./components/HighPriorityTasks"
 import NextTasks from "./components/NextTasks"
+import RemindersSection from "./components/RemindersSection"
 
 export default function HomeMobile() {
   return (
@@ -24,8 +24,8 @@ export default function HomeMobile() {
       <DailyInspiration />
       <QuickActions />
       <HighPriorityTasks />
+      <RemindersSection />
       <NextTasks />
-      <HabitRelics />
       <StatsGrid />
       <WeeklyOverview />
     </div>

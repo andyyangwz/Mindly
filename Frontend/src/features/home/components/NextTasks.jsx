@@ -212,11 +212,6 @@ export default function NextTasks() {
         <h2 style={{ fontSize: 15, fontWeight: 650, color: theme.dark, margin: 0 }}>
           Next Tasks
         </h2>
-        {nextTasks.length > 0 && (
-          <span style={{ fontSize: 11, color: theme.muted, fontWeight: 500 }}>
-            {nextTasks.length}
-          </span>
-        )}
       </div>
 
       {loading ? (

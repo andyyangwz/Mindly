@@ -8,7 +8,7 @@ import ActivityDetailModal from "../../productivity/modals/ActivityDetailModal";
 import AddTaskModal from "../../productivity/tasks/AddTaskModal";
 import TaskProgressBar from "./TaskProgressBar";
 
-const MAX_VISIBLE = 5;
+const MAX_VISIBLE = 4;
 const EXPANDED_HEIGHT = 400;
 
 function formatFinishDate(dateStr) {
@@ -214,11 +214,6 @@ export default function HighPriorityTasks() {
             High Priority In Progress
           </h2>
         </div>
-        {highPriorityTasks.length > 0 && (
-          <span style={{ fontSize: 11, color: theme.muted, fontWeight: 500 }}>
-            {highPriorityTasks.length}
-          </span>
-        )}
       </div>
 
       {loading ? (

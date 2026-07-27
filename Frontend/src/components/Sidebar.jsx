@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Brain, Home, PenLine, Calendar, BarChart3, Plus,
-  MessageSquare, Sun, Moon, Monitor, LogOut,
+  MessageSquare, Sun, Moon, Monitor, LogOut, Target,
 } from "lucide-react";
 import { theme } from "../theme";
 import { useTheme } from "../theme/ThemeProvider";
@@ -450,6 +450,27 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
             </p>
             <LanguageSwitcher />
 
+            <div style={{ height: 12 }} />
+            <button
+              onClick={() => { setShowAccountMenu(false); navigate("/app/habit-relics"); onNavClick?.() }}
+              style={{
+                width: "100%", display: "flex", alignItems: "center",
+                gap: 8, padding: "10px 12px", borderRadius: 8,
+                border: "none", cursor: "pointer",
+                background: "transparent", color: theme.dark,
+                fontSize: 13, fontWeight: 600,
+                transition: "all 0.12s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--color-hover, #F3F4F6)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
+            >
+              <Target size={15} />
+              {t("nav.habitRelics") || "Habit Relics"}
+            </button>
             <div style={{ height: 12 }} />
             <button
               onClick={() => { setShowAccountMenu(false); navigate("/app/insight"); onNavClick?.() }}

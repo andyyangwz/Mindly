@@ -19,6 +19,12 @@ function getRollingStart() {
   return formatDate(d);
 }
 
+function formatMinutes(totalMin) {
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  return `${h}h ${String(m).padStart(2, "0")}m`
+}
+
 export default function WeeklyOverview() {
   const { t } = useTranslation()
 
@@ -26,6 +32,7 @@ export default function WeeklyOverview() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [data, setData] = useState(null)
+  const [hoveredDay, setHoveredDay] = useState(null)
   const fetchId = useRef(0)
 
   const goBack = useCallback(() => {
@@ -44,21 +51,20 @@ export default function WeeklyOverview() {
     });
   }, [])
 
-  useEffect(() => {
+  const fetchData = useCallback((ws) => {
     const id = ++fetchId.current
     setLoading(true)
     setError(false)
-
-    statsService.getWeeklyStats(weekStart).then((res) => {
+    statsService.getWeeklyStats(ws).then((res) => {
       if (id !== fetchId.current) return
       setData({
         weekDays: res.weekDays.map((d) => ({
           ...d,
           hours: +(d.minutes / 60).toFixed(1),
+          productiveHours: +((d.productiveMinutes || 0) / 60).toFixed(1),
         })),
-        totalHours: res.totalHours,
-        tasksDone: res.tasksDone,
-        avgHours: res.avgHours,
+        totalHoursRecorded: res.totalHoursRecorded,
+        totalProductiveHours: res.totalProductiveHours,
         dateRange: res.dateRange,
       })
       setLoading(false)
@@ -67,42 +73,23 @@ export default function WeeklyOverview() {
       setError(true)
       setLoading(false)
     })
-  }, [weekStart])
+  }, [])
 
   useEffect(() => {
-    const handler = () => {
-      const id = ++fetchId.current
-      setLoading(true)
-      setError(false)
-      statsService.getWeeklyStats(weekStart).then((res) => {
-        if (id !== fetchId.current) return
-        setData({
-          weekDays: res.weekDays.map((d) => ({
-            ...d,
-            hours: +(d.minutes / 60).toFixed(1),
-          })),
-          totalHours: res.totalHours,
-          tasksDone: res.tasksDone,
-          avgHours: res.avgHours,
-          dateRange: res.dateRange,
-        })
-        setLoading(false)
-      }).catch(() => {
-        if (id !== fetchId.current) return
-        setError(true)
-        setLoading(false)
-      })
-    }
+    fetchData(weekStart)
+  }, [weekStart, fetchData])
+
+  useEffect(() => {
+    const handler = () => fetchData(weekStart)
     window.addEventListener(EVENT_TASKS_UPDATED, handler)
     return () => window.removeEventListener(EVENT_TASKS_UPDATED, handler)
-  }, [weekStart])
+  }, [weekStart, fetchData])
 
   const apiDays = data?.weekDays ?? null
   const maxHours = apiDays ? Math.max(...apiDays.map(d => d.hours), 1) : 1
   const displayDateRange = data?.dateRange ?? ""
-  const displayTotalHours = data?.totalHours ?? 0
-  const displayTasksDone = data?.tasksDone ?? 0
-  const displayAvgHours = data?.avgHours ?? 0
+  const displayTotalHoursRecorded = data?.totalHoursRecorded ?? 0
+  const displayTotalProductiveHours = data?.totalProductiveHours ?? 0
 
   return (
     <div data-tutorial-target="weekly-overview">
@@ -131,74 +118,141 @@ export default function WeeklyOverview() {
         </div>
       )}
 
-      <div data-tutorial-target="weekly-overview-chart" style={{
-        display: "flex",
-        alignItems: "flex-end",
-        gap: 8,
-        height: 200,
-        marginBottom: 16,
-        padding: "16px 0 12px",
-      }}>
-        {Array.from({ length: 7 }).map((_, i) => {
-          if (loading || !apiDays) {
+      <div style={{ position: "relative", marginBottom: 16 }}>
+        <div data-tutorial-target="weekly-overview-chart" style={{
+          display: "flex",
+          alignItems: "flex-end",
+          gap: 12,
+          height: 200,
+          padding: "16px 0 12px",
+        }}>
+          {Array.from({ length: 7 }).map((_, i) => {
+            if (loading || !apiDays) {
+              return (
+                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
+                  <div style={{
+                    width: "100%",
+                    maxWidth: 48,
+                    height: 40,
+                    borderRadius: 6,
+                    background: theme.border,
+                    opacity: 0.3,
+                  }} />
+                </div>
+              )
+            }
+            const day = apiDays[i]
+            if (!day) {
+              return (
+                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
+                  <div style={{ width: "100%", maxWidth: 48, height: 40, borderRadius: 6, background: theme.border, opacity: 0.3 }} />
+                </div>
+              )
+            }
+
+            const totalH = day.hours
+            const productiveH = day.productiveHours
+            const isHovered = hoveredDay === i
+            const barHeight = day.isFuture ? 4 : totalH === 0 ? 2 : Math.max((totalH / maxHours) * 160, 12)
+            const productiveHeight = totalH > 0 ? Math.max((productiveH / totalH) * barHeight, productiveH > 0 ? 6 : 0) : 0
+
+            const trackedColor = day.isToday
+              ? theme.primary
+              : day.isFuture
+                ? theme.border
+                : `color-mix(in srgb, ${theme.primary} 60%, transparent)`
+
             return (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
+              <div
+                key={i}
+                style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}
+                onMouseEnter={() => setHoveredDay(i)}
+                onMouseLeave={() => setHoveredDay(null)}
+              >
                 <div style={{
                   width: "100%",
-                  maxWidth: 40,
-                  height: 40,
+                  maxWidth: 48,
+                  height: barHeight,
                   borderRadius: 6,
-                  background: theme.border,
-                  opacity: 0.3,
-                }} />
-              </div>
-            )
-          }
-          const day = apiDays[i]
-          if (!day) {
-            return (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
-                <div style={{ width: "100%", maxWidth: 40, height: 40, borderRadius: 6, background: theme.border, opacity: 0.3 }} />
-              </div>
-            )
-          }
-          const barH = day.isFuture ? 4 : day.hours === 0 ? 2 : Math.max((day.hours / maxHours) * 160, 12)
-          return (
-            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-              <div style={{
-                width: "100%",
-                maxWidth: 40,
-                height: barH,
-                borderRadius: 6,
-                background: day.isToday
-                  ? theme.primary
-                  : day.isFuture
-                    ? theme.border
-                    : `color-mix(in srgb, ${theme.primary} 60%, transparent)`,
-                transition: "height 0.3s",
-                boxShadow: day.isToday ? `0 0 14px color-mix(in srgb, ${theme.primary} 66%, transparent)` : "none",
-              }} />
-              {day.isToday ? (
-                <div style={{
-                  padding: "4px 8px",
-                  borderRadius: 12,
-                  background: theme.primary,
-                  boxShadow: `0 0 10px color-mix(in srgb, ${theme.primary} 66%, transparent)`,
+                  overflow: "hidden",
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  flexDirection: "column",
+                  justifyContent: "flex-end",
+                  transition: "height 0.3s, filter 0.15s",
+                  filter: isHovered ? "brightness(1.15)" : "none",
+                  cursor: day.isFuture ? "default" : "pointer",
+                  boxShadow: day.isToday ? `0 0 14px color-mix(in srgb, ${theme.primary} 66%, transparent)` : "none",
                 }}>
-                  <span style={{ fontSize: 10, color: "white", fontWeight: 600, whiteSpace: "nowrap" }}>{day.month} {day.dayOfMonth}</span>
+                  <div style={{
+                    width: "100%",
+                    flex: 1,
+                    background: trackedColor,
+                    transition: "background 0.3s",
+                  }} />
+                  <div style={{
+                    width: "100%",
+                    height: productiveHeight,
+                    background: "#10B981",
+                    transition: "height 0.3s",
+                    flexShrink: 0,
+                  }} />
                 </div>
-              ) : (
-                <span style={{ fontSize: 11, color: theme.muted, fontWeight: 500 }}>{day.label}</span>
-              )}
-              {!day.isFuture && (
-                <span style={{ fontSize: 10, color: theme.muted, marginTop: -4 }}>{day.hours}h</span>
-              )}
+                {day.isToday ? (
+                  <div style={{
+                    padding: "4px 8px",
+                    borderRadius: 12,
+                    background: theme.primary,
+                    boxShadow: `0 0 10px color-mix(in srgb, ${theme.primary} 66%, transparent)`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <span style={{ fontSize: 10, color: "white", fontWeight: 600, whiteSpace: "nowrap" }}>{day.month} {day.dayOfMonth}</span>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 11, color: theme.muted, fontWeight: 500 }}>{day.label}</span>
+                )}
+                {!day.isFuture && (
+                  <span style={{ fontSize: 10, color: theme.muted, marginTop: -4 }}>{totalH}h</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {hoveredDay !== null && apiDays?.[hoveredDay] && !apiDays[hoveredDay].isFuture && (() => {
+          const d = apiDays[hoveredDay]
+          const pct = d.minutes > 0 ? Math.round(((d.productiveMinutes || 0) / d.minutes) * 100) : null
+          const leftPct = ((hoveredDay + 0.5) / 7) * 100
+          return (
+            <div style={{
+              position: "absolute",
+              left: `${leftPct}%`,
+              top: "100%",
+              transform: "translateX(-50%)",
+              marginTop: 8,
+              background: theme.dark,
+              color: "white",
+              borderRadius: 8,
+              padding: "8px 14px",
+              fontSize: 12,
+              fontWeight: 500,
+              lineHeight: 1.5,
+              pointerEvents: "none",
+              whiteSpace: "nowrap",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
+              zIndex: 5,
+              transition: "left 0.15s ease-out",
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 1 }}>{d.label}</div>
+              <div>Tracked: {formatMinutes(d.minutes)}</div>
+              <div style={{ color: "#6EE7B7" }}>Productive: {formatMinutes(d.productiveMinutes || 0)}</div>
+              <div style={{ opacity: 0.7 }}>
+                {pct !== null ? `${pct}% productive` : "No data"}
+              </div>
             </div>
           )
-        })}
+        })()}
       </div>
 
       <div data-tutorial-target="weekly-overview-stats" style={{
@@ -207,16 +261,12 @@ export default function WeeklyOverview() {
         paddingTop: 14,
       }}>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: 18, fontWeight: 700, color: theme.primary, margin: 0, letterSpacing: "-0.02em" }}>{displayTotalHours}h</p>
-          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0", fontWeight: 500 }}>{t("home.weeklyOverview.totalHours")}</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: theme.primary, margin: 0, letterSpacing: "-0.02em" }}>{formatMinutes(displayTotalHoursRecorded)}</p>
+          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0", fontWeight: 500 }}>{t("home.weeklyOverview.totalHoursRecorded")}</p>
         </div>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: 18, fontWeight: 700, color: "#3B82F6", margin: 0, letterSpacing: "-0.02em" }}>{displayTasksDone}</p>
-          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0", fontWeight: 500 }}>{t("home.weeklyOverview.tasksDone")}</p>
-        </div>
-        <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: 18, fontWeight: 700, color: "#10B981", margin: 0, letterSpacing: "-0.02em" }}>{displayAvgHours}h</p>
-          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0", fontWeight: 500 }}>{t("home.weeklyOverview.avgDay")}</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: "#10B981", margin: 0, letterSpacing: "-0.02em" }}>{formatMinutes(displayTotalProductiveHours)}</p>
+          <p style={{ fontSize: 10, color: theme.muted, margin: "2px 0 0 0", fontWeight: 500 }}>{t("home.weeklyOverview.totalProductiveHours")}</p>
         </div>
       </div>
     </div>

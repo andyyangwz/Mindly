@@ -10,6 +10,7 @@ import JournalsPage from "./features/journals/JournalsPage";
 import ProductivityPage from "./features/productivity/ProductivityPage";
 import InsightPage from "./features/insight/InsightPage";
 import SpillAIPage from "./features/spill/SpillAIPage";
+import HabitRelicsPage from "./features/habitRelics/HabitRelicsPage";
 import ToastContainer from "./components/ui/Toast";
 
 export default function MindlyApp() {
@@ -33,6 +34,7 @@ export default function MindlyApp() {
           <Route path="journals/*" element={<JournalsPage />} />
           <Route path="productivity" element={<ProductivityPage />} />
           <Route path="insight" element={<InsightPage />} />
+          <Route path="habit-relics" element={<HabitRelicsPage />} />
           <Route path="spill" element={<SpillAIPage />} />
           <Route path="spill/:chatId" element={<SpillAIPage />} />
         </Route>

@@ -329,7 +329,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack, fol
   const buttonsDisabled = isProcessing || !hasSelection
 
   return (
-    <div style={{ padding: "28px 32px", maxWidth: 740, margin: "0 auto" }}>
+    <div style={{ padding: "28px 32px 80px", maxWidth: 740, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
         <button
           onClick={onBack}
@@ -381,15 +381,8 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack, fol
         </div>
       )}
 
-      <div
-        style={{
-          background: "var(--color-card, white)",
-          borderRadius: 16,
-          border: `1px solid ${theme.border}`,
-          padding: "24px",
-        }}
-      >
-        <div style={{ marginBottom: 16 }}>
+      <>
+        <div style={{ marginBottom: 24 }}>
           <label
             style={{
               fontSize: 13,
@@ -426,7 +419,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack, fol
           )}
         </div>
 
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 24 }}>
           <label
             style={{
               fontSize: 13,
@@ -459,7 +452,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack, fol
           <div
             data-tutorial-target="writing-assistant"
             style={{
-              marginBottom: 16,
+              marginBottom: 24,
               padding: "14px 16px",
               borderRadius: 12,
               background: "var(--color-input)",
@@ -605,7 +598,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack, fol
         <div
           data-tutorial-target="voice-journaling"
           style={{
-            marginBottom: 20,
+            marginBottom: 24,
             padding: 16,
             borderRadius: 12,
             background: "var(--color-input)",
@@ -704,7 +697,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack, fol
           </div>
         </div>
 
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
             <label
               style={{
@@ -824,6 +817,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack, fol
           disabled={saving}
           style={{
             width: "100%",
+            marginTop: 8,
             padding: "12px",
             background: saving
               ? theme.muted
@@ -838,7 +832,7 @@ export default function JournalForm({ form, setForm, editId, onSave, onBack, fol
         >
           {saving ? t("journal.form.saving") : isEdit ? t("journal.form.update") : t("journal.form.save")}
         </button>
-      </div>
+      </>
 
       <style>{`
         @keyframes voice-spin {

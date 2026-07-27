@@ -22,7 +22,8 @@
     "newChat": "New Chat",
     "basicPlan": "Basic Plan",
     "settings": "Settings",
-    "logout": "Log Out"
+    "logout": "Log Out",
+    "habitRelics": "Habit Relics"
   },
   "home": {
     "hero": {
@@ -36,15 +37,15 @@
       "spillAI": "Spill AI"
     },
     "statsGrid": {
-      "tasksCompleted": "Tasks Completed",
-      "productivity": "Productivity",
-      "noOngoingTask": "No On Going Task"
+      "title": "Overview",
+      "productivityPercentage": "Productivity %",
+      "taskLeft": "Task Left",
+      "totalUnproductiveTime": "Total Unproductive Time"
     },
     "weeklyOverview": {
       "title": "Weekly Overview",
-      "totalHours": "Total Hours",
-      "tasksDone": "Tasks Done",
-      "avgDay": "Avg / Day",
+      "totalHoursRecorded": "Total Hours Recorded",
+      "totalProductiveHours": "Total Productive Hours",
       "noData": "No data for this week"
     },
     "dailyInspiration": {

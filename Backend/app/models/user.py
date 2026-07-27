@@ -29,9 +29,6 @@ class User(db.Model):
     )
 
     journals = db.relationship("Journal", backref="owner", lazy="dynamic")
-    productivity_events = db.relationship(
-        "ProductivityEvent", backref="owner", lazy="dynamic"
-    )
     chat_sessions = db.relationship(
         "ChatSession", backref="owner", lazy="dynamic"
     )

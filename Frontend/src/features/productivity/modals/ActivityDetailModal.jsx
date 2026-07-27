@@ -17,7 +17,7 @@ function formatDateTime(datetimeStr, timeStr) {
 
 const STATUS_OPTIONS = ["To Do", "In Progress", "Done"]
 
-export default function ActivityDetailModal({ activity, open, onClose, onStatusChange, onProgressChange, onEdit, onDelete }) {
+export default function ActivityDetailModal({ activity, open, onClose, onStatusChange, onProgressChange, onEdit, onDelete, elevated }) {
   const { t } = useTranslation()
   const [showStatusOptions, setShowStatusOptions] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -49,7 +49,7 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
         style={{
           position: "fixed",
           inset: 0,
-          zIndex: theme.z.modalOverlay,
+          zIndex: elevated ? 903 : theme.z.modalOverlay,
           background: "rgba(0,0,0,0.4)",
           display: "flex",
           alignItems: "center",

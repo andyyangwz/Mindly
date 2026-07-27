@@ -7,12 +7,15 @@ import { useTutorial } from "../../../components/tutorial/TutorialContext"
 import { useToast } from "../../../components/ui/Toast"
 import { useProductivity } from "../../../hooks/useProductivity"
 import { productivityService } from "../../../services/productivityService"
+import { reminderService } from "../../../services/reminderService"
 import { useCalendarHistory } from "../hooks/useCalendarHistory"
 import CalendarHeader from "../calendar/CalendarHeader"
 import CalendarGrid from "../calendar/CalendarGrid"
 import AddActivityModal from "../modals/AddActivityModal"
 import AddTaskModal from "../tasks/AddTaskModal"
+import AddReminderModal from "../reminders/AddReminderModal"
 import ActivityDetailModal from "../modals/ActivityDetailModal"
+import ReminderDetailModal from "../reminders/ReminderDetailModal"
 import ActivityContextMenu from "../interactions/ActivityContextMenu"
 import { notifyTasksUpdated } from "../../../utils/events"
 import VoiceRecorderModal from "../modals/VoiceRecorderModal"
@@ -39,7 +42,7 @@ function loadSavedDate() {
   return new Date()
 }
 
-const ProductivityCalendar = forwardRef(function ProductivityCalendar({ onActivityUpdated, calendarRefreshKey, onQuickAdd, onDrawerToggle }, ref) {
+const ProductivityCalendar = forwardRef(function ProductivityCalendar({ onActivityUpdated, calendarRefreshKey, onQuickAdd, onDrawerToggle, showDrawerToggle }, ref) {
 
 useImperativeHandle(ref, () => ({
   editActivity(activity) {
@@ -75,6 +78,9 @@ useImperativeHandle(ref, () => ({
   const [voiceDrafts, setVoiceDrafts] = useState(null)
   const [dragOverrides, setDragOverrides] = useState({})
   const [inlineDraft, setInlineDraft] = useState(null)
+  const [reminderFormOpen, setReminderFormOpen] = useState(false)
+  const [editingReminder, setEditingReminder] = useState(null)
+  const [viewingReminder, setViewingReminder] = useState(null)
   const { tutorialId, tutorialStep, closeTutorial, updateSpotlightTarget } = useTutorial()
   const toast = useToast()
   const demoModeStep4 = tutorialId === "productivity-calendar" && tutorialStep === 5
@@ -608,6 +614,38 @@ useImperativeHandle(ref, () => ({
     })
   }, [isTutorialDemoMode])
 
+  const handleReminderSave = useCallback(async (data) => {
+    try {
+      if (editingReminder) {
+        await reminderService.update(editingReminder.id, data)
+      } else {
+        await reminderService.create(data)
+      }
+      onActivityUpdated?.()
+      notifyTasksUpdated()
+      setReminderFormOpen(false)
+      setEditingReminder(null)
+      setSelectedSlot(null)
+    } catch (err) {
+      throw err
+    }
+  }, [editingReminder, onActivityUpdated])
+
+  const handleReminderDelete = useCallback(async (id) => {
+    try {
+      await reminderService.delete(id)
+      setViewingReminder(null)
+      onActivityUpdated?.()
+      notifyTasksUpdated()
+    } catch {
+    }
+  }, [onActivityUpdated])
+
+  const handleReminderEdit = useCallback((reminder) => {
+    setEditingReminder(reminder)
+    setReminderFormOpen(true)
+  }, [])
+
   const handleInlineCreate = useCallback((date, startTime, endTime) => {
     const id = `inline-${Date.now()}`
     const dateStr = toDateStr(date)
@@ -693,7 +731,9 @@ useImperativeHandle(ref, () => ({
   const closeModals = useCallback(() => {
     setActivityFormOpen(false)
     setTaskFormOpen(false)
+    setReminderFormOpen(false)
     setEditingActivity(null)
+    setEditingReminder(null)
     setSelectedSlot(null)
   }, [])
 
@@ -732,6 +772,12 @@ useImperativeHandle(ref, () => ({
     setTaskFormOpen(true)
   }, [currentDate])
 
+  const handleAddReminder = useCallback(() => {
+    setEditingReminder(null)
+    setSelectedSlot({ date: currentDate })
+    setReminderFormOpen(true)
+  }, [currentDate])
+
   const handleVoice = useCallback(() => {
     setVoiceAutofill(null)
     setVoiceOpen(true)
@@ -765,8 +811,11 @@ useImperativeHandle(ref, () => ({
       requestAnimationFrame(() => {
         setSelectedSlot(null)
         setEditingActivity(null)
+        setEditingReminder(null)
         if (single.type === "task") {
           setTaskFormOpen(true)
+        } else if (single.type === "reminder") {
+          setReminderFormOpen(true)
         } else {
           setActivityFormOpen(true)
         }
@@ -794,7 +843,12 @@ useImperativeHandle(ref, () => ({
     requestAnimationFrame(() => {
       setSelectedSlot(null)
       setEditingActivity(null)
-      setActivityFormOpen(true)
+      setEditingReminder(null)
+      if (activity.type === "reminder") {
+        setReminderFormOpen(true)
+      } else {
+        setActivityFormOpen(true)
+      }
     })
   }, [voiceDrafts])
 
@@ -839,6 +893,7 @@ useImperativeHandle(ref, () => ({
     } else {
       setActivityFormOpen(false)
       setTaskFormOpen(false)
+      setReminderFormOpen(false)
     }
   }, [voiceReviewActivities, voiceSavedIds, voiceDrafts])
 
@@ -869,9 +924,21 @@ useImperativeHandle(ref, () => ({
       const draft = voiceDrafts?.get(activity._voiceId)
       const data = draft || activity
       try {
-        const payload = toCreatePayload(data)
-        const created = await createActivity(payload)
-        setLocalActivities((prev) => [...prev, created])
+        if (data.type === "reminder") {
+          const dt = data.datetime || (data.start_date && data.start_time ? `${data.start_date}T${data.start_time}` : data.start_date ? `${data.start_date}T09:00` : undefined)
+          const payload = {
+            title: (data.title || "").trim(),
+            description: (data.description || "").trim(),
+            datetime: dt,
+            color: COLOR_NAME_MAP[data.color?.toLowerCase()] || data.color || "#7C3AED",
+            priority: data.priority || "medium",
+          }
+          await reminderService.create(payload)
+        } else {
+          const payload = toCreatePayload(data)
+          const created = await createActivity(payload)
+          setLocalActivities((prev) => [...prev, created])
+        }
         setVoiceSavedIds((prev) => new Set(prev).add(activity._voiceId))
       } catch (err) {
         console.error("[Voice] Create All failed for:", activity.title, err)
@@ -917,6 +984,14 @@ useImperativeHandle(ref, () => ({
     setCtxMenu(null)
   }, [ctxMenu])
 
+  const handleCtxAddReminder = useCallback(() => {
+    if (!ctxMenu) return
+    setSelectedSlot({ date: ctxMenu.date })
+    setEditingReminder(null)
+    setReminderFormOpen(true)
+    setCtxMenu(null)
+  }, [ctxMenu])
+
   const handleCtxEdit = useCallback((activity) => {
     if (isTutorialDemoMode) { setCtxMenu(null); return }
     setEditingActivity(activity)
@@ -949,12 +1024,14 @@ useImperativeHandle(ref, () => ({
         canRedo={canRedo}
         onAddActivity={handleAddActivity}
         onAddTask={handleAddTask}
+        onAddReminder={handleAddReminder}
         onVoice={handleVoice}
         onQuickAdd={onQuickAdd}
         interactionMode={interactionMode}
         onModeChange={setInteractionMode}
         onAutoSync={handleAutoSync}
         onDrawerToggle={onDrawerToggle}
+        showDrawerToggle={showDrawerToggle}
       />
 
       <div style={{ borderTop: `1px solid ${theme.border}`, display: "flex", flexDirection: "column" }}>
@@ -1022,6 +1099,22 @@ useImperativeHandle(ref, () => ({
         )}
       />
 
+      <AddReminderModal
+        open={reminderFormOpen}
+        onClose={() => {
+          closeModals()
+          setVoiceAutofill(null)
+          if (voiceSelectedActivity) {
+            setVoiceSelectedActivity(null)
+          }
+        }}
+        onSave={handleReminderSave}
+        editingReminder={editingReminder}
+        selectedSlot={!editingReminder ? selectedSlot : null}
+        voiceAutofill={voiceAutofill?.type === "reminder" ? voiceAutofill : null}
+        voiceMode={!!voiceSelectedActivity}
+      />
+
       <VoiceRecorderModal
         open={voiceOpen}
         onClose={() => setVoiceOpen(false)}
@@ -1057,6 +1150,7 @@ useImperativeHandle(ref, () => ({
           onDelete={(id) => { handleDelete(id); setCtxMenu(null) }}
           onAddActivity={handleCtxAddActivity}
           onAddTask={handleCtxAddTask}
+          onAddReminder={handleCtxAddReminder}
           onVoice={() => { setCtxMenu(null); handleVoice() }}
         />
       )}
@@ -1069,6 +1163,14 @@ useImperativeHandle(ref, () => ({
         onProgressChange={handleProgressChange}
         onEdit={(activity) => { setEditingActivity(activity); setSelectedSlot(null); if (activity.hasDeadline) setTaskFormOpen(true); else setActivityFormOpen(true); setViewingActivity(null) }}
         onDelete={(id) => { handleDelete(id); setViewingActivity(null) }}
+      />
+
+      <ReminderDetailModal
+        reminder={viewingReminder}
+        open={!!viewingReminder}
+        onClose={() => { setViewingReminder(null) }}
+        onEdit={handleReminderEdit}
+        onDelete={handleReminderDelete}
       />
     </div>
   )

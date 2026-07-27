@@ -1,14 +1,16 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Clock3, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Clock3, ChevronLeft, ChevronRight, Check, Bell, ChevronUp, ChevronDown, Filter } from "lucide-react";
 import { theme } from "../../theme";
 import { productivityService } from "../../services/productivityService";
+import { reminderService } from "../../services/reminderService";
 import { STATUS_META } from "./utils/calendarConstants";
 import ProductivityCalendar from "./calendar/ProductivityCalendar";
 import AIPlanningAssistant from "./components/AIPlanningAssistant";
 import QuickAddModal from "./components/QuickAddModal";
 import RightDrawer from "./components/RightDrawer";
 import ActivityDetailModal from "./modals/ActivityDetailModal";
+import ReminderDetailModal from "./reminders/ReminderDetailModal";
 import { notifyTasksUpdated, EVENT_TASKS_UPDATED } from "../../utils/events";
 import TaskProgressBar from "../home/components/TaskProgressBar";
 
@@ -35,7 +37,6 @@ export default function ProductivityPage() {
   const { t } = useTranslation();
   const [allTasks, setAllTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(true);
-  const [activeTaskTab, setActiveTaskTab] = useState("In Progress");
   const [detailEvent, setDetailEvent] = useState(null);
   const [donePage, setDonePage] = useState(1);
   const [doneLoading, setDoneLoading] = useState(false);
@@ -49,7 +50,14 @@ export default function ProductivityPage() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState("plan");
+  const [allReminders, setAllReminders] = useState([]);
+  const [remindersLoading, setRemindersLoading] = useState(true);
+  const [viewingReminder, setViewingReminder] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isWideScreen, setIsWideScreen] = useState(false);
+  const [taskStatusFilter, setTaskStatusFilter] = useState("all");
+  const [showFilterPopover, setShowFilterPopover] = useState(false);
+  const filterBtnRef = useRef(null);
 
   function toDateStr(date) {
     const y = date.getFullYear();
@@ -90,8 +98,6 @@ export default function ProductivityPage() {
 
   const DONE_PAGE_SIZE = 10;
 
-  const tabs = ["To Do", "In Progress", "Done"];
-
   const tStatus = (s) => {
     const k = { "To Do": "todo", "In Progress": "inProgress", "Done": "done" };
     return t(`productivity.status.${k[s]}`);
@@ -112,11 +118,26 @@ export default function ProductivityPage() {
     fetchAllTasks();
   }, [fetchAllTasks]);
 
+  const fetchAllReminders = useCallback(async () => {
+    try {
+      const result = await reminderService.getAll();
+      setAllReminders(result.reminders);
+    } catch {
+      setAllReminders([]);
+    } finally {
+      setRemindersLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const handler = () => fetchAllTasks();
+    fetchAllReminders();
+  }, [fetchAllReminders]);
+
+  useEffect(() => {
+    const handler = () => { fetchAllTasks(); fetchAllReminders(); };
     window.addEventListener(EVENT_TASKS_UPDATED, handler);
     return () => window.removeEventListener(EVENT_TASKS_UPDATED, handler);
-  }, [fetchAllTasks]);
+  }, [fetchAllTasks, fetchAllReminders]);
 
   const handleDetailStatusChange = useCallback(async (event, newStatus) => {
     try {
@@ -168,9 +189,28 @@ export default function ProductivityPage() {
     calendarRef.current?.editActivity(activity);
   }, []);
 
+  const handleReminderClick = useCallback((reminder) => {
+    setViewingReminder(reminder);
+  }, []);
+
+  const handleReminderEdit = useCallback((reminder) => {
+    setViewingReminder(null);
+    calendarRef.current?.editActivity({ ...reminder, hasDeadline: false, _isReminder: true });
+  }, []);
+
+  const handleReminderDelete = useCallback(async (id) => {
+    try {
+      await reminderService.delete(id);
+      setAllReminders(prev => prev.filter(r => r.id !== id));
+      setViewingReminder(null);
+      notifyTasksUpdated();
+    } catch {
+    }
+  }, []);
+
   useEffect(() => {
     setDonePage(1);
-  }, [activeTaskTab, allTasks.length]);
+  }, [taskStatusFilter, allTasks.length]);
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1000px)")
@@ -188,10 +228,29 @@ export default function ProductivityPage() {
     return () => mql.removeEventListener("change", handler)
   }, [])
 
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1100px)")
+    setIsWideScreen(mql.matches)
+    const handler = (e) => setIsWideScreen(e.matches)
+    mql.addEventListener("change", handler)
+    return () => mql.removeEventListener("change", handler)
+  }, [])
+
+  useEffect(() => {
+    if (!showFilterPopover) return
+    const handler = (e) => {
+      if (filterBtnRef.current && !filterBtnRef.current.contains(e.target)) {
+        setShowFilterPopover(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [showFilterPopover])
+
   const handleDoneScroll = useCallback(() => {
     const el = doneScrollRef.current;
     if (!el || doneLoading) return;
-    if (activeTaskTab !== "Done") return;
+    if (taskStatusFilter !== "Done") return;
     const totalDone = allTasks.filter(t => t.status === "Done").length;
     if (donePage * DONE_PAGE_SIZE >= totalDone) return;
     if (el.scrollHeight - el.scrollTop - el.clientHeight < 40) {
@@ -201,7 +260,7 @@ export default function ProductivityPage() {
         setDoneLoading(false);
       }, 200);
     }
-  }, [doneLoading, activeTaskTab, donePage, allTasks]);
+  }, [doneLoading, taskStatusFilter, donePage, allTasks]);
 
   const handlePlanCircleToggle = useCallback(async (e, item) => {
     e.stopPropagation();
@@ -220,14 +279,12 @@ export default function ProductivityPage() {
   const filteredTasks = allTasks
     .filter(t => {
       if (t.hasDeadline !== true) return false;
-      if (activeTaskTab === "Done") return t.status === "Done";
-      if (activeTaskTab === "In Progress") return t.status === "In Progress";
-      if (activeTaskTab === "To Do") return t.status === "To Do";
-      return false;
+      if (taskStatusFilter !== "all" && t.status !== taskStatusFilter) return false;
+      return true;
     })
     .filter(t => priorityFilter === "all" || t.priority === priorityFilter)
     .sort((a, b) => {
-      if (activeTaskTab === "Done") {
+      if (taskStatusFilter === "Done") {
         const tsA = a.statusChangeAt ? new Date(a.statusChangeAt).getTime() : 0;
         const tsB = b.statusChangeAt ? new Date(b.statusChangeAt).getTime() : 0;
         return tsB - tsA;
@@ -239,7 +296,7 @@ export default function ProductivityPage() {
       return (a.id || "").localeCompare(b.id || "");
     });
 
-  const visibleTasks = activeTaskTab === "Done"
+  const visibleTasks = taskStatusFilter === "Done"
     ? filteredTasks.slice(0, donePage * DONE_PAGE_SIZE)
     : filteredTasks;
 
@@ -256,47 +313,62 @@ export default function ProductivityPage() {
 
   const planLoading = tasksLoading;
 
+  const isDrawerDetailOpen = !!detailEvent || !!viewingReminder;
+
+  const isDrawerInline = isWideScreen
+
   return (
-    <div style={{ background: theme.bg }}>
-      <ProductivityCalendar ref={calendarRef} onActivityUpdated={fetchAllTasks} calendarRefreshKey={calendarRefreshKey} onQuickAdd={() => setQuickAddOpen(true)} onDrawerToggle={() => setDrawerOpen(true)} />
+    <div style={{ position: "fixed", top: 0, left: isMobile ? 0 : 260, right: 0, bottom: 0, display: "flex", flexDirection: "column", background: theme.bg }}>
+      {/* Workspace: calendar + inline panel */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
+        <div style={{ flex: 1, minWidth: 0, overflowY: "auto", transition: "width 280ms cubic-bezier(0.4, 0, 0.2, 1)" }}>
+          <ProductivityCalendar ref={calendarRef} onActivityUpdated={fetchAllTasks} calendarRefreshKey={calendarRefreshKey} onQuickAdd={() => setQuickAddOpen(true)} onDrawerToggle={() => setDrawerOpen(true)} showDrawerToggle={!isDrawerInline} />
+        </div>
 
-      <div style={{ height: 120 }} />
+        {/* Drawer handle */}
+        {isDrawerInline && (
+          <button
+            onClick={() => setDrawerOpen(v => !v)}
+            aria-label={drawerOpen ? "Close side panel" : "Open side panel"}
+            style={{
+              position: "absolute",
+              right: drawerOpen ? 320 : 0,
+              top: "50%",
+              transform: `translateY(-50%) rotate(${drawerOpen ? 180 : 0}deg)`,
+              zIndex: 11,
+              width: 28,
+              height: 72,
+              borderRadius: "10px 0 0 10px",
+              border: "none",
+              background: theme.bg,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: theme.muted,
+              transition: "right 280ms cubic-bezier(0.4, 0, 0.2, 1), transform 280ms cubic-bezier(0.4, 0, 0.2, 1), color 0.15s, background 0.15s",
+              boxShadow: "-1px 0 6px rgba(0,0,0,0.04)",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = theme.dark; e.currentTarget.style.background = `color-mix(in srgb, ${theme.border} 30%, ${theme.bg})` }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = theme.muted; e.currentTarget.style.background = theme.bg }}
+          >
+            <ChevronLeft size={22} strokeWidth={2.5} />
+          </button>
+        )}
 
-      <div style={{
-        position: "fixed",
-        bottom: 0,
-        left: isMobile ? 0 : 260,
-        right: 0,
-        padding: isCompact ? "12px 16px" : "16px 32px",
-        background: theme.bg,
-        zIndex: 10,
-        borderTop: `1px solid ${theme.border}`,
-      }}>
-        <AIPlanningAssistant />
-      </div>
-
-      <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
-
-      <ActivityDetailModal
-        activity={detailEvent}
-        open={!!detailEvent}
-        onClose={() => setDetailEvent(null)}
-        onStatusChange={handleDetailStatusChange}
-        onProgressChange={handleDetailProgressChange}
-        onEdit={handleDetailEdit}
-        onDelete={handleDetailDelete}
-      />
-
-      <RightDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        header={
+        <RightDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          isModalOpen={isDrawerDetailOpen}
+          variant={isDrawerInline ? "inline" : "overlay"}
+          header={
           <div style={{ display: "flex", flexDirection: "column" }}>
             {/* Section Selector */}
             <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${theme.border}`, marginBottom: drawerTab === "plan" ? 14 : 12 }}>
               {[
                 { key: "plan", label: t("productivity.page.todaysPlan") },
                 { key: "tasks", label: t("productivity.page.yourTasks") },
+                { key: "reminders", label: "Reminders" },
               ].map(({ key, label }) => (
                 <button
                   key={key}
@@ -305,7 +377,8 @@ export default function ProductivityPage() {
                     flex: 1,
                     padding: "8px 0",
                     background: "none",
-                    border: "none",
+              border: `1px solid ${theme.border}`,
+              borderRight: "none",
                     borderBottom: `2px solid ${drawerTab === key ? theme.primary : "transparent"}`,
                     cursor: "pointer",
                     fontSize: 12,
@@ -363,33 +436,79 @@ export default function ProductivityPage() {
               </div>
             )}
 
-            {/* Tasks: title + filters */}
+            {/* Tasks: title + filter */}
             {drawerTab === "tasks" && (
-              <>
-                <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
-                  <h3 style={{ fontSize: 12, fontWeight: 600, color: theme.dark, flex: 1 }}>
-                    {t("productivity.page.yourTasks")}
-                    {tasksLoading && <span style={{ fontSize: 11, fontWeight: 400, color: theme.muted, marginLeft: 6 }}>{t("productivity.page.loading")}</span>}
-                  </h3>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: theme.dark, flex: 1 }}>
+                  {t("productivity.page.yourTasks")}
+                  {tasksLoading && <span style={{ fontSize: 11, fontWeight: 400, color: theme.muted, marginLeft: 6 }}>{t("productivity.page.loading")}</span>}
+                </h3>
+                <div ref={filterBtnRef} style={{ position: "relative" }}>
+                  <button
+                    onClick={() => setShowFilterPopover(v => !v)}
+                    style={{
+                      width: 26, height: 26, borderRadius: 6,
+                      border: `1px solid ${(taskStatusFilter !== "all" || priorityFilter !== "all") ? theme.primary : theme.border}`,
+                      background: (taskStatusFilter !== "all" || priorityFilter !== "all")
+                        ? `color-mix(in srgb, ${theme.primary} 8%, transparent)`
+                        : "transparent",
+                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                      color: (taskStatusFilter !== "all" || priorityFilter !== "all") ? theme.primary : theme.muted,
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = (taskStatusFilter !== "all" || priorityFilter !== "all") ? theme.primary : theme.border;
+                      e.currentTarget.style.color = (taskStatusFilter !== "all" || priorityFilter !== "all") ? theme.primary : theme.muted;
+                    }}
+                  >
+                    <Filter size={12} />
+                  </button>
+
+                  {showFilterPopover && (
+                    <div style={{
+                      position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: theme.z.dropdown,
+                      background: "var(--color-card, white)", borderRadius: 10,
+                      border: `1px solid ${theme.border}`, boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                      padding: 10, width: 160,
+                    }}>
+                      <p style={{ fontSize: 10, fontWeight: 600, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 6px 0" }}>Status</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 10 }}>
+                        {[{ key: "all", label: "All" }, { key: "To Do", label: tStatus("To Do") }, { key: "In Progress", label: tStatus("In Progress") }, { key: "Done", label: tStatus("Done") }].map(({ key, label }) => (
+                          <button key={key} onClick={() => setTaskStatusFilter(key)} style={{
+                            padding: "5px 8px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 500, textAlign: "left",
+                            background: taskStatusFilter === key ? `color-mix(in srgb, ${theme.primary} 10%, transparent)` : "transparent",
+                            color: taskStatusFilter === key ? theme.primary : theme.dark,
+                            transition: "all 0.1s",
+                          }}
+                            onMouseEnter={(e) => { if (taskStatusFilter !== key) e.currentTarget.style.background = theme.bg }}
+                            onMouseLeave={(e) => { if (taskStatusFilter !== key) e.currentTarget.style.background = "transparent" }}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ height: 1, background: theme.border, margin: "0 0 8px 0" }} />
+                      <p style={{ fontSize: 10, fontWeight: 600, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 6px 0" }}>Priority</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        {[{ key: "all", label: "All" }, { key: "high", label: `${t("productivity.eventForm.priority_high")}` }].map(({ key, label }) => (
+                          <button key={key} onClick={() => setPriorityFilter(key)} style={{
+                            padding: "5px 8px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 500, textAlign: "left",
+                            background: priorityFilter === key ? `color-mix(in srgb, ${theme.primary} 10%, transparent)` : "transparent",
+                            color: priorityFilter === key ? theme.primary : theme.dark,
+                            transition: "all 0.1s",
+                          }}
+                            onMouseEnter={(e) => { if (priorityFilter !== key) e.currentTarget.style.background = theme.bg }}
+                            onMouseLeave={(e) => { if (priorityFilter !== key) e.currentTarget.style.background = "transparent" }}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "10px 12px", borderRadius: 10, border: `1px solid ${theme.border}` }}>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {tabs.map((tab) => (
-                      <button key={tab} onClick={() => setActiveTaskTab(tab)} style={{ flex: 1, padding: "6px 4px", borderRadius: 8, border: "none", cursor: "pointer", background: activeTaskTab === tab ? "var(--color-card, white)" : "transparent", color: activeTaskTab === tab ? theme.primaryText : theme.muted, fontSize: 11, fontWeight: 500, transition: "all 0.15s", boxShadow: activeTaskTab === tab ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
-                        {tStatus(tab)}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ height: 1, background: theme.border }} />
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {["all", "high"].map(p => (
-                      <button key={p} onClick={() => setPriorityFilter(p)} style={{ flex: 1, padding: "6px 4px", borderRadius: 8, border: "none", cursor: "pointer", background: priorityFilter === p ? "var(--color-card, white)" : "transparent", color: priorityFilter === p ? theme.primaryText : theme.muted, fontSize: 11, fontWeight: 500, transition: "all 0.15s", boxShadow: priorityFilter === p ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
-                        {p === "all" ? "All" : `${t("productivity.eventForm.priority_high")} Priority`}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
+              </div>
             )}
           </div>
         }
@@ -455,12 +574,78 @@ export default function ProductivityPage() {
                 <TaskProgressBar progress={task.progress ?? 0} color={task.color || "#6366F1"} />
               </div>
             ))}
-            {doneLoading && activeTaskTab === "Done" && (
+            {doneLoading && taskStatusFilter === "Done" && (
               <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "12px 0" }}>{t("productivity.page.loading")}</p>
             )}
           </div>
         )}
+
+        {drawerTab === "reminders" && (
+          <div>
+            {remindersLoading && <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>{t("productivity.page.loading")}</p>}
+            {!remindersLoading && allReminders.length === 0 && (
+              <p style={{ fontSize: 12, color: theme.muted, textAlign: "center", padding: "20px 0" }}>No reminders yet.</p>
+            )}
+            {allReminders.map((rem) => (
+              <div key={rem.id} onClick={() => handleReminderClick(rem)} style={{
+                display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                borderRadius: 10, border: `1px solid ${theme.border}`, marginBottom: 8,
+                transition: "all 0.15s", cursor: "pointer",
+              }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.accent; e.currentTarget.style.background = theme.bg }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.background = "transparent" }}
+              >
+                <div style={{ width: 4, height: 32, borderRadius: 2, background: rem.color || "#F59E0B", flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: theme.dark, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{rem.title}</p>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 2 }}>
+                    {rem.datetime && (
+                      <span style={{ fontSize: 10, color: theme.muted, display: "flex", alignItems: "center", gap: 3 }}>
+                        <Bell size={9} />{rem.datetime.slice(0, 10)} {rem.datetime.slice(11, 16)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 6px", borderRadius: 3, background: `${rem.color}18`, color: rem.color, lineHeight: 1.4, letterSpacing: "0.01em", flexShrink: 0 }}>
+                  {rem.priority}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </RightDrawer>
+      </div>
+
+      <div style={{
+        padding: isCompact ? "12px 16px" : "16px 32px",
+        background: theme.bg,
+        borderTop: `1px solid ${theme.border}`,
+        flexShrink: 0,
+      }}>
+        <AIPlanningAssistant />
+      </div>
+
+      <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
+
+      <ActivityDetailModal
+        activity={detailEvent}
+        open={!!detailEvent}
+        onClose={() => setDetailEvent(null)}
+        onStatusChange={handleDetailStatusChange}
+        onProgressChange={handleDetailProgressChange}
+        onEdit={handleDetailEdit}
+        onDelete={handleDetailDelete}
+        elevated
+      />
+
+      <ReminderDetailModal
+        reminder={viewingReminder}
+        open={!!viewingReminder}
+        onClose={() => setViewingReminder(null)}
+        onEdit={handleReminderEdit}
+        onDelete={handleReminderDelete}
+        elevated
+      />
     </div>
   );
 }

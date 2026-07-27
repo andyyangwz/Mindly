@@ -2,11 +2,14 @@ import { useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { theme } from "../../../theme"
 
-export default function RightDrawer({ open, onClose, header, children }) {
+const PANEL_WIDTH = 320
+
+export default function RightDrawer({ open, onClose, header, children, isModalOpen, variant = "overlay" }) {
   const drawerRef = useRef(null)
+  const isInline = variant === "inline"
 
   useEffect(() => {
-    if (!open) return
+    if (!open || isModalOpen || isInline) return
     const handleClick = (e) => {
       if (drawerRef.current && !drawerRef.current.contains(e.target)) {
         onClose()
@@ -14,7 +17,83 @@ export default function RightDrawer({ open, onClose, header, children }) {
     }
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
-  }, [open, onClose])
+  }, [open, onClose, isModalOpen, isInline])
+
+  const closeBtn = !isInline && (
+    <button
+      onClick={onClose}
+      style={{
+        position: "absolute",
+        top: 16,
+        right: 16,
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        border: `1px solid ${theme.border}`,
+        background: "var(--color-card, white)",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: theme.muted,
+        zIndex: 1,
+        transition: "all 0.15s",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.accent; e.currentTarget.style.color = theme.dark }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.muted }}
+    >
+      <X size={15} />
+    </button>
+  )
+
+  const innerContent = (
+    <>
+      {closeBtn}
+      {header && (
+        <div style={{ flexShrink: 0, padding: "20px 20px 0 20px" }}>
+          {header}
+        </div>
+      )}
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: header ? "12px 20px 20px 20px" : "20px" }}>
+        {children}
+      </div>
+    </>
+  )
+
+  if (isInline) {
+    return (
+      <div
+        ref={drawerRef}
+        style={{
+          width: open ? PANEL_WIDTH : 0,
+          flexShrink: 0,
+          overflow: "hidden",
+          transition: "width 280ms cubic-bezier(0.4, 0, 0.2, 1)",
+          borderLeft: open ? `1px solid ${theme.border}` : "none",
+          background: "var(--color-card, white)",
+          display: "flex",
+          flexDirection: "column",
+          position: "relative",
+        }}
+      >
+        <div style={{ width: PANEL_WIDTH, flexShrink: 0, display: "flex", flexDirection: "column", height: "100%" }}>
+          {innerContent}
+        </div>
+        {isModalOpen && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 902,
+              background: "rgba(0,0,0,0.18)",
+              pointerEvents: "none",
+              transition: "opacity 200ms ease",
+            }}
+          />
+        )}
+      </div>
+    )
+  }
 
   return (
     <>
@@ -40,7 +119,7 @@ export default function RightDrawer({ open, onClose, header, children }) {
           top: 0,
           right: 0,
           bottom: 0,
-          width: 420,
+          width: PANEL_WIDTH,
           maxWidth: "90vw",
           zIndex: 901,
           background: "var(--color-card, white)",
@@ -54,44 +133,22 @@ export default function RightDrawer({ open, onClose, header, children }) {
           overflow: "hidden",
         }}
       >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          style={{
-            position: "absolute",
-            top: 16,
-            right: 16,
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            border: `1px solid ${theme.border}`,
-            background: "var(--color-card, white)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: theme.muted,
-            zIndex: 1,
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.accent; e.currentTarget.style.color = theme.dark }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.muted }}
-        >
-          <X size={15} />
-        </button>
-
-        {/* Fixed header */}
-        {header && (
-          <div style={{ flexShrink: 0, padding: "24px 24px 0 24px" }}>
-            {header}
-          </div>
-        )}
-
-        {/* Scrollable content */}
-        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: header ? "16px 24px 24px 24px" : "24px" }}>
-          {children}
-        </div>
+        {innerContent}
       </div>
+
+      {/* Dimming overlay between drawer and child modal */}
+      {isModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 902,
+            background: "rgba(0,0,0,0.18)",
+            pointerEvents: "none",
+            transition: "opacity 200ms ease",
+          }}
+        />
+      )}
     </>
   )
 }

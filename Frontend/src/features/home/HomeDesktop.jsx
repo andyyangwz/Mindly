@@ -3,9 +3,10 @@ import HeroTitle from "./components/HeroTitle"
 import WeeklyOverview from "./components/WeeklyOverview"
 import QuickActions from "./components/QuickActions"
 import DailyInspiration from "./components/DailyInspiration"
-import HabitRelics from "./components/HabitRelics"
 import HighPriorityTasks from "./components/HighPriorityTasks"
 import NextTasks from "./components/NextTasks"
+import RemindersSection from "./components/RemindersSection"
+import StatsGrid from "./components/StatsGrid"
 
 export default function HomeDesktop() {
   return (
@@ -23,21 +24,22 @@ export default function HomeDesktop() {
       <DailyInspiration />
       <QuickActions />
 
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 48, alignItems: "start" }}>
+        <div style={{ display: "flex", gap: 24, alignItems: "start" }}>
+          <div style={{ flex: 1 }}><HighPriorityTasks /></div>
+          <div style={{ flex: 1 }}><RemindersSection /></div>
+        </div>
+        <NextTasks />
+      </div>
+
       <div style={{
         display: "grid",
-        gridTemplateColumns: "calc((100% - 48px) * 0.55) calc((100% - 48px) * 0.45)",
+        gridTemplateColumns: "1fr 320px",
         gap: 48,
         alignItems: "start",
       }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 44 }}>
-          <HighPriorityTasks />
-          <WeeklyOverview />
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 44 }}>
-          <NextTasks />
-          <HabitRelics />
-        </div>
+        <WeeklyOverview />
+        <StatsGrid />
       </div>
     </div>
   )

@@ -61,6 +61,11 @@ def create_app(config_class=Config):
     from .routes.stats import stats_bp
     app.register_blueprint(stats_bp)
     print("  ✓ Stats blueprint registered")
+
+    from .routes.reminders import reminder_bp
+    app.register_blueprint(reminder_bp)
+    print("  ✓ Reminders blueprint registered")
+
     from .routes.voice import voice_bp
     app.register_blueprint(voice_bp)
     print("  ✓ Voice blueprint registered")

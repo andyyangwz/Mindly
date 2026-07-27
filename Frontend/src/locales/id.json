@@ -20,7 +20,8 @@
     "newChat": "Obrolan Baru",
     "basicPlan": "Paket Dasar",
     "settings": "Pengaturan",
-    "logout": "Keluar"
+    "logout": "Keluar",
+    "habitRelics": "Habit Relics"
   },
   "home": {
     "hero": {
@@ -34,15 +35,15 @@
       "spillAI": "Spill AI"
     },
     "statsGrid": {
-      "tasksCompleted": "Tugas Selesai",
-      "productivity": "Produktivitas",
-      "noOngoingTask": "No On Going Task"
+      "title": "Ringkasan",
+      "productivityPercentage": "Persentase Produktivitas",
+      "taskLeft": "Tugas Tersisa",
+      "totalUnproductiveTime": "Total Waktu Tidak Produktif"
     },
     "weeklyOverview": {
       "title": "Ringkasan Mingguan",
-      "totalHours": "Total Jam",
-      "tasksDone": "Tugas Selesai",
-      "avgDay": "Rata-rata / Hari",
+      "totalHoursRecorded": "Total Jam Terekam",
+      "totalProductiveHours": "Total Jam Produktif",
       "noData": "Tidak ada data minggu ini"
     },
     "dailyInspiration": {

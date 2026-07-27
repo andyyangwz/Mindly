@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { Plus, Target, Waves, Mic, Pencil, Trash2 } from "lucide-react"
+import { Plus, Target, Waves, Bell, Mic, Pencil, Trash2 } from "lucide-react"
 import { theme } from "../../../theme"
 
 const GAP = 6
 
-export default function ActivityContextMenu({ x, y, activity, menuRef, containerRef, onEdit, onDelete, onAddActivity, onAddTask, onVoice }) {
+export default function ActivityContextMenu({ x, y, activity, menuRef, containerRef, onEdit, onDelete, onAddActivity, onAddTask, onAddReminder, onVoice }) {
   const { t } = useTranslation()
   const [pos, setPos] = useState({ left: 0, top: 0 })
 
@@ -143,6 +143,27 @@ export default function ActivityContextMenu({ x, y, activity, menuRef, container
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>Task</span>
           <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>Create a deadline</span>
+        </div>
+      </button>
+      <button
+        onClick={onAddReminder}
+        style={{
+          ...menuItemStyle("#F59E0B"),
+          gap: 10,
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "#F59E0B0C" }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+      >
+        <span style={{
+          width: 26, height: 26, borderRadius: 8,
+          background: "#F59E0B14",
+          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+        }}>
+          <Bell size={14} color="#F59E0B" />
+        </span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: theme.dark }}>Reminder</span>
+          <span style={{ fontSize: 10, color: theme.muted, fontWeight: 400 }}>Set a reminder</span>
         </div>
       </button>
       <div style={{ height: 1, background: theme.border, margin: "4px 0" }} />
