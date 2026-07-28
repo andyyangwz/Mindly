@@ -15,6 +15,11 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
+/* ── Bare mode (seamless, no card) ── */
+.re-bare {
+  position: relative;
+}
+
 /* ── Toolbar ── */
 .re-toolbar {
   display: flex;
@@ -81,6 +86,19 @@
   min-height: 260px;
 }
 
+/* ── Bare mode: no container padding, no min-height ── */
+.re-bare .re-editor-container {
+  padding: 0;
+  min-height: auto;
+}
+
+.re-bare .re-editor-content {
+  padding: 0;
+  min-height: auto;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
 /* ── Editable Content ── */
 .re-editor-content {
   outline: none;
@@ -123,6 +141,14 @@
   font-weight: 600;
   color: var(--color-dark);
   margin: 1.2em 0 0.4em;
+  line-height: 1.4;
+}
+
+.re-editor-content h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-dark);
+  margin: 1em 0 0.35em;
   line-height: 1.4;
 }
 
@@ -232,6 +258,132 @@
   background: color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
+/* ── Floating Link Button ── */
+.re-link-float {
+  position: fixed;
+  transform: translateX(-50%) translateY(-100%);
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.re-link-float-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-card, #fff);
+  color: var(--color-muted);
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--color-border);
+  transition: all 0.12s;
+}
+
+.re-link-float-btn:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16), 0 0 0 1px var(--color-primary);
+}
+
+.re-link-float-btn:active {
+  transform: scale(0.92);
+}
+
+/* ── Link URL Popup ── */
+.re-link-popup {
+  position: fixed;
+  transform: translateX(-50%) translateY(calc(-100% + 4px));
+  z-index: 101;
+  background: var(--color-card, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  padding: 8px;
+  min-width: 280px;
+  pointer-events: auto;
+  animation: re-link-popup-in 0.12s ease-out;
+}
+
+@keyframes re-link-popup-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(calc(-100% + 12px)); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(calc(-100% + 4px)); }
+}
+
+.re-link-popup-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.re-link-popup-icon {
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+.re-link-popup-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-dark);
+  padding: 6px 0;
+  font-family: inherit;
+}
+
+.re-link-popup-input::placeholder {
+  color: var(--color-muted);
+}
+
+.re-link-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+}
+
+.re-link-popup-cancel {
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: all 0.1s;
+}
+
+.re-link-popup-cancel:hover {
+  background: var(--color-hover);
+  color: var(--color-dark);
+}
+
+.re-link-popup-apply {
+  border: none;
+  background: var(--color-primary);
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 6px;
+  transition: all 0.1s;
+}
+
+.re-link-popup-apply:hover {
+  opacity: 0.9;
+}
+
+.re-link-popup-apply:active {
+  transform: scale(0.96);
+}
+
 /* ── Status indicator ── */
 .re-status {
   position: absolute;
@@ -266,4 +418,46 @@
 
 [data-theme="dark"] .re-editor-content mark {
   background: #7c6a3a;
+}
+
+/* ── Context Menu ── */
+.re-ctx-menu {
+  position: fixed;
+  z-index: 200;
+  background: var(--color-card, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  padding: 4px;
+  min-width: 140px;
+  pointer-events: auto;
+  animation: re-ctx-in 0.1s ease-out;
+}
+
+@keyframes re-ctx-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.re-ctx-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-dark);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.08s;
+}
+
+.re-ctx-menu-item:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
 }

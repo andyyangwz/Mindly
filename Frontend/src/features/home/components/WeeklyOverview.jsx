@@ -208,7 +208,10 @@ export default function WeeklyOverview() {
                   <span style={{ fontSize: 11, color: theme.muted, fontWeight: 500 }}>{day.label}</span>
                 )}
                 {!day.isFuture && (
-                  <span style={{ fontSize: 10, color: theme.muted, marginTop: -4 }}>{totalH}h</span>
+                  <div style={{ textAlign: "center", marginTop: -4 }}>
+                    <div style={{ fontSize: 10, color: theme.muted, fontWeight: 500, lineHeight: 1.4 }}>{formatMinutes(day.minutes)}</div>
+                    <div style={{ fontSize: 9, color: "#10B981", fontWeight: 500, lineHeight: 1.4 }}>{formatMinutes(day.productiveMinutes || 0)}</div>
+                  </div>
                 )}
               </div>
             )

@@ -42,6 +42,7 @@ export default function ProductivityPage() {
   const [doneLoading, setDoneLoading] = useState(false);
   const doneScrollRef = useRef(null);
   const calendarRef = useRef(null);
+  const calScrollRef = useRef(null);
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [selectedPlanDate, setSelectedPlanDate] = useState(() => new Date());
@@ -321,8 +322,8 @@ export default function ProductivityPage() {
     <div style={{ position: "fixed", top: 0, left: isMobile ? 0 : 260, right: 0, bottom: 0, display: "flex", flexDirection: "column", background: theme.bg }}>
       {/* Workspace: calendar + inline panel */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
-        <div style={{ flex: 1, minWidth: 0, overflowY: "auto", transition: "width 280ms cubic-bezier(0.4, 0, 0.2, 1)" }}>
-          <ProductivityCalendar ref={calendarRef} onActivityUpdated={fetchAllTasks} calendarRefreshKey={calendarRefreshKey} onQuickAdd={() => setQuickAddOpen(true)} onDrawerToggle={() => setDrawerOpen(true)} showDrawerToggle={!isDrawerInline} />
+        <div ref={calScrollRef} style={{ flex: 1, minWidth: 0, overflowY: "auto", transition: "width 280ms cubic-bezier(0.4, 0, 0.2, 1)" }}>
+          <ProductivityCalendar ref={calendarRef} scrollContainerRef={calScrollRef} onActivityUpdated={fetchAllTasks} calendarRefreshKey={calendarRefreshKey} onQuickAdd={() => setQuickAddOpen(true)} onDrawerToggle={() => setDrawerOpen(true)} showDrawerToggle={!isDrawerInline} />
         </div>
 
         {/* Drawer handle */}

@@ -86,7 +86,7 @@ export default function AppLayout() {
   return (
     <>
       {isMobile ? (
-        <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: theme.bg }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: theme.bg, "--sidebar-width": "0px" }}>
           <div
             style={{
               height: TOP_BAR_HEIGHT,
@@ -140,9 +140,10 @@ export default function AppLayout() {
             height: "100vh",
             background: theme.bg,
             overflow: "hidden",
+            "--sidebar-width": "260px",
           }}
         >
-          <div style={{ display: isMobile ? "none" : "block", position: "relative", zIndex: 20 }}>
+          <div style={{ display: isMobile ? "none" : "block", position: "relative", zIndex: 30 }}>
             <Sidebar
               sessions={sessions}
               newSessionId={newSessionId}

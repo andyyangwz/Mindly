@@ -23,6 +23,7 @@ import VoiceReviewPopup from "../modals/VoiceReviewPopup"
 import {
   toDateStr,
   COLOR_NAME_MAP,
+  HOUR_HEIGHT,
 } from "../utils/calendarConstants"
 import {
   getCachedDaySegment,
@@ -42,7 +43,7 @@ function loadSavedDate() {
   return new Date()
 }
 
-const ProductivityCalendar = forwardRef(function ProductivityCalendar({ onActivityUpdated, calendarRefreshKey, onQuickAdd, onDrawerToggle, showDrawerToggle }, ref) {
+const ProductivityCalendar = forwardRef(function ProductivityCalendar({ onActivityUpdated, calendarRefreshKey, onQuickAdd, onDrawerToggle, showDrawerToggle, scrollContainerRef }, ref) {
 
 useImperativeHandle(ref, () => ({
   editActivity(activity) {
@@ -123,20 +124,48 @@ useImperativeHandle(ref, () => ({
 
   useEffect(() => {
     if (isTutorialDemoMode) {
-      const grid = document.querySelector("[data-calendar-grid]")
-      if (grid) {
+      const container = scrollContainerRef?.current
+      if (container) {
         const targetPx = 0
-        const centerOffset = grid.clientHeight * 0.35
-        grid.scrollTop = Math.max(0, targetPx - centerOffset)
+        const centerOffset = container.clientHeight * 0.35
+        container.scrollTop = Math.max(0, targetPx - centerOffset)
       }
     }
-  }, [isTutorialDemoMode])
+  }, [isTutorialDemoMode, scrollContainerRef])
 
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, toDateStr(currentDate))
     } catch {}
   }, [currentDate])
+
+  useEffect(() => {
+    const container = scrollContainerRef?.current
+    if (!container) return
+
+    const raf = requestAnimationFrame(() => {
+      const now = new Date()
+      const todayStr = toDateStr(now)
+      const dateStr = toDateStr(currentDate)
+      const maxScroll = container.scrollHeight - container.clientHeight
+      let targetPx
+
+      if (dateStr < todayStr) {
+        targetPx = maxScroll
+      } else if (dateStr === todayStr) {
+        const hourDecimal = now.getHours() + now.getMinutes() / 60
+        const hourPx = hourDecimal * HOUR_HEIGHT
+        const viewportH = container.clientHeight
+        targetPx = Math.max(0, Math.min(hourPx - viewportH / 2, maxScroll))
+      } else {
+        targetPx = 5 * HOUR_HEIGHT
+      }
+
+      container.scrollTop = Math.max(0, Math.min(targetPx, maxScroll))
+    })
+
+    return () => cancelAnimationFrame(raf)
+  }, [currentDate, scrollContainerRef])
 
   const [isSyncing, setIsSyncing] = useState(false)
   const [localActivities, setLocalActivities] = useState([])
@@ -424,6 +453,24 @@ useImperativeHandle(ref, () => ({
         setEditingActivity(null)
         setSelectedSlot(null)
         if (voiceSelectedActivity) {
+          setVoiceReviewActivities((prev) => {
+            if (!prev) return prev
+            return prev.map((a) => {
+              if (a._voiceId !== voiceSelectedActivity._voiceId) return a
+              return {
+                ...a,
+                title: data.title || a.title,
+                description: data.description ?? a.description,
+                start_date: data.startDatetime?.slice(0, 10) || a.start_date,
+                end_date: data.endDatetime?.slice(0, 10) || a.end_date,
+                start_time: data.startDatetime?.slice(11, 16) || a.start_time,
+                end_time: data.endDatetime?.slice(11, 16) || a.end_time,
+                color: data.color || a.color,
+                priority: data.priority || a.priority,
+                productivity_level: data.productivityLevel || a.productivity_level,
+              }
+            })
+          })
           setVoiceSavedIds((prev) => {
             const next = new Set(prev)
             next.add(voiceSelectedActivity._voiceId)

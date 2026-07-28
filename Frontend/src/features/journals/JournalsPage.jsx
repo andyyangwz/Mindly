@@ -1,27 +1,35 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Loader, FolderOpen, X } from "lucide-react"
+import { Loader, X } from "lucide-react"
 import { useJournals } from "../../hooks/useJournals"
 import { refreshPinnedJournals } from "../../hooks/usePinnedJournals"
 import { journalService } from "../../services/journalService"
 import { theme } from "../../theme"
 import JournalList from "./components/JournalList"
-import JournalDetail from "./components/JournalDetail"
-import JournalForm from "./components/JournalForm"
+import JournalEditor from "./components/JournalEditor"
 import FolderExplorer from "./folders/FolderExplorer"
 
 const SPILL_PERSONALITY_KEY = "mindly_spill_personality"
 
+function getUniqueTitle(baseTitle, existingJournals, excludeId = null) {
+  const existingTitles = new Set(
+    existingJournals
+      .filter((j) => j.id !== excludeId)
+      .map((j) => j.title)
+  )
+  if (!existingTitles.has(baseTitle)) return baseTitle
+  let num = 2
+  while (existingTitles.has(`${baseTitle} #${num}`)) num++
+  return `${baseTitle} #${num}`
+}
+
 function useJournalRoutes() {
   const location = useLocation()
   const parts = location.pathname.replace(/^.*\/journals\/?/, "").split("/").filter(Boolean)
-
   if (parts.length === 0) return { view: "list" }
-  if (parts[0] === "new") return { view: "create" }
-  if (parts[0] === "add") return { view: "create" }
-  if (parts[1] === "edit") return { view: "edit", id: parts[0] }
-  return { view: "detail", id: parts[0] }
+  if (parts[0] === "new") return { view: "editor", isNew: true }
+  return { view: "editor", id: parts[0] }
 }
 
 export default function JournalsPage() {
@@ -33,12 +41,6 @@ export default function JournalsPage() {
   const [filter, setFilter] = useState("all")
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
-  const [editId, setEditId] = useState(null)
-  const [form, setForm] = useState({
-    title: "",
-    content: "",
-    emojis: ["", "", ""],
-  })
   const [deleting, setDeleting] = useState(false)
   const [chatAboutItLoading, setChatAboutItLoading] = useState(false)
   const [showFolderExplorer, setShowFolderExplorer] = useState(false)
@@ -93,60 +95,24 @@ export default function JournalsPage() {
     }
   }, [route.view, activeFolderId, fetchJournals])
 
-  useEffect(() => {
-    if (route.view === "detail" && route.id) {
-      journalService.recordOpen(route.id).catch(() => {})
-    }
-  }, [route.view, route.id])
-
-  useEffect(() => {
-    if (route.view === "create") {
-      setForm({ title: "", content: "", emojis: ["", "", ""] })
-      setEditId(null)
-    } else if (route.view === "edit" && route.id) {
-      const j = journals.find(x => x.id === route.id)
-      if (j && editId !== route.id) {
-        setEditId(route.id)
-        setForm({
-          title: j.title,
-          content: j.content,
-          emojis:
-            j.emojis.length >= 3
-              ? [...j.emojis]
-              : [...j.emojis, ...Array(3 - j.emojis.length).fill("")],
-        })
-      }
-    }
-  }, [route.view, route.id, journals, editId])
-
   const handleBack = () => navigate("/app/journals")
 
-  const handleStartCreate = () => navigate("/app/journals/new")
-
-  const handleViewDetail = (id) => navigate(`/app/journals/${id}`)
-
-  const handleStartEdit = (id) => navigate(`/app/journals/${id}/edit`)
-
-  const handleSave = async (data) => {
-    const { folderIds, ...journalData } = data
-    if (editId) {
-      await updateJournal(editId, journalData)
-      if (folderIds !== undefined) {
-        await assignJournalFolders(editId, folderIds)
-      }
+  const handleStartCreate = async () => {
+    try {
+      const title = getUniqueTitle("Untitled", journals)
+      const journal = await journalService.create({
+        title,
+        content: "<p></p>",
+        emojis: ["📝", "", ""],
+        folderIds: [],
+      })
       refreshPinnedJournals()
-      setEditId(null)
-      setForm({ title: "", content: "", emojis: ["", "", ""] })
-      navigate(`/app/journals/${editId}`)
-    } else {
-      const created = await createJournal(journalData)
-      if (folderIds && folderIds.length > 0) {
-        await assignJournalFolders(created.id, folderIds)
-      }
-      setForm({ title: "", content: "", emojis: ["", "", ""] })
-      navigate(`/app/journals/${created.id}`)
+      navigate(`/app/journals/${journal.id}`)
+    } catch {
     }
   }
+
+  const handleViewDetail = (id) => navigate(`/app/journals/${id}`)
 
   const handleDelete = async (id) => {
     setDeleting(true)
@@ -184,21 +150,13 @@ export default function JournalsPage() {
     try {
       const j = journals.find((x) => x.id === id)
       if (!j) return
-
       if (!j.allowAI) {
         await updateJournal(id, { allowAI: true })
       }
-
-      const personality =
-        localStorage.getItem(SPILL_PERSONALITY_KEY) || "empathetic"
-
+      const personality = localStorage.getItem(SPILL_PERSONALITY_KEY) || "empathetic"
       navigate("/app/spill", {
         state: {
-          forwardedJournal: {
-            id: j.id,
-            title: j.title,
-            content: j.content,
-          },
+          forwardedJournal: { id: j.id, title: j.title, content: j.content },
           personality,
         },
       })
@@ -221,7 +179,7 @@ export default function JournalsPage() {
       openFolder(folderId)
       setShowFolderExplorer(false)
     },
-    [openFolder]
+    [openFolder],
   )
 
   const handleCloseFolder = useCallback(() => {
@@ -246,169 +204,56 @@ export default function JournalsPage() {
     return () => window.removeEventListener("journal-drop-folder", handleDrop)
   }, [journals, assignJournalFolders])
 
-  if (loading && journals.length === 0 && route.view !== "create") {
+  if (route.view === "editor") {
     return (
-      <div
-        style={{
-          padding: "60px 32px",
-          textAlign: "center",
-          color: theme.muted,
-          fontSize: 14,
-        }}
-      >
+      <JournalEditor
+        journalId={route.id || null}
+        isNew={!!route.isNew}
+        onBack={handleBack}
+        onDelete={handleDelete}
+        toggleFavorite={handleToggleFavorite}
+        togglePinned={handleTogglePinned}
+        toggleAllowAI={handleToggleAllowAI}
+        onChatAboutIt={handleChatAboutIt}
+        chatAboutItLoading={chatAboutItLoading}
+        deleting={deleting}
+        onAssignFolders={assignJournalFolders}
+        folders={folders}
+        journals={journals}
+        updateJournal={updateJournal}
+      />
+    )
+  }
+
+  if (loading && journals.length === 0) {
+    return (
+      <div style={{ padding: "60px 32px", textAlign: "center", color: theme.muted, fontSize: 14 }}>
         {t("journal.loadingJournals")}
       </div>
     )
   }
 
-  if (error && journals.length === 0 && route.view !== "create") {
+  if (error && journals.length === 0) {
     return (
-      <div
-        style={{
-          padding: "60px 32px",
-          textAlign: "center",
-          color: "#EF4444",
-          fontSize: 14,
-        }}
-      >
+      <div style={{ padding: "60px 32px", textAlign: "center", color: "#EF4444", fontSize: 14 }}>
         {t("common.errors.loadJournal", { error })}
       </div>
-    )
-  }
-
-  if (route.view === "create") {
-    return (
-      <JournalForm
-        form={form}
-        setForm={setForm}
-        editId={null}
-        onSave={handleSave}
-        onBack={handleBack}
-        folders={folders}
-        selectedFolderIds={[]}
-      />
-    )
-  }
-
-  if (route.view === "edit") {
-    const journal = journals.find((x) => x.id === route.id)
-    return (
-      <JournalForm
-        form={form}
-        setForm={setForm}
-        editId={editId}
-        onSave={handleSave}
-        onBack={handleBack}
-        folders={folders}
-        selectedFolderIds={journal?.folderIds || []}
-      />
-    )
-  }
-
-  if (route.view === "detail") {
-    const journal = journals.find((x) => x.id === route.id)
-    if (!journal) {
-      if (loading) {
-        return (
-          <div
-            style={{
-              padding: "60px 32px",
-              textAlign: "center",
-              color: theme.muted,
-              fontSize: 14,
-            }}
-          >
-            {t("journal.detail.loadingJournal")}
-          </div>
-        )
-      }
-      return (
-        <div
-          style={{
-            padding: "60px 32px",
-            textAlign: "center",
-            color: theme.muted,
-            fontSize: 14,
-          }}
-        >
-          {t("journal.detail.notFound")}
-        </div>
-      )
-    }
-    return (
-      <>
-        <JournalDetail
-          journal={journal}
-          folders={folders}
-          onBack={handleBack}
-          onEdit={handleStartEdit}
-          onDelete={handleDelete}
-          toggleFavorite={handleToggleFavorite}
-          togglePinned={handleTogglePinned}
-          toggleAllowAI={handleToggleAllowAI}
-          onChatAboutIt={() => handleChatAboutIt(journal.id)}
-          chatAboutItLoading={chatAboutItLoading}
-          deleting={deleting}
-          onAssignFolders={assignJournalFolders}
-        />
-        {chatAboutItLoading && (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 9999,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "rgba(0,0,0,0.25)",
-              backdropFilter: "blur(3px)",
-              animation: "fadeIn 0.15s ease",
-            }}
-          >
-            <div
-              style={{
-                background: "var(--color-card, white)",
-                borderRadius: 16,
-                padding: "28px 36px",
-                textAlign: "center",
-                boxShadow: "0 8px 40px rgba(0,0,0,0.15)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
-              <Loader size={22} color={theme.primary} className="spin" />
-              <p style={{ fontSize: 14, color: theme.dark, fontWeight: 500, margin: 0 }}>
-                Preparing reflection session...
-              </p>
-            </div>
-          </div>
-        )}
-      </>
     )
   }
 
   return (
     <>
       {activeFolder && (
-        <div
-          style={{
-            padding: "14px 32px",
-            background: `color-mix(in srgb, ${theme.primary} 8%, transparent)`,
-            borderBottom: `1px solid color-mix(in srgb, ${theme.primary} 15%, transparent)`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
+        <div style={{
+          padding: "14px 32px",
+          background: `color-mix(in srgb, ${theme.primary} 8%, transparent)`,
+          borderBottom: `1px solid color-mix(in srgb, ${theme.primary} 15%, transparent)`,
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 24 }}>{activeFolder.emoji}</span>
             <div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: theme.dark, margin: 0 }}>
-                {activeFolder.name}
-              </p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: theme.dark, margin: 0 }}>{activeFolder.name}</p>
               <p style={{ fontSize: 12, color: theme.muted, margin: "2px 0 0" }}>
                 {journals.length} {journals.length === 1 ? "journal" : "journals"}
               </p>
@@ -417,25 +262,12 @@ export default function JournalsPage() {
           <button
             onClick={handleCloseFolder}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "7px 14px",
-              borderRadius: 10,
-              border: "none",
-              background: "var(--color-card, white)",
-              color: theme.dark,
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-              transition: "all 0.15s",
+              display: "flex", alignItems: "center", gap: 6, padding: "7px 14px",
+              borderRadius: 10, border: "none", background: "var(--color-card, white)",
+              color: theme.dark, fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = theme.bg
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "var(--color-card, white)"
-            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-card, white)" }}
           >
             <X size={14} /> Back to All Journals
           </button>
