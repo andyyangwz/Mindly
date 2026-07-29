@@ -1,37 +1,29 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Brain, Home, PenLine, Calendar, BarChart3, Plus,
+  Brain, LayoutDashboard, PenLine, Calendar, BarChart3, Plus,
   MessageSquare, Sun, Moon, Monitor, LogOut, Target,
 } from "lucide-react";
-import { theme } from "../theme";
 import { useTheme } from "../theme/ThemeProvider";
 import { useAuth } from "../context/AuthContext";
 import ChatListItem from "../features/chats/ChatListItem";
 import { useTranslation } from "react-i18next";
 import { useNavbarJournals, refreshPinnedJournals } from "../hooks/usePinnedJournals";
 import ManageNavbarJournals from "../features/journals/components/ManageNavbarJournals";
+import "../styles/shared/index.css";
 
-const ICONS = { Home, PenLine, Calendar };
+const ICONS = { LayoutDashboard, PenLine, Calendar };
 
 const NAV_ITEMS = [
-  { icon: "Home", id: "home" },
-  { icon: "Calendar", id: "productivity" },
+  { icon: "LayoutDashboard", id: "dashboard" },
+  { icon: "Calendar", id: "scheduling" },
   { icon: "PenLine", id: "journals" },
 ];
 
 function ThemeSwitcher({ currentTheme, onSelect }) {
   const { t } = useTranslation();
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 3,
-        background: theme.bg,
-        borderRadius: 8,
-        padding: 2,
-      }}
-    >
+    <div className="sidebar-switcher">
       {[
         { value: "light", icon: Sun, label: t("nav.light") },
         { value: "dark", icon: Moon, label: t("nav.dark") },
@@ -42,23 +34,7 @@ function ThemeSwitcher({ currentTheme, onSelect }) {
           <button
             key={value}
             onClick={() => onSelect(value)}
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-              padding: "5px 8px",
-              borderRadius: 7,
-              border: "none",
-              cursor: "pointer",
-              background: active ? "var(--color-card, white)" : "transparent",
-              color: active ? theme.primaryText : theme.muted,
-              fontSize: 11,
-              fontWeight: active ? 600 : 500,
-              transition: "all 0.15s",
-              boxShadow: active ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-            }}
+            className={`sidebar-switcher-btn ${active ? "sidebar-switcher-btn--active" : ""}`}
           >
             <Icon size={12} />
             {label}
@@ -74,15 +50,7 @@ function LanguageSwitcher() {
   const currentLang = i18n.language?.startsWith("id") ? "id" : "en";
 
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 3,
-        background: theme.bg,
-        borderRadius: 8,
-        padding: 2,
-      }}
-    >
+    <div className="sidebar-switcher">
       {[
         { value: "en", label: t("nav.english") },
         { value: "id", label: t("nav.indonesian") },
@@ -92,23 +60,7 @@ function LanguageSwitcher() {
           <button
             key={value}
             onClick={() => i18n.changeLanguage(value)}
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-              padding: "5px 8px",
-              borderRadius: 7,
-              border: "none",
-              cursor: "pointer",
-              background: active ? "var(--color-card, white)" : "transparent",
-              color: active ? theme.primaryText : theme.muted,
-              fontSize: 11,
-              fontWeight: active ? 600 : 500,
-              transition: "all 0.15s",
-              boxShadow: active ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-            }}
+            className={`sidebar-switcher-btn ${active ? "sidebar-switcher-btn--active" : ""}`}
           >
             {value === "en" ? "\uD83C\uDDEC\uD83C\uDDE7" : "\uD83C\uDDEE\uD83C\uDDE9"}
             {label}
@@ -145,7 +97,7 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
   }, []);
 
   const pathname = location.pathname;
-  const activeTab = pathname.startsWith("/app") ? pathname.split("/")[2] || "home" : "home";
+  const activeTab = pathname.startsWith("/app") ? pathname.split("/")[2] || "dashboard" : "dashboard";
   const activeSessionId = pathname.startsWith("/app/spill/") ? pathname.split("/")[3] : null;
   const activeJournalId = pathname.startsWith("/app/journals/") ? pathname.split("/")[3] : null;
 
@@ -162,51 +114,22 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
   };
 
   return (
-    <div
-      style={{
-        width: 260, minWidth: 260, height: "100vh",
-        background: "var(--color-card, white)",
-        borderRight: `1px solid ${theme.border}`,
-        display: "flex", flexDirection: "column",
-        position: "sticky", top: 0,
-      }}
-    >
+    <div className="sidebar">
       {/* Logo */}
-      <div
-        style={{
-          padding: "22px 20px 18px",
-          borderBottom: `1px solid ${theme.border}`,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
-              borderRadius: 10, padding: 7, display: "flex",
-            }}
-          >
+      <div className="sidebar-logo-section">
+        <div className="sidebar-logo-row">
+          <div className="sidebar-logo-icon">
             <Brain size={18} color="white" />
           </div>
-          <span
-            style={{
-              fontWeight: 700, fontSize: 16, color: theme.dark,
-              letterSpacing: "-0.01em",
-            }}
-          >
+          <span className="sidebar-logo-text">
             {t("app.name")}
           </span>
         </div>
       </div>
 
       {/* Nav items */}
-      <div style={{ padding: "14px 10px 4px" }}>
-        <p
-          style={{
-            fontSize: 10, fontWeight: 700, color: theme.muted,
-            textTransform: "uppercase", letterSpacing: "0.08em",
-            marginBottom: 10, paddingLeft: 6,
-          }}
-        >
+      <div className="sidebar-nav-section">
+        <p className="sidebar-section-label sidebar-label-nav">
           {t("nav.mainMenu")}
         </p>
         {NAV_ITEMS.map((item) => {
@@ -216,49 +139,16 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
             <div key={item.id}>
               <button
                 onClick={() => { navigate(`/app/${item.id}`); onNavClick?.() }}
-                style={{
-                  width: "100%", display: "flex", alignItems: "center", gap: 10,
-                  padding: "10px 12px", borderRadius: 8, border: "none",
-                  cursor: "pointer", marginBottom: 4,
-                  background: active ? theme.primary : "transparent",
-                  color: active ? "white" : theme.muted,
-                  fontWeight: active ? 600 : 500, fontSize: 14,
-                  transition: "all 0.12s",
-                  boxShadow: active
-                    ? `0 2px 8px color-mix(in srgb, ${theme.primary} 33%, transparent)`
-                    : "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (!active)
-                    e.currentTarget.style.background = "var(--color-hover, #F9FAFB)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) e.currentTarget.style.background = "transparent";
-                }}
+                className={`sidebar-nav-btn ${active ? "sidebar-nav-btn--active" : ""}`}
               >
                 <Icon size={17} />
                 {t(`nav.${item.id}`)}
               </button>
               {item.id === "journals" && (
-                <div style={{ paddingLeft: 20, marginTop: -1, marginBottom: 6 }}>
+                <div className="sidebar-journal-submenu">
                   <button
                     onClick={() => { setShowManageNavbar(true); onNavClick?.() }}
-                    style={{
-                      width: "100%", display: "flex", alignItems: "center", gap: 8,
-                      padding: "6px 12px", borderRadius: 6, border: "none",
-                      cursor: "pointer", marginBottom: 4,
-                      background: "transparent",
-                      color: theme.muted,
-                      fontWeight: 600, fontSize: 13,
-                      transition: "color 0.12s",
-                      textAlign: "left",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = theme.dark
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = theme.muted
-                    }}
+                    className="sidebar-pinned-btn"
                   >
                     {t("nav.pinned")}
                   </button>
@@ -271,21 +161,10 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
                           <button
                             key={journal.id}
                             onClick={() => { navigate(`/app/journals/${journal.id}`); onNavClick?.() }}
-                            style={{
-                              width: "100%", display: "flex", alignItems: "center", gap: 8,
-                              padding: "6px 12px", borderRadius: 6, border: "none",
-                              cursor: "pointer", marginBottom: 1,
-                              background: "var(--color-card, white)",
-                              color: isActive ? theme.primary : theme.muted,
-                              fontWeight: isActive ? 600 : 500, fontSize: 13,
-                              transition: "color 0.12s",
-                            }}
+                            className={`sidebar-journal-item ${isActive ? "sidebar-journal-item--active" : ""}`}
                           >
-                            <span style={{ fontSize: 14, lineHeight: 1 }}>{emoji}</span>
-                            <span style={{
-                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                              flex: 1, textAlign: "left",
-                            }}>
+                            <span className="sidebar-journal-emoji">{emoji}</span>
+                            <span className="sidebar-journal-title">
                               {journal.title}
                             </span>
                           </button>
@@ -301,55 +180,26 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
       </div>
 
       {/* Chat list */}
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "0 10px", marginTop: 6 }}>
-        <div
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "10px 6px 8px",
-          }}
-        >
-          <p
-            style={{
-              fontSize: 10, fontWeight: 700, color: theme.muted,
-              textTransform: "uppercase", letterSpacing: "0.08em",
-            }}
-          >
+      <div className="sidebar-chat-section">
+        <div className="sidebar-chat-header">
+          <p className="sidebar-section-label">
             {t("nav.recentChats")}
           </p>
           <button
             onClick={onNewChat}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: theme.muted, display: "flex", padding: 4, borderRadius: 6,
-              transition: "all 0.12s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "var(--color-hover, #F3F4F6)";
-              e.currentTarget.style.color = theme.primaryText;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = theme.muted;
-            }}
+            className="sidebar-new-chat-btn"
           >
             <Plus size={15} />
           </button>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+        <div className="sidebar-chat-list">
           {sessions.length === 0 && (
-            <div style={{ padding: "28px 12px", textAlign: "center" }}>
-              <div
-                style={{
-                  width: 32, height: 32, borderRadius: 8,
-                  background: `color-mix(in srgb, ${theme.primary} 18%, transparent)`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  margin: "0 auto 10px",
-                }}
-              >
-                <MessageSquare size={14} color={theme.primaryText} />
+            <div className="sidebar-empty-state">
+              <div className="sidebar-empty-icon">
+                <MessageSquare size={14} />
               </div>
-              <p style={{ fontSize: 12, color: theme.muted, margin: 0, lineHeight: 1.5 }}>
+              <p className="sidebar-empty-text">
                 {t("nav.noChats")}
               </p>
             </div>
@@ -370,145 +220,52 @@ export default function Sidebar({ sessions, newSessionId, onNewChat, onRenameCha
       </div>
 
       {/* User footer */}
-      <div
-        ref={accountRef}
-        style={{
-          position: "relative", padding: "16px 10px 12px",
-          borderTop: `1px solid ${theme.border}`,
-        }}
-      >
+      <div ref={accountRef} className="sidebar-footer">
         <button
           onClick={() => setShowAccountMenu((v) => !v)}
-          style={{
-            width: "100%", display: "flex", alignItems: "center", gap: 10,
-            padding: "10px 12px", borderRadius: 10, border: "none",
-            cursor: "pointer",
-            background: "transparent",
-            transition: "all 0.15s",
-          }}
+          className="sidebar-account-btn"
         >
-          <div
-            style={{
-              width: 32, height: 32, borderRadius: "50%",
-              background: `linear-gradient(135deg, ${theme.secondary}, ${theme.accent})`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "white", fontWeight: 600, fontSize: 12,
-            }}
-          >
+          <div className="sidebar-avatar">
             {initials}
           </div>
-          <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-            <p
-              style={{
-                fontSize: 12, fontWeight: 600, color: theme.dark,
-                margin: 0, marginBottom: 1,
-              }}
-            >
+          <div className="sidebar-user-info">
+            <p className="sidebar-user-name">
               {displayName}
             </p>
-            <p style={{ fontSize: 10, color: theme.muted, margin: 0 }}>
+            <p className="sidebar-user-plan">
               {t("nav.basicPlan")}
             </p>
           </div>
         </button>
 
         {showAccountMenu && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "100%",
-              left: 10,
-              right: 10,
-              marginBottom: 6,
-              background: "var(--color-card, white)",
-              borderRadius: 12,
-              border: `1px solid ${theme.border}`,
-              boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-              padding: 12,
-              zIndex: theme.z.dropdown,
-            }}
-          >
-            <p
-              style={{
-                fontSize: 10, fontWeight: 700, color: theme.muted,
-                textTransform: "uppercase", letterSpacing: "0.08em",
-                marginBottom: 8,
-              }}
-            >
+          <div className="sidebar-dropdown">
+            <p className="sidebar-section-label sidebar-label-dropdown">
               {t("nav.theme")}
             </p>
             <ThemeSwitcher currentTheme={currentTheme} onSelect={setTheme} />
-            <div style={{ height: 12 }} />
-            <p
-              style={{
-                fontSize: 10, fontWeight: 700, color: theme.muted,
-                textTransform: "uppercase", letterSpacing: "0.08em",
-                marginBottom: 8,
-              }}
-            >
+            <p className="sidebar-section-label sidebar-label-dropdown-top">
               {t("nav.language")}
             </p>
             <LanguageSwitcher />
 
-            <div style={{ height: 12 }} />
             <button
-              onClick={() => { setShowAccountMenu(false); navigate("/app/habit-relics"); onNavClick?.() }}
-              style={{
-                width: "100%", display: "flex", alignItems: "center",
-                gap: 8, padding: "10px 12px", borderRadius: 8,
-                border: "none", cursor: "pointer",
-                background: "transparent", color: theme.dark,
-                fontSize: 13, fontWeight: 600,
-                transition: "all 0.12s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--color-hover, #F3F4F6)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
+              onClick={() => { setShowAccountMenu(false); navigate("/app/progress-tracker"); onNavClick?.() }}
+              className="sidebar-dropdown-btn"
             >
               <Target size={15} />
-              {t("nav.habitRelics") || "Habit Relics"}
+              {t("nav.progressTracker") || "Progress Tracker"}
             </button>
-            <div style={{ height: 12 }} />
             <button
               onClick={() => { setShowAccountMenu(false); navigate("/app/insight"); onNavClick?.() }}
-              style={{
-                width: "100%", display: "flex", alignItems: "center",
-                gap: 8, padding: "10px 12px", borderRadius: 8,
-                border: "none", cursor: "pointer",
-                background: "transparent", color: theme.dark,
-                fontSize: 13, fontWeight: 600,
-                transition: "all 0.12s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--color-hover, #F3F4F6)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
+              className="sidebar-dropdown-btn"
             >
               <BarChart3 size={15} />
               {t("nav.insight")}
             </button>
-            <div style={{ height: 12 }} />
             <button
               onClick={handleLogout}
-              style={{
-                width: "100%", display: "flex", alignItems: "center",
-                gap: 8, padding: "10px 12px", borderRadius: 8,
-                border: "none", cursor: "pointer",
-                background: "transparent", color: "#EF4444",
-                fontSize: 13, fontWeight: 600,
-                transition: "all 0.12s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(239,68,68,0.08)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
+              className="sidebar-dropdown-btn sidebar-dropdown-btn--danger"
             >
               <LogOut size={15} />
               {t("nav.logout") || "Log Out"}

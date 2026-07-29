@@ -1,0 +1,37 @@
+.dashboard-desktop {
+  padding: 36px 48px 80px;
+  margin: 0 auto;
+  background: var(--color-bg);
+  min-height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+}
+
+.dashboard-mobile {
+  padding: 24px 20px 72px;
+  margin: 0 auto;
+  background: var(--color-bg);
+  min-height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.dashboard-grid-2col {
+  display: grid;
+  gap: 48px;
+  align-items: start;
+}
+
+.dashboard-grid-2col-tasks {
+  display: flex;
+  gap: 24px;
+  align-items: start;
+}
+
+.dashboard-grid-2col-tasks > * {
+  flex: 1;
+}

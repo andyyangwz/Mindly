@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import "../../styles/auth/index.css";
 
 const DISPLAY_DURATION = 2800;
 const FADE_DURATION = 0.55;
@@ -23,7 +24,7 @@ export default function TypewriterText({ texts, style }) {
   }, [page, advance]);
 
   return (
-    <div style={{ position: "relative", ...style }}>
+    <div className="typewriter-root" style={style}>
       <AnimatePresence mode="wait">
         <motion.div
           key={page}

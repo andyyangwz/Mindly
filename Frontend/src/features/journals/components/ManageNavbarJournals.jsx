@@ -1,24 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import { X, GripVertical } from "lucide-react"
-import { theme } from "../../../theme"
 import { Portal } from "../../../utils/portal"
 import { journalService } from "../../../services/journalService"
 import { refreshPinnedJournals } from "../../../hooks/usePinnedJournals"
 import { useToast } from "../../../components/ui/Toast"
+import "../../../styles/journals/index.css"
 
 const MAX_SIDEBAR = 3
 const GAP = 6
-
-const KEYFRAMES = `
-@keyframes nbar-list-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes nbar-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-`
 
 export default function ManageNavbarJournals({ open, onClose }) {
   const [orderedList, setOrderedList] = useState([])
@@ -174,71 +163,48 @@ export default function ManageNavbarJournals({ open, onClose }) {
 
   return (
     <Portal>
-      <style>{KEYFRAMES}</style>
-      <div
-        onClick={onClose}
-        style={{
-          position: "fixed", inset: 0, zIndex: theme.z.modalOverlay,
-          background: "rgba(0,0,0,0.4)",
-          display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
-          animation: "nbar-fade-in 0.2s ease",
-        }}
-      >
+      <div onClick={onClose} className="nbar-overlay">
         <div
           role="dialog"
           aria-modal="true"
           aria-label="Manage Pinned Journals"
           onClick={e => e.stopPropagation()}
-          style={{
-            background: "var(--color-card, white)",
-            borderRadius: 20, padding: "32px 36px",
-            maxWidth: 440, width: "100%",
-            maxHeight: "80vh", overflowY: "auto",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
-            position: "relative",
-          }}
+          className="nbar-dialog"
         >
-          <button
-            onClick={onClose}
-            style={{
-              position: "absolute", top: 16, right: 16,
-              background: "none", border: "none", cursor: "pointer",
-              color: theme.muted, padding: 4, borderRadius: 6,
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.color = theme.dark }}
-            onMouseLeave={e => { e.currentTarget.style.color = theme.muted }}
-          >
+          <button onClick={onClose} className="nbar-close-btn">
             <X size={18} />
           </button>
 
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: theme.dark, margin: "0 0 4px" }}>
+          <h2 className="nbar-title">
             Pinned Journals
           </h2>
-          <p style={{ fontSize: 12.5, color: theme.muted, margin: "0 0 20px", lineHeight: 1.5 }}>
+          <p className="nbar-subtitle">
             The first 3 journals appear in your sidebar. Drag to reorder.
           </p>
 
           {loading ? (
-            <p style={{ fontSize: 13, color: theme.muted, textAlign: "center", padding: "24px 0" }}>
-              Loading...
-            </p>
+            <p className="nbar-loading">Loading...</p>
           ) : orderedList.length === 0 ? (
-            <p style={{ fontSize: 13, color: theme.muted, textAlign: "center", padding: "24px 0", opacity: 0.6 }}>
-              No pinned journals
-            </p>
+            <p className="nbar-empty">No pinned journals</p>
           ) : (
             <div
               ref={listRef}
               onDrop={handleDrop}
               onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move" }}
-              style={{ display: "flex", flexDirection: "column", gap: `${GAP}px` }}
+              className="nbar-list"
+              style={{ gap: `${GAP}px` }}
             >
               {orderedList.map((journal, index) => {
                 const isTopThree = index < MAX_SIDEBAR
                 const isDragging = dragging && dragStartRef.current === index
                 const isDragOver = dragOverIndex === index && !(dragging && dragStartRef.current === index)
                 const transform = getDragTransform(index)
+
+                let itemClass = "nbar-item"
+                if (isDragOver) itemClass += " drag-over"
+                else if (isDragging) itemClass += " dragging"
+                else if (isTopThree) itemClass += " top-three"
+                else itemClass += " default"
 
                 return (
                   <div
@@ -248,70 +214,30 @@ export default function ManageNavbarJournals({ open, onClose }) {
                     onDragOver={e => handleDragOver(e, index)}
                     onDragEnd={handleDragEnd}
                     onDragLeave={handleDragLeave}
+                    className={itemClass}
                     style={{
-                      display: "flex", alignItems: "center", gap: 10,
-                      padding: "10px 12px", borderRadius: 10,
-                      border: isDragOver
-                        ? `1.5px dashed ${theme.primary}`
-                        : isTopThree
-                          ? `1.5px solid ${theme.primary}`
-                          : `1px solid ${theme.border}`,
-                      background: isDragOver
-                        ? `color-mix(in srgb, ${theme.primary} 8%, transparent)`
-                        : isTopThree
-                          ? `color-mix(in srgb, ${theme.primary} 3%, var(--color-card, white))`
-                          : "var(--color-card, white)",
-                      boxShadow: isTopThree && !isDragOver
-                        ? `0 0 0 1px color-mix(in srgb, ${theme.primary} 12%, transparent)`
-                        : "none",
-                      cursor: dragging ? "default" : "grab",
-                      transition: justDropped
-                        ? "none"
-                        : dragging
-                          ? "border 0.15s ease, background 0.15s ease, box-shadow 0.15s ease"
-                          : "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                      transition: justDropped ? "none" : dragging ? "border 0.15s ease, background 0.15s ease, box-shadow 0.15s ease" : undefined,
                       transform,
                       opacity: isDragging ? 0.05 : 1,
                       animation: !dragging && !hasDraggedRef.current ? `nbar-list-in 0.25s ease ${index * 40}ms both` : "none",
-                      position: "relative",
                       zIndex: isDragging ? 10 : 1,
                     }}
-                    onMouseEnter={e => {
-                      if (dragging) return
-                      e.currentTarget.style.transform = "translateY(-1px)"
-                      e.currentTarget.style.boxShadow = isTopThree
-                        ? `0 2px 12px color-mix(in srgb, ${theme.primary} 15%, transparent)`
-                        : "0 2px 8px rgba(0,0,0,0.06)"
-                    }}
-                    onMouseLeave={e => {
-                      if (dragging) return
-                      e.currentTarget.style.transform = "translateY(0)"
-                      e.currentTarget.style.boxShadow = isTopThree
-                        ? `0 0 0 1px color-mix(in srgb, ${theme.primary} 12%, transparent)`
-                        : "none"
-                    }}
                   >
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, color: isTopThree ? theme.primary : theme.muted,
-                      width: 16, textAlign: "center", flexShrink: 0,
-                      opacity: isTopThree ? 1 : 0.5,
-                    }}>
+                    <span className={`nbar-rank${isTopThree ? " top-three" : " default"}`}>
                       {index + 1}
                     </span>
 
-                    <div style={{ color: theme.muted, display: "flex", flexShrink: 0 }}>
+                    <div className="nbar-grip">
                       <GripVertical size={14} />
                     </div>
 
-                    <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>
+                    <span className="nbar-emoji">
                       {journal.emojis?.find(Boolean) || "\uD83D\uDCD6"}
                     </span>
 
-                    <span style={{
-                      fontSize: 13, fontWeight: isTopThree ? 600 : 500,
-                      color: theme.dark,
-                      flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    }}>
+                    <span className={`nbar-journal-title${isTopThree ? " top-three" : " default"}`}
+                      style={{ color: "var(--color-dark)" }}
+                    >
                       {journal.title}
                     </span>
                   </div>
@@ -321,10 +247,7 @@ export default function ManageNavbarJournals({ open, onClose }) {
           )}
 
           {saving && (
-            <p style={{
-              fontSize: 11, color: theme.muted, textAlign: "center",
-              marginTop: 12, opacity: 0.7,
-            }}>
+            <p className="nbar-saving">
               Saving...
             </p>
           )}

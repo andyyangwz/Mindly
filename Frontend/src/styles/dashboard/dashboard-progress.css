@@ -1,0 +1,115 @@
+.tpb-track { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; overflow: hidden; }
+.tpb-fill { height: 100%; transition: width 0.3s ease; }
+
+.quick-actions-row {
+  display: flex;
+  gap: 8px;
+}
+
+.quick-actions-btn {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 6px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-hover);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.quick-actions-btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.quick-actions-btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.quick-actions-btn-label {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--color-dark);
+}
+
+.quick-actions-icon-box {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quick-actions-label {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.quick-actions-dropdown {
+  flex: 1;
+  position: relative;
+}
+
+.quick-actions-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: var(--color-card, white);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  overflow: hidden;
+  z-index: 500;
+  animation: fadeIn 0.12s ease;
+}
+
+.quick-actions-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.1s;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-dark);
+  font-family: inherit;
+}
+
+.quick-actions-menu-item:hover {
+  background: var(--color-hover);
+}
+
+.quick-actions-menu-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quick-actions-chevron {
+  transition: transform 0.15s;
+}
+
+.quick-actions-truncated {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

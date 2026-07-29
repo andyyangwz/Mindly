@@ -1,0 +1,96 @@
+.insight-page {
+  padding: 28px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.insight-section {
+  margin-bottom: 48px;
+}
+
+.insight-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.insight-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-dark);
+  margin: 0;
+}
+
+.insight-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 48px;
+}
+
+.insight-header-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-dark);
+  margin: 0;
+}
+
+.insight-header-subtitle {
+  font-size: 12px;
+  color: var(--color-muted);
+  margin: 3px 0 0;
+}
+
+.insight-performance-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 20px;
+}
+
+.insight-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.insight-know-you-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.insight-collapsible-section {
+  margin-bottom: 40px;
+}
+
+.insight-collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.insight-collapsible-header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-dark);
+  margin: 0;
+  flex: 1;
+}
+
+.insight-chevron-box {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-muted) 10%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.insight-collapsible-body {
+  overflow: hidden;
+}

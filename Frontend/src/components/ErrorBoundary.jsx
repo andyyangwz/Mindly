@@ -1,4 +1,5 @@
 import { Component } from "react"
+import "../styles/shared/index.css"
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -17,38 +18,15 @@ export default class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-          padding: 40,
-          fontFamily: "'Poppins', system-ui, sans-serif",
-          background: "#f9fafb",
-          color: "#111827",
-        }}>
-          <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
-            Something went wrong
-          </h1>
-          <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 20, textAlign: "center", maxWidth: 400 }}>
-            An unexpected error occurred.
-          </p>
-          <div style={{ display: "flex", gap: 10 }}>
+        <div className="eb-wrapper">
+          <h1 className="eb-title">Something went wrong</h1>
+          <p className="eb-message">An unexpected error occurred.</p>
+          <div className="eb-actions">
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null })
               }}
-              style={{
-                padding: "10px 24px",
-                borderRadius: 10,
-                border: "1px solid #d1d5db",
-                background: "white",
-                color: "#111827",
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: "pointer",
-              }}
+              className="eb-btn eb-btn--try-again"
             >
               Try Again
             </button>
@@ -56,16 +34,7 @@ export default class ErrorBoundary extends Component {
               onClick={() => {
                 window.location.reload()
               }}
-              style={{
-                padding: "10px 24px",
-                borderRadius: 10,
-                border: "none",
-                background: "#6366f1",
-                color: "white",
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: "pointer",
-              }}
+              className="eb-btn eb-btn--refresh"
             >
               Refresh Page
             </button>

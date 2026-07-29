@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Brain } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TypewriterText from "./TypewriterText";
+import "../../styles/auth/index.css";
 
 const DARK_ORBS = [
   { color: "#6C47FF", size: 420, x: "20%", y: "15%", duration: 28 },
@@ -96,91 +97,55 @@ export default function AtmospherePanel({ isLight }) {
 
   return (
     <div
+      className="atmosphere-root"
       style={{
-        position: "relative",
-        flex: "1 1 55%",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        overflow: "hidden",
         background: isLight
           ? "radial-gradient(ellipse at 30% 40%, #F4F1F8 0%, #EEEAFA 40%, #E8E2F4 100%)"
           : "radial-gradient(ellipse at 30% 40%, #0F0B1E 0%, #0A0A1A 60%, #080812 100%)",
       }}
     >
-      {/* Mesh gradient overlay */}
       <div
+        className="atmosphere-mesh"
         style={{
-          position: "absolute",
-          inset: 0,
           background: isLight
-            ? `
-              radial-gradient(ellipse at 20% 20%, rgba(196,181,253,0.08) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 80%, rgba(167,139,250,0.06) 0%, transparent 50%),
-              radial-gradient(ellipse at 50% 50%, rgba(221,214,254,0.05) 0%, transparent 60%)
-            `
-            : `
-              radial-gradient(ellipse at 20% 20%, rgba(108,71,255,0.06) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 80%, rgba(74,58,138,0.04) 0%, transparent 50%),
-              radial-gradient(ellipse at 50% 50%, rgba(45,43,85,0.03) 0%, transparent 60%)
-            `,
-          pointerEvents: "none",
+            ? "radial-gradient(ellipse at 20% 20%, rgba(196,181,253,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(167,139,250,0.06) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(221,214,254,0.05) 0%, transparent 60%)"
+            : "radial-gradient(ellipse at 20% 20%, rgba(108,71,255,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(74,58,138,0.04) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(45,43,85,0.03) 0%, transparent 60%)",
         }}
       />
 
-      {/* Vignette */}
       <div
+        className="atmosphere-vignette"
         style={{
-          position: "absolute",
-          inset: 0,
           background: isLight
             ? "radial-gradient(ellipse at center, transparent 40%, rgba(238,234,250,0.5) 100%)"
             : "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)",
-          pointerEvents: "none",
         }}
       />
 
-      {/* Glowing orbs */}
       {orbs.map((orb, i) => (
         <Orb key={i} {...orb} isLight={isLight} />
       ))}
 
-      {/* Floating particles */}
       {Array.from({ length: 30 }).map((_, i) => (
         <FloatingParticle key={i} isLight={isLight} />
       ))}
 
-      {/* Content */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 2,
-          padding: "80px 60px",
-          maxWidth: 560,
-        }}
-      >
-        {/* Logo */}
+      <div className="atmosphere-content">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 48 }}
+          className="atmosphere-logo"
         >
           <div
+            className="atmosphere-logo-icon"
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
               background: isLight
                 ? "linear-gradient(135deg, rgba(124,92,252,0.2), rgba(167,139,250,0.12))"
                 : "linear-gradient(135deg, rgba(108,71,255,0.3), rgba(74,58,138,0.2))",
               border: isLight
                 ? "1px solid rgba(124,92,252,0.12)"
                 : "1px solid rgba(108,71,255,0.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
             }}
           >
             <Brain
@@ -190,53 +155,37 @@ export default function AtmospherePanel({ isLight }) {
           </div>
           <div>
             <span
-              style={{
-                fontWeight: 700,
-                fontSize: 17,
-                color: isLight ? "rgba(45,43,61,0.9)" : "rgba(232,230,240,0.95)",
-                letterSpacing: "-0.01em",
-              }}
+              className="atmosphere-logo-text"
+              style={{ color: isLight ? "rgba(45,43,61,0.9)" : "rgba(232,230,240,0.95)" }}
             >
               {t("auth.atmosphere.title")}
             </span>
             <p
-              style={{
-                margin: 0,
-                fontSize: 11,
-                color: isLight ? "rgba(45,43,61,0.35)" : "rgba(154,148,184,0.6)",
-                fontWeight: 400,
-                letterSpacing: "0.04em",
-                textTransform: "none",
-              }}
+              className="atmosphere-logo-sub"
+              style={{ color: isLight ? "rgba(45,43,61,0.35)" : "rgba(154,148,184,0.6)" }}
             >
               {t("auth.atmosphere.subtitle")}
             </p>
           </div>
         </motion.div>
 
-        {/* Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15, ease: "easeOut" }}
-          style={{
-            fontSize: 38,
-            fontWeight: 300,
-            lineHeight: 1.2,
-            color: isLight ? "rgba(45,43,61,0.9)" : "rgba(232,230,240,0.95)",
-            letterSpacing: "-0.03em",
-            margin: 0,
-            marginBottom: 20,
-          }}
+          className="atmosphere-headline"
+          style={{ color: isLight ? "rgba(45,43,61,0.9)" : "rgba(232,230,240,0.95)" }}
         >
           {t("auth.atmosphere.headline1")}
           <br />
-          <span style={{ fontWeight: 600, color: isLight ? "rgba(124,92,252,0.85)" : "rgba(200,190,240,0.9)" }}>
+          <span
+            className="atmosphere-headline-highlight"
+            style={{ color: isLight ? "rgba(124,92,252,0.85)" : "rgba(200,190,240,0.9)" }}
+          >
             {t("auth.atmosphere.headline2")}
           </span>
         </motion.h1>
 
-        {/* Typewriter taglines */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -257,37 +206,23 @@ export default function AtmospherePanel({ isLight }) {
           />
         </motion.div>
 
-        {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 1.0, ease: "easeOut" }}
-          style={{
-            position: "absolute",
-            bottom: 40,
-            left: 60,
-            right: 60,
-          }}
+          className="atmosphere-footer"
         >
           <div
+            className="atmosphere-footer-line"
             style={{
-              width: 40,
-              height: 2,
               background: isLight
                 ? "linear-gradient(90deg, rgba(124,92,252,0.3), transparent)"
                 : "linear-gradient(90deg, rgba(108,71,255,0.4), transparent)",
-              marginBottom: 16,
-              borderRadius: 1,
             }}
           />
           <p
-            style={{
-              margin: 0,
-              fontSize: 11,
-              color: isLight ? "rgba(45,43,61,0.2)" : "rgba(154,148,184,0.35)",
-              fontWeight: 500,
-              letterSpacing: "0.04em",
-            }}
+            className="atmosphere-footer-text"
+            style={{ color: isLight ? "rgba(45,43,61,0.2)" : "rgba(154,148,184,0.35)" }}
           >
             {t("auth.atmosphere.footer")}
           </p>

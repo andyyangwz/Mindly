@@ -1,0 +1,263 @@
+.ib-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s;
+  opacity: 0.85;
+  position: relative;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.ib-btn:hover {
+  opacity: 1;
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 19%, transparent);
+  transform: scale(1.12);
+}
+.ib-btn:focus-visible {
+  opacity: 1;
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 19%, transparent);
+  transform: scale(1.12);
+}
+.ib-tooltip {
+  position: fixed;
+  z-index: 99999;
+  pointer-events: none;
+  max-width: 240px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-dark);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.sh-hint {
+  position: absolute;
+  z-index: 100;
+  max-width: 260px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--color-primary)11;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-dark);
+  animation: sh-hint-fade-in 0.4s ease both;
+}
+.sh-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.sh-text {
+  margin: 0;
+  flex: 1;
+}
+.sh-dismiss-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  color: var(--color-muted);
+  flex-shrink: 0;
+  margin-top: -2px;
+}
+@keyframes sh-hint-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.so-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.8);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  cursor: pointer;
+  animation: so-spotlightIn 0.3s ease both;
+}
+.so-glow {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  animation: so-glowPulse 2.5s ease-in-out infinite;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+.so-ring {
+  position: fixed;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  z-index: 9999;
+  pointer-events: none;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+.so-card {
+  position: fixed;
+  z-index: 10002;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  overflow: visible;
+  border-radius: 16px;
+  box-shadow: 0 24px 80px 16px rgba(0, 0, 0, 0.45);
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.so-card-inner {
+  background: var(--color-card);
+  border-radius: 16px;
+  border: 1px solid var(--color-primary)33;
+  padding: 24px 24px 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  position: relative;
+}
+.so-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-input);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  transition: all 0.15s;
+}
+.so-close-btn:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+.so-dots {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+.so-dot {
+  height: 6px;
+  border-radius: 3px;
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.so-dot--active {
+  width: 22px;
+  background: var(--color-primary);
+}
+.so-dot:not(.so-dot--active) {
+  width: 6px;
+  background: var(--color-border);
+}
+.so-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-dark);
+  margin: 0 0 4px;
+}
+.so-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-muted);
+  margin: 0 0 16px;
+}
+.so-nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.so-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-dark);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.so-back-btn:hover {
+  border-color: var(--color-primary);
+}
+.so-next-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.so-next-btn:hover {
+  opacity: 0.9;
+}
+.so-done-btn {
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.so-done-btn:hover {
+  opacity: 0.9;
+}
+.so-mascot {
+  position: absolute;
+  bottom: -60px;
+  left: -24px;
+  width: 100px;
+  height: auto;
+  pointer-events: none;
+  z-index: 10003;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3)) drop-shadow(0 24px 64px rgba(0, 0, 0, 0.2));
+  object-fit: contain;
+}
+@keyframes so-spotlightIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes so-glowPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}

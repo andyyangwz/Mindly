@@ -1,0 +1,44 @@
+.eb-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px;
+  font-family: "Poppins", system-ui, sans-serif;
+  background: #f9fafb;
+  color: #111827;
+}
+.eb-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.eb-message {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 20px;
+  text-align: center;
+  max-width: 400px;
+}
+.eb-actions {
+  display: flex;
+  gap: 10px;
+}
+.eb-btn {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.eb-btn--try-again {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+}
+.eb-btn--refresh {
+  border: none;
+  background: #6366f1;
+  color: #fff;
+}

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { useTutorial } from "./TutorialContext"
 import TUTORIAL_CONTENT, { getLocalizedTutorialContent } from "./tutorialContent"
 import { getTutorialMascot } from "./tutorialMascotMapping"
-import { theme } from "../../theme"
+import "../../styles/shared/index.css"
 
 const SPOTLIGHT_PADDING = 16
 const SPOTLIGHT_RADIUS = 14
@@ -177,8 +177,6 @@ export default function SpotlightOverlay() {
     return null
   }
 
-  const dotColor = theme.primary
-
   const sp = SPOTLIGHT_PADDING
   const sr = SPOTLIGHT_RADIUS
   const stepOffsetX = currentStep?.spotlightOffsetX ?? 0
@@ -205,260 +203,108 @@ export default function SpotlightOverlay() {
 
   return (
     <>
-      <style>{`
-        @keyframes spotlightIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes glowPulse {
-          0%, 100% { opacity: 0.45; }
-          50% { opacity: 1; }
-        }
-      `}</style>
-
       {/* Fullscreen dark overlay with mask cutout — target shows through as a real hole */}
       <div
         onClick={handleBackdropClick}
+        className="so-overlay"
         style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 9998,
-          background: "rgba(0,0,0,0.80)",
           WebkitMaskImage: maskImage,
           maskImage,
           WebkitMaskSize: `${vw}px ${vh}px`,
           maskSize: `${vw}px ${vh}px`,
-          WebkitMaskRepeat: "no-repeat",
-          maskRepeat: "no-repeat",
-          cursor: "pointer",
-          animation: "spotlightIn 0.3s ease both",
         }}
       />
 
       {/* Outer glow — pulsing intensity */}
       <div
+        className="so-glow"
         style={{
-          position: "fixed",
           top: sy - 8,
           left: sx - 8,
           width: sw + 16,
           height: sh + 16,
           borderRadius: sr + 8,
           boxShadow: [
-            `0 0 30px 8px ${theme.primary}55`,
-            `0 0 60px 20px ${theme.primary}30`,
-            `0 0 120px 50px ${theme.primary}15`,
+            `0 0 30px 8px var(--color-primary)55`,
+            `0 0 60px 20px var(--color-primary)30`,
+            `0 0 120px 50px var(--color-primary)15`,
           ].join(", "),
-          zIndex: 9999,
-          pointerEvents: "none",
-          animation: "glowPulse 2.5s ease-in-out infinite",
-          transition: "top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease",
         }}
       />
 
       {/* Edge ring — clean visible boundary around the cutout */}
       <div
+        className="so-ring"
         style={{
-          position: "fixed",
           top: sy - 1,
           left: sx - 1,
           width: sw + 2,
           height: sh + 2,
           borderRadius: sr + 1,
-          border: "1.5px solid rgba(255,255,255,0.3)",
-          boxShadow: "0 0 0 1px rgba(0,0,0,0.35)",
-          zIndex: 9999,
-          pointerEvents: "none",
-          transition: "top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease",
         }}
       />
 
       {/* Tutorial card */}
       <div
         ref={cardRef}
+        className="so-card"
         style={{
-          position: "fixed",
           top: cardPos.top,
           left: cardPos.left,
-          zIndex: 10002,
-          width: 340,
-          maxWidth: "calc(100vw - 32px)",
-          overflow: "visible",
-          borderRadius: 16,
-          boxShadow: "0 24px 80px 16px rgba(0,0,0,0.45)",
           opacity: positioned ? (closing ? 0 : 1) : 0,
           transform: positioned
             ? closing
               ? "translateY(8px) scale(0.98)"
               : "translateY(0) scale(1)"
             : "translateY(12px) scale(0.96)",
-          transition: "opacity 0.3s ease, transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         }}
       >
-        <div
-          style={{
-            background: "var(--color-card, white)",
-            borderRadius: 16,
-            border: `1px solid ${theme.primary}33`,
-            padding: "24px 24px 20px",
-            maxHeight: "calc(100vh - 40px)",
-            overflowY: "auto",
-            position: "relative",
-          }}
-        >
+        <div className="so-card-inner">
           {/* Close button */}
-          <button
-            type="button"
-            onClick={handleClose}
-            style={{
-              position: "absolute",
-              top: 12,
-              right: 12,
-              width: 28,
-              height: 28,
-              borderRadius: "50%",
-              border: "none",
-              background: "var(--color-input)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: theme.muted,
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = theme.primary + "1a"
-              e.currentTarget.style.color = theme.primary
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "var(--color-input)"
-              e.currentTarget.style.color = theme.muted
-            }}
-          >
+          <button type="button" onClick={handleClose} className="so-close-btn">
             <X size={13} />
           </button>
 
           {/* Step indicator dots */}
           {isMultiStep && (
-            <div style={{ display: "flex", gap: 5, marginBottom: 14 }}>
+            <div className="so-dots">
               {content.steps.map((_, i) => (
                 <div
                   key={i}
-                  style={{
-                    width: i === step ? 22 : 6,
-                    height: 6,
-                    borderRadius: 3,
-                    background: i === step ? dotColor : theme.border,
-                    transition: "all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                  }}
+                  className={`so-dot${i === step ? " so-dot--active" : ""}`}
                 />
               ))}
             </div>
           )}
 
           {/* Title */}
-          <h3
-            style={{
-              fontSize: 15,
-              fontWeight: 600,
-              color: theme.dark,
-              margin: "0 0 4px",
-            }}
-          >
+          <h3 className="so-title">
             {isMultiStep && currentStep ? currentStep.title : content.title}
           </h3>
 
           {/* Description or step text */}
-          <p
-            style={{
-              fontSize: 13,
-              lineHeight: 1.6,
-              color: theme.muted,
-              margin: "0 0 16px",
-            }}
-          >
+          <p className="so-text">
             {isMultiStep && currentStep
               ? currentStep.text
               : content.description}
           </p>
 
           {/* Navigation */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              gap: 6,
-            }}
-          >
+          <div className="so-nav">
             {isMultiStep && step > 0 && (
-              <button
-                type="button"
-                onClick={() => goToStep(step - 1)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                  padding: "6px 12px",
-                  borderRadius: 8,
-                  border: `1px solid ${theme.border}`,
-                  background: "var(--color-card, white)",
-                  color: theme.dark,
-                  fontSize: 12,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = theme.primary
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = theme.border
-                }}
-              >
+              <button type="button" onClick={() => goToStep(step - 1)} className="so-back-btn">
                 <ChevronLeft size={13} />
                 Back
               </button>
             )}
 
             {isMultiStep && step < content.steps.length - 1 ? (
-              <button
-                type="button"
-                onClick={() => goToStep(step + 1)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                  padding: "6px 14px",
-                  borderRadius: 8,
-                  border: "none",
-                  background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
-                  color: "white",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "opacity 0.15s",
-                }}
-              >
+              <button type="button" onClick={() => goToStep(step + 1)} className="so-next-btn">
                 Next
                 <ChevronRight size={13} />
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={handleClose}
-                style={{
-                  padding: "6px 16px",
-                  borderRadius: 8,
-                  border: "none",
-                  background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
-                  color: "white",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "opacity 0.15s",
-                }}
-              >
+              <button type="button" onClick={handleClose} className="so-done-btn">
                 Done
               </button>
             )}
@@ -476,17 +322,7 @@ export default function SpotlightOverlay() {
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            style={{
-              position: "absolute",
-              bottom: -60,
-              left: -24,
-              width: 100,
-              height: "auto",
-              pointerEvents: "none",
-              zIndex: 10003,
-              filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.30)) drop-shadow(0 24px 64px rgba(0,0,0,0.20))",
-              objectFit: "contain",
-            }}
+            className="so-mascot"
           />
         )}
       </div>

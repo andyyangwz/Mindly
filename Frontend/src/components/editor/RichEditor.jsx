@@ -14,7 +14,7 @@ import {
 } from "lucide-react"
 import SlashCommand from "./slashCommand"
 import SlashCommandList from "./SlashCommandList"
-import "./RichEditor.css"
+import "../../styles/shared/index.css"
 
 function ToolbarButton({ icon: Icon, active, onClick, title }) {
   return (

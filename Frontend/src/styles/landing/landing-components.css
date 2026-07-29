@@ -1,0 +1,57 @@
+/* ===== Components (Floating Orbs, Toggles) ===== */
+
+.floating-orbs-container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.floating-orb {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--landing-orb);
+  opacity: 0.5;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+
+.toggle-btn {
+  position: fixed;
+  top: 24px;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--landing-border);
+  background: var(--landing-surface);
+  color: var(--landing-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+  box-shadow: var(--landing-shadow-sm);
+}
+
+.toggle-btn:hover {
+  border-color: var(--landing-accent);
+  color: var(--landing-accent);
+  transform: scale(1.05);
+}
+
+.toggle-btn--theme {
+  right: 24px;
+}
+
+.toggle-btn--lang {
+  right: 76px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-family: 'Poppins', system-ui, sans-serif;
+}

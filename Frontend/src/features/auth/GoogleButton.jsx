@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import "../../styles/auth/index.css";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
@@ -64,60 +65,16 @@ export default function GoogleButton({ isLight, onSuccess, onError }) {
     });
   }
 
-  const c = isLight
-    ? {
-        bg: "rgba(255,255,255,0.8)",
-        border: "rgba(45,43,61,0.08)",
-        text: "rgba(45,43,61,0.75)",
-        hoverBorder: "rgba(45,43,61,0.15)",
-        hoverBg: "rgba(255,255,255,0.95)",
-        shadow: "0 2px 8px rgba(0,0,0,0.04)",
-        hoverShadow: "0 4px 16px rgba(0,0,0,0.06)",
-      }
-    : {
-        bg: "rgba(255,255,255,0.04)",
-        border: "rgba(255,255,255,0.08)",
-        text: "rgba(232,230,240,0.7)",
-        hoverBorder: "rgba(255,255,255,0.15)",
-        hoverBg: "rgba(255,255,255,0.07)",
-        shadow: "0 2px 8px rgba(0,0,0,0.2)",
-        hoverShadow: "0 4px 16px rgba(0,0,0,0.3)",
-      };
-
   return (
     <div ref={btnRef}>
       <motion.button
         type="button"
         onClick={handleClick}
         disabled={loading}
-        whileHover={loading ? {} : { scale: 1.015, boxShadow: c.hoverShadow }}
+        whileHover={loading ? {} : { scale: 1.015 }}
         whileTap={loading ? {} : { scale: 0.985 }}
-        style={{
-          width: "100%",
-          padding: "12px 20px",
-          borderRadius: 10,
-          border: `1px solid ${c.border}`,
-          background: c.bg,
-          color: c.text,
-          fontSize: 13,
-          fontWeight: 500,
-          cursor: loading ? "not-allowed" : "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-          opacity: loading ? 0.6 : 1,
-          boxShadow: c.shadow,
-          transition: "all 0.25s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = c.hoverBorder;
-          e.currentTarget.style.background = c.hoverBg;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = c.border;
-          e.currentTarget.style.background = c.bg;
-        }}
+        className="google-btn"
+        style={{ opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
       >
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path d="M17.64 9.2045C17.64 8.5663 17.5827 7.9527 17.4764 7.3636H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.2045Z" fill="#4285F4"/>

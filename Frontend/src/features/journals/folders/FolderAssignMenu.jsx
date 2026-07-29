@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Portal } from "../../../utils/portal"
-import { theme } from "../../../theme"
+import "../../../styles/journals/index.css"
 
 export default function FolderAssignMenu({
   open,
@@ -105,13 +105,7 @@ export default function FolderAssignMenu({
     <AnimatePresence>
       {open && (
         <Portal>
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: theme.z.contextMenu - 1,
-            }}
-          />
+          <div className="folder-assign-backdrop" />
           <motion.div
             ref={menuRef}
             data-tutorial-target="journal-folder-assign"
@@ -119,52 +113,16 @@ export default function FolderAssignMenu({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.93, y: -4 }}
             transition={{ duration: 0.12, ease: "easeOut" }}
-            style={{
-              position: "fixed",
-              left: adjustedPos.left,
-              top: adjustedPos.top,
-              zIndex: theme.z.contextMenu,
-              background: "var(--color-card, white)",
-              borderRadius: 14,
-              border: `1px solid ${theme.border}`,
-              boxShadow: "0 12px 44px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.06)",
-              minWidth: 200,
-              maxWidth: 240,
-              maxHeight: 380,
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
+            className="folder-assign-menu"
+            style={{ left: adjustedPos.left, top: adjustedPos.top }}
           >
-            <div
-              style={{
-                padding: "12px 14px 6px",
-                fontSize: 11,
-                fontWeight: 600,
-                color: theme.muted,
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-              }}
-            >
+            <div className="folder-assign-header">
               Assign to Folder
             </div>
 
-            <div
-              style={{
-                flex: 1,
-                overflowY: "auto",
-                padding: "4px 6px",
-              }}
-            >
+            <div className="folder-assign-list">
               {folders.length === 0 ? (
-                <div
-                  style={{
-                    padding: "16px 10px",
-                    textAlign: "center",
-                    fontSize: 12,
-                    color: theme.muted,
-                  }}
-                >
+                <div className="folder-assign-empty">
                   No folders yet. Create one in Folder Explorer.
                 </div>
               ) : (
@@ -175,58 +133,13 @@ export default function FolderAssignMenu({
                       key={f.id}
                       type="button"
                       onClick={() => toggle(f.id)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        width: "100%",
-                        padding: "7px 10px",
-                        borderRadius: 8,
-                        border: "none",
-                        background: checked
-                          ? `color-mix(in srgb, ${theme.primary} 8%, transparent)`
-                          : "transparent",
-                        color: checked ? theme.primaryText : theme.dark,
-                        fontSize: 13,
-                        fontWeight: checked ? 600 : 400,
-                        cursor: "pointer",
-                        textAlign: "left",
-                        transition: "background 0.08s",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!checked) {
-                          e.currentTarget.style.background = theme.bg
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!checked) {
-                          e.currentTarget.style.background = "transparent"
-                        }
-                      }}
+                      className={`folder-assign-item${checked ? " checked" : ""}`}
                     >
-                      <span
-                        style={{
-                          width: 17,
-                          height: 17,
-                          borderRadius: 4,
-                          border: `1.5px solid ${
-                            checked ? theme.primary : theme.border
-                          }`,
-                          background: checked ? theme.primary : "transparent",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                          transition: "all 0.12s",
-                          fontSize: 10,
-                          color: "white",
-                          fontWeight: 700,
-                        }}
-                      >
+                      <span className={`folder-assign-checkbox${checked ? " checked" : ""}`}>
                         {checked ? "✓" : ""}
                       </span>
-                      <span style={{ fontSize: 14 }}>{f.emoji}</span>
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <span className="folder-assign-emoji">{f.emoji}</span>
+                      <span className="folder-assign-name">
                         {f.name}
                       </span>
                     </button>
@@ -235,33 +148,15 @@ export default function FolderAssignMenu({
               )}
             </div>
 
-            <div
-              style={{
-                padding: "8px 10px",
-                borderTop: `1px solid ${theme.border}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 8,
-              }}
-            >
-              <span style={{ fontSize: 11, color: theme.muted }}>
+            <div className="folder-assign-footer">
+              <span className="folder-assign-count">
                 {selectedCount} selected
               </span>
-              <div style={{ display: "flex", gap: 6 }}>
+              <div className="folder-assign-actions">
                 <button
                   type="button"
                   onClick={onClose}
-                  style={{
-                    padding: "6px 12px",
-                    borderRadius: 8,
-                    border: `1px solid ${theme.border}`,
-                    background: "transparent",
-                    color: theme.dark,
-                    fontSize: 12,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                  }}
+                  className="folder-assign-cancel"
                 >
                   Cancel
                 </button>
@@ -270,20 +165,8 @@ export default function FolderAssignMenu({
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  style={{
-                    padding: "6px 14px",
-                    borderRadius: 8,
-                    border: "none",
-                    background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
-                    color: "white",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: saving ? "not-allowed" : "pointer",
-                    opacity: saving ? 0.7 : 1,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                  }}
+                  className="folder-assign-save"
+                  style={{ opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer" }}
                 >
                   {saving ? "Saving..." : "Save"}
                 </button>

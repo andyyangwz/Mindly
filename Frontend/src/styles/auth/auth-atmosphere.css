@@ -1,0 +1,96 @@
+.atmosphere-root {
+  position: relative;
+  flex: 1 1 55%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.atmosphere-mesh {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.atmosphere-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.atmosphere-content {
+  position: relative;
+  z-index: 2;
+  padding: 80px 60px;
+  max-width: 560px;
+}
+
+.atmosphere-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 48px;
+}
+
+.atmosphere-logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.atmosphere-logo-text {
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+.atmosphere-logo-sub {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.atmosphere-headline {
+  font-size: 38px;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin: 0;
+  margin-bottom: 20px;
+}
+
+.atmosphere-headline-highlight {
+  font-weight: 600;
+}
+
+.atmosphere-footer {
+  position: absolute;
+  bottom: 40px;
+  left: 60px;
+  right: 60px;
+}
+
+.atmosphere-footer-line {
+  width: 40px;
+  height: 2px;
+  margin-bottom: 16px;
+  border-radius: 1px;
+}
+
+.atmosphere-footer-text {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.typewriter-root {
+  position: relative;
+}

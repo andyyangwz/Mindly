@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Search, X, Plus, Star, Pin, CalendarDays, List, FolderOpen } from "lucide-react"
-import { theme } from "../../../theme"
+import "../../../styles/journals/index.css"
 import { formatDate } from "../../../utils/formatters"
 import FolderAssignMenu from "../folders/FolderAssignMenu"
 import { useToast } from "../../../components/ui/Toast"
@@ -217,11 +217,11 @@ export default function JournalList({
   const handleDragStart = useCallback((e, journalId) => {
     e.dataTransfer.setData("text/journal-id", journalId)
     e.dataTransfer.effectAllowed = "move"
-    e.currentTarget.style.opacity = "0.6"
+    e.currentTarget.classList.add("jl-dragging")
   }, [])
 
   const handleDragEnd = useCallback((e) => {
-    e.currentTarget.style.opacity = "1"
+    e.currentTarget.classList.remove("jl-dragging")
   }, [])
 
   const handleContextMenu = useCallback((e, journal) => {
@@ -271,91 +271,38 @@ export default function JournalList({
   }, [draftFrom, draftTo, onDateFromChange, onDateToChange])
 
   return (
-    <div data-tutorial-target="journal-page" style={{ padding: "28px 32px", maxWidth: 900, margin: "0 auto" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 20,
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <h1 style={{ fontSize: 22, fontWeight: 600, color: theme.dark, display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <div data-tutorial-target="journal-page" className="jl-container">
+      <div className="jl-header">
+        <h1 className="jl-title">
           {t("journal.list.title")}
           <InfoButton tutorialId="journal-page" />
         </h1>
         <button
           data-tutorial-target="journal-add-button"
           onClick={onStartCreate}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
-            color: "white",
-            border: "none",
-            borderRadius: 24,
-            padding: "9px 18px",
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: 500,
-            boxShadow: `0 4px 12px color-mix(in srgb, ${theme.primary} 44%, transparent)`,
-          }}
+          className="jl-add-btn"
         >
           <Plus size={16} strokeWidth={2.5} /> {t("journal.list.addJournal")}
         </button>
       </div>
 
-      <div
-        data-tutorial-target="journal-search-input"
-        style={{
-          background: "var(--color-card, white)",
-          borderRadius: 14,
-          border: `1px solid ${theme.border}`,
-          padding: "12px 16px",
-          marginBottom: 16,
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-        }}
-      >
-        <Search size={16} color={theme.muted} />
+      <div data-tutorial-target="journal-search-input" className="jl-search">
+        <Search size={16} color="var(--color-muted)" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t("journal.list.search")}
-          style={{
-            flex: 1,
-            border: "none",
-            outline: "none",
-            fontSize: 14,
-            color: theme.dark,
-            background: "transparent",
-          }}
+          className="jl-search-input"
         />
         {search && (
-          <button
-            onClick={() => setSearch("")}
-            style={{ background: "none", border: "none", cursor: "pointer", display: "flex" }}
-          >
-            <X size={14} color={theme.muted} />
+          <button onClick={() => setSearch("")} className="jl-search-clear">
+            <X size={14} color="var(--color-muted)" />
           </button>
         )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 28,
-          flexWrap: "wrap",
-          gap: 10,
-        }}
-      >
-        <div data-tutorial-target="journal-pin-fav-filter" style={{ display: "flex", gap: 4, background: "var(--color-card, white)", borderRadius: 12, padding: 3, border: `1px solid ${theme.border}` }}>
+      <div className="jl-filter-bar">
+        <div data-tutorial-target="journal-pin-fav-filter" className="jl-filter-group">
           {FILTERS.map(({ key, icon: Icon }) => {
             const isActive = filter === key
             const count = counts?.[key] ?? 0
@@ -363,48 +310,12 @@ export default function JournalList({
               <button
                 key={key}
                 onClick={() => onFilterChange(key)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "6px 13px",
-                  borderRadius: 9,
-                  border: "none",
-                  background: isActive ? theme.primary : "transparent",
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontWeight: isActive ? 600 : 500,
-                  color: isActive ? "white" : theme.muted,
-                  transition: "all 0.2s",
-                  outline: "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = `color-mix(in srgb, ${theme.primary} 8%, transparent)`
-                    e.currentTarget.style.color = theme.dark
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = "transparent"
-                    e.currentTarget.style.color = theme.muted
-                  }
-                }}
+                className={`jl-filter-btn ${isActive ? "jl-filter-btn--active" : ""}`}
               >
                 <Icon size={13} />
                 {t(`journal.filter.${key}`)}
                 {count > 0 && (
-                  <span style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    background: isActive ? "rgba(255,255,255,0.25)" : theme.bg,
-                    color: isActive ? "white" : theme.muted,
-                    borderRadius: 8,
-                    padding: "1px 5px",
-                    minWidth: 16,
-                    textAlign: "center",
-                    lineHeight: "15px",
-                  }}>
+                  <span className={`jl-filter-badge ${isActive ? "jl-filter-badge--active" : ""}`}>
                     {count}
                   </span>
                 )}
@@ -413,12 +324,8 @@ export default function JournalList({
           })}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8, position: "relative" }}>
-          <span style={{
-            fontSize: 12,
-            color: dateFrom || dateTo ? theme.primaryText : theme.muted,
-            fontWeight: dateFrom || dateTo ? 500 : 400,
-          }}>
+        <div className="jl-actions">
+          <span className={`jl-date-status ${dateFrom || dateTo ? "jl-date-status--active" : ""}`}>
             {dateStatus}
           </span>
           <button
@@ -426,33 +333,7 @@ export default function JournalList({
             ref={dateBtnRef}
             type="button"
             onClick={handleOpenDatePopover}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "6px 12px",
-              borderRadius: 8,
-              border: `1px solid ${showDatePopover ? theme.primary : theme.border}`,
-              background: showDatePopover ? `color-mix(in srgb, ${theme.primary} 8%, transparent)` : "var(--color-card, white)",
-              cursor: "pointer",
-              fontSize: 12,
-              fontWeight: 500,
-              color: showDatePopover ? theme.primary : theme.muted,
-              transition: "all 0.2s",
-              outline: "none",
-            }}
-            onMouseEnter={(e) => {
-              if (!showDatePopover) {
-                e.currentTarget.style.borderColor = theme.primary
-                e.currentTarget.style.color = theme.primary
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!showDatePopover) {
-                e.currentTarget.style.borderColor = theme.border
-                e.currentTarget.style.color = theme.muted
-              }
-            }}
+            className={`jl-action-btn ${showDatePopover ? "jl-action-btn--active" : ""}`}
           >
             <CalendarDays size={13} />
             Date Filter
@@ -461,172 +342,48 @@ export default function JournalList({
             data-tutorial-target="journal-folder-filter"
             type="button"
             onClick={onOpenFolderExplorer}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "6px 12px",
-              borderRadius: 8,
-              border: `1px solid ${activeFolderId ? theme.primary : theme.border}`,
-              background: activeFolderId ? `color-mix(in srgb, ${theme.primary} 8%, transparent)` : "var(--color-card, white)",
-              cursor: "pointer",
-              fontSize: 12,
-              fontWeight: 500,
-              color: activeFolderId ? theme.primary : theme.muted,
-              transition: "all 0.2s",
-              outline: "none",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = theme.primary
-              e.currentTarget.style.color = theme.primary
-            }}
-            onMouseLeave={(e) => {
-              if (!activeFolderId) {
-                e.currentTarget.style.borderColor = theme.border
-                e.currentTarget.style.color = theme.muted
-              }
-            }}
+            className={`jl-action-btn ${activeFolderId ? "jl-action-btn--active" : ""}`}
           >
             <FolderOpen size={13} />
             Folders
           </button>
 
           {showDatePopover && (
-            <div
-              ref={popoverRef}
-              style={{
-                position: "absolute",
-                top: "calc(100% + 8px)",
-                right: 0,
-                zIndex: 50,
-                background: "var(--color-card, white)",
-                borderRadius: 16,
-                border: `1px solid ${theme.border}`,
-                boxShadow: "0 12px 40px rgba(0,0,0,0.12)",
-                padding: "20px 20px 16px",
-                minWidth: 280,
-                opacity: 0,
-                transform: "translateY(-4px) scale(0.97)",
-                animation: "popoverIn 0.2s ease forwards",
-              }}
-            >
-              <style>{`
-                @keyframes popoverIn {
-                  to { opacity: 1; transform: translateY(0) scale(1); }
-                }
-              `}</style>
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6, display: "block" }}>
+            <div ref={popoverRef} className="jl-date-popover">
+              <div className="jl-popover-field">
+                <label className="jl-popover-label">
                   From Date
                 </label>
                 <input
                   type="date"
                   value={draftFrom}
                   onChange={(e) => setDraftFrom(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 10px",
-                    borderRadius: 8,
-                    border: `1px solid ${theme.border}`,
-                    background: "var(--color-input)",
-                    color: theme.dark,
-                    fontSize: 13,
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
+                  className="jl-popover-input"
                 />
               </div>
-              <div style={{ marginBottom: 18 }}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6, display: "block" }}>
+              <div className="jl-popover-field">
+                <label className="jl-popover-label">
                   To Date
                 </label>
                 <input
                   type="date"
                   value={draftTo}
                   onChange={(e) => setDraftTo(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 10px",
-                    borderRadius: 8,
-                    border: `1px solid ${theme.border}`,
-                    background: "var(--color-input)",
-                    color: theme.dark,
-                    fontSize: 13,
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
+                  className="jl-popover-input"
                 />
               </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <button
-                  type="button"
-                  onClick={handleDefault}
-                  style={{
-                    padding: "7px 14px",
-                    borderRadius: 8,
-                    border: `1px solid ${theme.border}`,
-                    background: "transparent",
-                    color: theme.muted,
-                    fontSize: 12,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = theme.primary
-                    e.currentTarget.style.color = theme.primary
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = theme.border
-                    e.currentTarget.style.color = theme.muted
-                  }}
-                >
+              <div className="jl-popover-footer">
+                <button type="button" onClick={handleDefault} className="jl-popover-btn">
                   Default
                 </button>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button
-                    type="button"
-                    onClick={handleCancel}
-                    style={{
-                      padding: "7px 14px",
-                      borderRadius: 8,
-                      border: `1px solid ${theme.border}`,
-                      background: "transparent",
-                      color: theme.dark,
-                      fontSize: 12,
-                      fontWeight: 500,
-                      cursor: "pointer",
-                      transition: "all 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = theme.bg
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent"
-                    }}
-                  >
+                <div className="jl-popover-btn-row">
+                  <button type="button" onClick={handleCancel} className="jl-popover-btn jl-popover-btn--cancel">
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleProcessFilter}
-                    style={{
-                      padding: "7px 16px",
-                      borderRadius: 8,
-                      border: "none",
-                      background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
-                      color: "white",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      transition: "opacity 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = "0.9"
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = "1"
-                    }}
+                    className="jl-popover-btn--confirm"
                   >
                     Process Filter
                   </button>
@@ -638,26 +395,18 @@ export default function JournalList({
       </div>
 
       {!loading && displayJournals.length === 0 ? (
-      <div
-        style={{
-            textAlign: "center",
-            padding: "48px 24px",
-            background: "var(--color-card, white)",
-            borderRadius: 16,
-            border: `1px solid ${theme.border}`,
-          }}
-        >
-          <p style={{ fontSize: 40, marginBottom: 12, opacity: 0.4 }}>
+      <div className="jl-empty">
+          <p className="jl-empty-emoji">
             {search ? "🔍" : "📝"}
           </p>
-          <p style={{ fontSize: 14, fontWeight: 600, color: theme.dark, marginBottom: 4 }}>
+          <p className="jl-empty-title">
             {search
               ? t("journal.list.noMatch")
               : filter !== "all"
                 ? t("journal.list.noFilter", { filter })
                 : t("journal.list.noJournals")}
           </p>
-          <p style={{ fontSize: 12, color: theme.muted, marginBottom: 16 }}>
+          <p className="jl-empty-subtitle">
             {search
               ? t("journal.list.emptySearch")
               : filter !== "all"
@@ -665,30 +414,14 @@ export default function JournalList({
                 : t("journal.list.emptyCTA")}
           </p>
           {!search && filter === "all" && (
-            <button
-              onClick={onStartCreate}
-              style={{
-                padding: "9px 20px",
-                borderRadius: 24,
-                border: "none",
-                background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
-                color: "white",
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: "pointer",
-              }}
-            >
+            <button onClick={onStartCreate} className="jl-empty-btn">
               {t("journal.list.createFirst")}
             </button>
           )}
         </div>
       ) : (
         <>
-        <style>{`
-          .journal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 48px 36px; }
-          @media (max-width: 700px) { .journal-grid { grid-template-columns: 1fr; } }
-        `}</style>
-        <div data-tutorial-target="journal-list-container" className="journal-grid">
+        <div data-tutorial-target="journal-list-container" className="jl-grid">
           {displayJournals.slice(0, displayCount).map((j) => {
             const isTutorial = j.id === "tutorial-journal"
             const isHovered = hoveredId === j.id
@@ -721,35 +454,15 @@ export default function JournalList({
                 onMouseUp={() => setPressedId(null)}
                 onMouseLeave={() => { setHoveredId(null); setPressedId(null) }}
                 onMouseEnter={() => setHoveredId(j.id)}
-                style={{
-                  position: "relative",
-                  cursor: isTutorial ? "default" : "grab",
-                }}
+                className={`jl-card ${isTutorial ? "jl-card--tutorial" : ""}`}
               >
                 {/* Back layer — second page underneath, always partially visible */}
-                <div style={{
-                  position: "absolute",
-                  top: 7,
-                  left: 14,
-                  right: 2,
-                  bottom: 0,
-                  borderRadius: "3px 12px 12px 3px",
-                  background: "color-mix(in srgb, var(--color-card, #fff) 88%, #d4cfc9)",
-                  border: "1px solid rgba(0,0,0,0.06)",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-                  transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                <div className="jl-card-back" style={{
                   transform: `rotate(${rot.back}deg) ${isHovered ? "translateY(14px)" : "translateY(4px)"}`,
-                  transformOrigin: "center center",
-                  zIndex: 0,
                 }} />
 
                 {/* Front layer — visible journal page */}
-                <div style={{
-                  position: "relative",
-                  background: "var(--color-card, #fff)",
-                  border: "1px solid rgba(0,0,0,0.04)",
-                  borderRadius: "3px 12px 12px 3px",
-                  padding: "44px 36px 40px",
+                <div className="jl-card-front" style={{
                   boxShadow: isHovered
                     ? "0 6px 20px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.03)"
                     : "0 1px 4px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)",
@@ -761,66 +474,28 @@ export default function JournalList({
                     : isHovered
                       ? "rotate(0deg) translateY(-4px) scale(1.015)"
                       : `rotate(${rot.front}deg) translateY(0) scale(1)`,
-                  transformOrigin: "center center",
-                  zIndex: 1,
                 }}>
                   {/* Pin / Favorite indicators — upper right */}
-                  <div style={{
-                    position: "absolute",
-                    top: 20,
-                    right: 24,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                  }}>
+                  <div className="jl-card-badges">
                     {(isPinned || isFav) && !showActions && (
-                      <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-                        {isPinned && <Pin size={13} color={theme.primary} fill={theme.primary} />}
+                      <div className="jl-card-badge-row">
+                        {isPinned && <Pin size={13} color="var(--color-primary)" fill="var(--color-primary)" />}
                         {isFav && <Star size={13} color="#F59E0B" fill="#F59E0B" />}
                       </div>
                     )}
-                    <div style={{
-                      display: "flex",
-                      gap: 2,
+                    <div className="jl-card-actions" style={{
                       opacity: showActions ? 1 : 0,
                       transform: showActions ? "translateY(0)" : "translateY(3px)",
-                      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     }}>
                       <button
                         onClick={(ev) => { ev.stopPropagation(); togglePinned?.(j.id) }}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          borderRadius: 6,
-                          padding: 4,
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: isPinned ? theme.primary : "#9CA3AF",
-                          transition: "color 0.15s",
-                        }}
-                        onMouseEnter={(e) => { if (!isPinned) e.currentTarget.style.color = theme.dark }}
-                        onMouseLeave={(e) => { if (!isPinned) e.currentTarget.style.color = "#9CA3AF" }}
+                        className={`jl-card-action-btn ${isPinned ? "jl-card-action-btn--pinned" : ""}`}
                       >
                         <Pin size={14} color="currentColor" fill={isPinned ? "currentColor" : "none"} />
                       </button>
                       <button
                         onClick={(ev) => { ev.stopPropagation(); toggleFavorite(j.id) }}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          borderRadius: 6,
-                          padding: 4,
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: isFav ? "#F59E0B" : "#9CA3AF",
-                          transition: "color 0.15s",
-                        }}
-                        onMouseEnter={(e) => { if (!isFav) e.currentTarget.style.color = theme.dark }}
-                        onMouseLeave={(e) => { if (!isFav) e.currentTarget.style.color = "#9CA3AF" }}
+                        className={`jl-card-action-btn ${isFav ? "jl-card-action-btn--fav" : ""}`}
                       >
                         <Star size={14} color="currentColor" fill={isFav ? "currentColor" : "none"} />
                       </button>
@@ -828,59 +503,34 @@ export default function JournalList({
                   </div>
 
                   {/* Main content — centered */}
-                  <div style={{ textAlign: "center", paddingTop: 4 }}>
+                  <div className="jl-card-body">
                     {emojis && emojis.some(Boolean) && (
-                      <div style={{ fontSize: 36, lineHeight: 1, marginBottom: 14 }}>
+                      <div className="jl-card-emoji">
                         {emojis.find(Boolean)}
                       </div>
                     )}
 
-                    <h3 style={{
-                      fontSize: 21,
-                      fontWeight: 700,
-                      color: theme.dark,
-                      margin: "0 0 8px 0",
-                      lineHeight: 1.35,
-                    }}>
+                    <h3 className="jl-card-title">
                       {j.title}
                     </h3>
 
-                    <p style={{
-                      fontSize: 13,
-                      color: isHovered ? "rgba(0,0,0,0.42)" : "rgba(0,0,0,0.25)",
-                      margin: 0,
-                      letterSpacing: "0.01em",
-                      transition: "color 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                    }}>
+                    <p className="jl-card-date" data-hovered={isHovered ? "" : undefined}>
                       {formatDate(j.date)}
                     </p>
 
                     {j.folderIds && j.folderIds.length > 0 && (
-                      <div style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: 5,
-                        marginTop: 16,
-                        flexWrap: "wrap",
-                      }}>
+                      <div className="jl-card-folders">
                         {j.folderIds.slice(0, 2).map((fid) => {
                           const folder = folderMap[fid]
                           if (!folder) return null
                           return (
-                            <span key={fid} style={{
-                              fontSize: 11,
-                              background: `color-mix(in srgb, ${theme.muted} 8%, transparent)`,
-                              color: theme.muted,
-                              borderRadius: 6,
-                              padding: "2px 8px",
-                              fontWeight: 450,
-                            }}>
+                            <span key={fid} className="jl-card-folder-tag">
                               {folder.emoji} {folder.name}
                             </span>
                           )
                         })}
                         {j.folderIds.length > 2 && (
-                          <span style={{ fontSize: 11, color: theme.muted, opacity: 0.6 }}>
+                          <span className="jl-card-folder-more">
                             +{j.folderIds.length - 2}
                           </span>
                         )}
@@ -892,7 +542,7 @@ export default function JournalList({
             )
           })}
           {displayCount < filtered.length && (
-            <div ref={sentinelRef} style={{ height: 1 }} />
+            <div ref={sentinelRef} className="jl-sentinel" />
           )}
         </div>
         </>

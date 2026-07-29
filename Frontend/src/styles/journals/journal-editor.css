@@ -1,0 +1,781 @@
+/* ===== JournalEditor ===== */
+
+/* Loading */
+.je-loading {
+  min-height: 100vh;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Not found */
+.je-not-found {
+  min-height: 100vh;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+/* Container */
+.je-container {
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+/* Top bar */
+.je-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--color-bg);
+}
+
+/* Back button */
+.je-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-muted);
+  font-weight: 400;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.je-back-btn:hover {
+  background: var(--color-hover);
+}
+
+/* Action buttons (pin, chat, star, more) */
+.je-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.je-action-btn:hover {
+  background: var(--color-hover);
+}
+.je-action-btn-more {
+  color: var(--color-muted);
+}
+
+/* Actions dropdown */
+.je-actions-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  background: var(--color-card, white);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  padding: 6px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Save state */
+.je-save-state {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--color-muted);
+  user-select: none;
+}
+.je-save-editing {
+  color: var(--color-muted);
+}
+.je-save-saved {
+  color: #10B981;
+}
+.je-save-failed {
+  color: #EF4444;
+}
+.je-save-spin {
+  animation: je-spin 0.8s linear infinite;
+}
+
+/* Content area */
+.je-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 48px 32px 50vh;
+}
+
+/* Title input */
+.je-title-input {
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--color-dark);
+  border: none;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  width: 100%;
+  padding: 0;
+  margin: 0 0 16px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  font-family: inherit;
+  caret-color: var(--color-primary);
+}
+.je-title-input:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+}
+.je-title-input::placeholder {
+  color: var(--color-muted);
+  font-style: normal;
+}
+
+/* Emoji row */
+.je-emoji-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+/* Emoji slots container */
+.je-emoji-slots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+/* Emoji slot */
+.je-emoji-slot {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.je-emoji-slot:hover {
+  cursor: pointer;
+}
+.je-emoji-text {
+  font-size: 26px;
+  line-height: 1;
+}
+.je-emoji-plus {
+  font-size: 16px;
+  line-height: 1;
+  color: var(--color-muted);
+}
+
+/* Auto Fill button */
+.je-auto-fill-btn {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 18px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.je-auto-fill-btn:disabled {
+  cursor: default;
+}
+.je-auto-fill-btn:not(:disabled):hover {
+  background: var(--color-hover);
+}
+
+/* Date */
+.je-date {
+  font-size: 13px;
+  color: var(--color-muted);
+  margin: 0;
+  font-weight: 400;
+  cursor: default;
+  position: relative;
+}
+
+/* Date tooltip */
+.je-date-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  background: rgba(30,27,75,0.92);
+  color: white;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: je-fade-out 2.5s forwards;
+}
+
+/* Folder badges row */
+.je-folders-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+/* Folder badge */
+.je-folder-badge {
+  font-size: 12px;
+  background: var(--color-hover);
+  color: var(--color-dark);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.je-folder-badge-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  color: var(--color-muted);
+  font-size: 11px;
+  margin-left: 1px;
+}
+.je-folder-badge-btn:disabled {
+  cursor: not-allowed;
+}
+
+/* Selected text bar */
+.je-selected-bar {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 10px;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.je-selected-text {
+  font-size: 13px;
+}
+.je-selected-save-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* Highlights section */
+.je-highlights-section {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+.je-highlights-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-dark);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.je-highlight-item {
+  padding: 10px 0;
+  font-size: 14px;
+  color: var(--color-dark);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.je-highlight-item:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}
+.je-highlight-text {
+  line-height: 1.6;
+}
+.je-highlight-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-muted);
+  padding: 4px;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+.je-highlight-remove:hover {
+  background: var(--color-hover);
+}
+
+/* Bottom bar */
+.je-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  z-index: 20;
+  background: var(--color-bg);
+  padding: 10px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Bottom bar left side */
+.je-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Voice error */
+.je-voice-error {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #EF4444;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.je-voice-error-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #EF4444;
+  padding: 2px;
+  display: flex;
+}
+
+/* AI tools */
+.je-ai-tools {
+  display: flex;
+  gap: 4px;
+}
+
+/* Divider */
+.je-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+/* Voice controls */
+.je-voice-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Voice timer */
+.je-voice-timer {
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-dark);
+}
+
+/* Record button */
+.je-record-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+}
+.je-record-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.je-record-btn:not(:disabled) {
+  cursor: pointer;
+}
+
+/* Stop button */
+.je-stop-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #EF4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Transcribe button */
+.je-transcribe-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Transcribing state */
+.je-transcribing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  color: var(--color-muted);
+  font-size: 11px;
+}
+.je-transcribing-spin {
+  animation: je-spin 0.8s linear infinite;
+}
+
+/* Waveform */
+.je-waveform {
+  width: 200px;
+  height: 36px;
+  border-radius: 6px;
+  background: var(--color-input);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.je-waveform canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Bottom right */
+.je-bottom-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Folder button */
+.je-folder-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.2s;
+  background: var(--color-card, white);
+  border: 1px solid var(--color-border);
+  color: var(--color-dark);
+}
+.je-folder-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.je-folder-btn-active {
+  border-color: var(--color-primary);
+  background: rgba(124,58,237,0.06);
+  color: var(--color-primary);
+}
+
+/* Folder menu */
+.je-folder-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  background: var(--color-card, white);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  padding: 14px;
+  min-width: 220px;
+}
+
+/* Chat button */
+.je-chat-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card, white);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-dark);
+  transition: all 0.2s;
+}
+.je-chat-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.je-chat-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.je-chat-btn:disabled:hover {
+  border-color: var(--color-border);
+  color: var(--color-dark);
+}
+
+/* Invalid snackbar */
+.je-invalid-snackbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 12px 20px;
+  background: rgba(30,27,75,0.92);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  animation: je-snackbar-in 0.8s ease-out forwards;
+}
+
+/* Invalid delete button */
+.je-invalid-delete-btn {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 6px;
+  padding: 5px 12px;
+  color: #EF4444;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.je-invalid-delete-btn:hover {
+  background: rgba(239,68,68,0.25);
+}
+
+/* ActionRow sub-component */
+.je-action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all 0.1s;
+}
+.je-action-row:hover {
+  background: var(--color-hover);
+}
+
+/* AiToolButton sub-component */
+.je-ai-tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.je-ai-tool-btn-accent {
+  background: rgba(124,58,237,0.06);
+}
+.je-ai-tool-btn-default {
+  background: var(--color-card, white);
+}
+.je-ai-tool-btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.je-ai-tool-btn-enabled {
+  cursor: pointer;
+}
+
+/* Keyframes */
+@keyframes je-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes je-fade-out {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+@keyframes je-snackbar-in {
+  0% { transform: translateX(-50%) translateY(100%); opacity: 0; }
+  30% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  40% { transform: translateX(calc(-50% - 5px)); }
+  50% { transform: translateX(calc(-50% + 5px)); }
+  60% { transform: translateX(calc(-50% - 4px)); }
+  70% { transform: translateX(calc(-50% + 4px)); }
+  80% { transform: translateX(calc(-50% - 2px)); }
+  90% { transform: translateX(calc(-50% + 2px)); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Emoji pop animation */
+.je-emoji-pop {
+  animation: je-emoji-pop-anim 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes je-emoji-pop-anim {
+  0% { opacity: 0; transform: scale(0.5) translateY(8px); }
+  60% { opacity: 1; transform: scale(1.15) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Emoji picker container */
+.je-emoji-picker-wrap {
+  animation-delay: var(--je-delay, 0s);
+}
+
+/* Folder menu labels */
+.je-folder-menu-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.je-folder-menu-empty {
+  font-size: 12px;
+  color: var(--color-muted);
+  margin: 0 0 10px;
+  font-style: italic;
+}
+.je-folder-menu-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.je-folder-menu-badge {
+  font-size: 12px;
+  background: var(--color-hover);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-weight: 500;
+}
+.je-folder-menu-divider {
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+.je-folder-menu-move {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.je-folder-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+  transition: all 0.1s;
+}
+.je-folder-menu-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.je-folder-menu-item:not(:disabled) {
+  cursor: pointer;
+}
+.je-folder-menu-item-selected {
+  background: var(--color-hover);
+  font-weight: 500;
+}
+.je-folder-menu-item:not(.je-folder-menu-item-selected):not(:disabled):hover {
+  background: var(--color-hover);
+}
+.je-folder-menu-item-emoji {
+  font-size: 15px;
+}
+.je-folder-menu-item-name {
+  flex: 1;
+}
+.je-folder-menu-item-check {
+  font-size: 11px;
+  color: var(--color-primary);
+}

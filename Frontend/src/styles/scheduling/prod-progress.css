@@ -1,0 +1,98 @@
+.ipb-container {
+  width: 100%;
+}
+
+.ipb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.ipb-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ipb-value-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ipb-input {
+  width: 44px;
+  height: 26px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.ipb-percent {
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 1px;
+}
+
+.ipb-static-value {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ipb-bar {
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ipb-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-radius: 6px;
+}
+
+.ipb-glow {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 0;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ipb-unsaved {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 0 6px 6px 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ipb-ghost {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 0 6px 6px 0;
+  pointer-events: none;
+}
+
+.ipb-thumb {
+  position: absolute;
+  top: 50%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+}

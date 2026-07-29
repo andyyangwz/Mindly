@@ -5,12 +5,12 @@ import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LandingPage from "./features/landing/LandingPage";
 import AuthPage from "./features/auth/AuthPage";
-import HomePage from "./features/home/HomePage";
+import DashboardPage from "./features/dashboard/DashboardPage";
 import JournalsPage from "./features/journals/JournalsPage";
-import ProductivityPage from "./features/productivity/ProductivityPage";
+import SchedulingPage from "./features/scheduling/SchedulingPage";
 import InsightPage from "./features/insight/InsightPage";
 import SpillAIPage from "./features/spill/SpillAIPage";
-import HabitRelicsPage from "./features/habitRelics/HabitRelicsPage";
+import ProgressTrackerPage from "./features/progressTracker/ProgressTrackerPage";
 import ToastContainer from "./components/ui/Toast";
 
 export default function MindlyApp() {
@@ -29,12 +29,12 @@ export default function MindlyApp() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/app/home" replace />} />
-          <Route path="home" element={<HomePage />} />
+          <Route index element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="journals/*" element={<JournalsPage />} />
-          <Route path="productivity" element={<ProductivityPage />} />
+          <Route path="scheduling" element={<SchedulingPage />} />
           <Route path="insight" element={<InsightPage />} />
-          <Route path="habit-relics" element={<HabitRelicsPage />} />
+          <Route path="progress-tracker" element={<ProgressTrackerPage />} />
           <Route path="spill" element={<SpillAIPage />} />
           <Route path="spill/:chatId" element={<SpillAIPage />} />
         </Route>

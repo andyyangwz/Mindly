@@ -1,0 +1,121 @@
+.auth-page-root {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.fixed-btn-base {
+  position: fixed;
+  top: 24px;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(45,43,61,0.08);
+  background: rgba(255,255,255,0.7);
+  color: rgba(45,43,61,0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+[data-theme="dark"] .fixed-btn-base {
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  color: rgba(154,148,184,0.6);
+}
+.fixed-btn-base:hover {
+  border-color: rgba(124,92,252,0.3);
+  color: rgba(124,92,252,0.7);
+  transform: scale(1.05);
+}
+[data-theme="dark"] .fixed-btn-base:hover {
+  border-color: rgba(108,71,255,0.4);
+  color: rgba(200,190,240,0.9);
+}
+
+.auth-panel-root {
+  flex: 1 1 45%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  position: relative;
+}
+
+.auth-panel-glow {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.auth-panel-card-wrap {
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-panel-tabs {
+  display: flex;
+}
+
+.auth-panel-body {
+  padding: 28px 32px 32px;
+}
+
+.auth-panel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-panel-name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.auth-panel-forgot {
+  text-align: right;
+  font-size: 12px;
+  margin: 10px 0 0;
+  cursor: default;
+}
+
+.auth-panel-btn-wrap {
+  margin-top: 20px;
+}
+
+.auth-panel-footer {
+  text-align: center;
+  font-size: 11px;
+  margin: 20px 0 0;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.auth-panel-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+.auth-panel-divider-line {
+  flex: 1;
+  height: 1px;
+}
+.auth-panel-divider-text {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

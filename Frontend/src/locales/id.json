@@ -4,9 +4,9 @@
   },
   "nav": {
     "mainMenu": "Menu Utama",
-    "home": "Beranda",
+    "dashboard": "Dashboard",
     "journals": "Jurnal Saya",
-    "productivity": "Produktivitas",
+    "scheduling": "Produktivitas",
     "insight": "Analisa Saya",
     "recentChats": "Obrolan Terbaru",
     "noChats": "Belum ada obrolan",
@@ -21,9 +21,9 @@
     "basicPlan": "Paket Dasar",
     "settings": "Pengaturan",
     "logout": "Keluar",
-    "habitRelics": "Habit Relics"
+    "progressTracker": "Progress Tracker"
   },
-  "home": {
+  "dashboard": {
     "hero": {
       "welcome": "Selamat datang kembali, {{name}}!"
     },
@@ -38,7 +38,7 @@
     },
     "statsGrid": {
       "title": "Ringkasan",
-      "productivityPercentage": "Persentase Produktivitas",
+      "schedulingPercentage": "Persentase Produktivitas",
       "taskLeft": "Tugas Tersisa",
       "totalUnproductiveTime": "Total Waktu Tidak Produktif"
     },
@@ -52,7 +52,7 @@
       "title": "Inspirasi Harian"
     },
     "habitRelics": {
-      "title": "Pusaka Kebiasaan",
+      "title": "Pelacak Kemajuan",
       "subtitle": "Kumpulkan, tingkatkan, dan kuasai pusaka-mu",
       "beAMaster": "Jadi Master",
       "noRelics": "Belum ada pusaka — ketuk + untuk menempa yang baru",
@@ -249,7 +249,7 @@
       "favorites": "Favorit"
     }
   },
-  "productivity": {
+  "scheduling": {
     "page": {
       "title": "Rencana & Tugas Hari Ini",
       "smartSuggestions": "Saran Cerdas",
@@ -338,7 +338,7 @@
       "endLabel": "Selesai",
       "startsLabel": "Mulai",
       "dueLabel": "Jatuh Tempo",
-      "productivityLabel": "Produktivitas",
+      "schedulingLabel": "Produktivitas",
       "statusLabel": "Status",
       "priorityLabel": "Prioritas",
       "colorLabel": "Warna",
@@ -451,7 +451,7 @@
     "timeDistributionDesc": "Rincian aktivitas yang kamu lacak",
     "chart": {
       "studyTime": "Waktu Belajar",
-      "productivity": "Produktivitas",
+      "scheduling": "Produktivitas",
       "focus": "Fokus"
     },
     "patterns": "Pola yang Kami Perhatikan",
@@ -496,7 +496,7 @@
     "aiPoweredDesc": "Kemajuan bagus! Produktivitas naik <strong>8%</strong> dan kamu mempertahankan <strong>7 hari streak</strong>. Fokus puncak antara jam 9\u201311. Pertimbangkan tugas ringan di hari Jumat saat fokus menurun.",
     "quickWins": "Kemenangan Cepat",
     "stats": {
-      "productivityScore": "Skor Produktivitas",
+      "schedulingScore": "Skor Produktivitas",
       "totalStudyTime": "Total Waktu Belajar",
       "focusSessions": "Sesi Fokus",
       "scoreUnit": "/100",
@@ -655,7 +655,7 @@
         { "title": "Cara Meningkatkan", "text": "Rencanakan jumlah tugas harian yang realistis. Pecah tugas besar menjadi lebih kecil untuk membangun momentum. Gunakan Kalender Produktivitas untuk menjadwalkan blok waktu fokus untuk setiap tugas." }
       ]
     },
-    "productivity-score": {
+    "scheduling-score": {
       "title": "Skor Produktivitas",
       "tooltip": "Rasio waktu produktif vs total waktu terlacak hari ini",
       "description": "Skor produktivitas adalah persentase waktu terlacak hari ini yang kamu habiskan untuk aktivitas Produktif vs Tidak Produktif. Hanya aktivitas dengan tingkat produktivitas yang diperhitungkan.",
@@ -665,8 +665,8 @@
         { "title": "Perlu Diingat", "text": "Aktivitas netral (seperti makan siang, perjalanan, istirahat) tidak mempengaruhi skor. Tujuannya bukan 100% — hari yang seimbang dengan istirahat dan kerja fokus itu sehat dan berkelanjutan." }
       ]
     },
-    "habit-relics": {
-      "title": "Pusaka Kebiasaan",
+    "progress-tracker": {
+      "title": "Pelacak Kemajuan",
       "tooltip": "Pasang, lacak, dan kembangkan pusaka pertumbuhan pribadimu",
       "description": "Lengkapi pusaka pertumbuhan bermakna yang mengingatkanmu siapa dirimu yang sedang berkembang. Setiap pusaka melacak kebiasaan harian yang kamu komitmenkan — perbarui progres dan lihat streak-mu bertambah.",
       "steps": [
@@ -685,10 +685,10 @@
         { "title": "Panduan Refleksi", "text": "Setiap wawasan menyertakan panduan lembut untuk membantu kamu merefleksikan dan menyesuaikan pendekatan ke depan." }
       ]
     },
-    "home-dashboard": {
-      "title": "Dasbor Beranda",
-      "tooltip": "Pusat kendali pribadimu untuk pertumbuhan dan produktivitas",
-      "description": "Dasbor Beranda menyatukan inspirasi harian, aksi cepat, ringkasan mingguan, dan pusaka kebiasaan dalam satu ruang yang tenang dan terfokus.",
+    "dashboard-page": {
+      "title": "Dashboard",
+      "tooltip": "Pusat kendali pribadimu untuk pertumbuhan dan penjadwalan",
+      "description": "Dashboard menyatukan inspirasi harian, aksi cepat, ringkasan mingguan, dan progress trackers dalam satu ruang yang tenang dan terfokus.",
       "steps": [
         { "title": "Inspirasi Harian", "text": "Mulai setiap hari dengan panduan atau refleksi bermakna untuk menetapkan niatmu." },
         { "title": "Aksi Cepat", "text": "Langsung ke jurnal, perencanaan produktivitas, atau percakapan AI reflektif dengan satu klik." }
@@ -723,12 +723,12 @@
         { "title": "Tingkatkan", "text": "Gunakan Haluskan untuk membersihkan artefak ucapan, Format Otomatis untuk struktur, atau Restruktur untuk kejelasan lebih dalam." }
       ]
     },
-    "productivity-calendar": {
+    "scheduling-calendar": {
       "title": "Kalender Produktivitas",
       "tooltip": "Jadwalkan aktivitas, kelola tugas, dan atur minggumu",
       "description": "Kalender mingguan visual di mana kamu bisa merencanakan aktivitas blok waktu, menetapkan tugas tenggat, dan menyesuaikan semuanya dengan seret dan lepas.",
       "steps": [
-        { "targetId": "productivity-calendar", "title": "Tampilan Minggu & Navigasi", "text": "Kalender menampilkan satu hari dalam garis waktu vertikal 24 jam. Gunakan pemilih hari di bagian atas untuk melompat antar hari, panah kiri/kanan untuk bergerak minggu-per-minggu, atau klik nama bulan untuk memilih bulan mana pun." },
+        { "targetId": "scheduling-calendar", "title": "Tampilan Minggu & Navigasi", "text": "Kalender menampilkan satu hari dalam garis waktu vertikal 24 jam. Gunakan pemilih hari di bagian atas untuk melompat antar hari, panah kiri/kanan untuk bergerak minggu-per-minggu, atau klik nama bulan untuk memilih bulan mana pun." },
         { "targetId": "add-activity-btn", "title": "Menambahkan Aktivitas", "text": "Klik tombol '+ Tambah' di kanan atas dan pilih 'Aktivitas', atau klik kanan slot waktu kosong. Kamu juga bisa klik dua kali tempat kosong di grid dan mengetik inline." },
         { "targetId": "add-menu-options", "title": "Aktivitas vs Tugas — Apa Perbedaannya?", "text": "Aktivitas adalah acara blok waktu dengan waktu mulai dan selesai — seperti 'Gym 9–10'. Tugas memiliki tenggat — seperti 'Tugas kuliah due Jumat'. Tugas tidak bisa diubah ukurannya (durasi tetap 1 jam)." },
         { "targetId": "voice-option", "title": "Input Aktivitas/Tugas dengan Suara", "text": "Klik '+ Tambah' > 'Gunakan Suara'. Rekam rencanamu secara alami — AI mengisi formulir. Tinjau dan kirim." },

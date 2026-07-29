@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { X } from "lucide-react"
 import { useTutorial } from "./TutorialContext"
-import { theme } from "../../theme"
+import "../../styles/shared/index.css"
 
 const HINT_STORAGE = "mindly_smart_hints"
 
@@ -47,49 +47,17 @@ export default function SmartHint({ id, text, position = "bottom-left", offset =
 
   return (
     <div
+      className="sh-hint"
       style={{
-        position: "absolute",
         ...(posStyles[position] || posStyles["bottom-left"]),
-        zIndex: 100,
-        maxWidth: 260,
-        padding: "10px 14px",
-        borderRadius: 12,
-        background: "var(--color-card, white)",
-        border: `1px solid ${theme.border}`,
-        boxShadow: `0 8px 28px rgba(0,0,0,0.1), 0 0 0 1px ${theme.primary}11`,
-        fontSize: 12,
-        lineHeight: 1.5,
-        color: theme.dark,
-        animation: "hint-fade-in 0.4s ease both",
       }}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-        <p style={{ margin: 0, flex: 1 }}>
-          {text}{" "}
-        </p>
-        <button
-          type="button"
-          onClick={dismiss}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 2,
-            display: "flex",
-            color: theme.muted,
-            flexShrink: 0,
-            marginTop: -2,
-          }}
-        >
+      <div className="sh-content">
+        <p className="sh-text">{text}</p>
+        <button type="button" onClick={dismiss} className="sh-dismiss-btn">
           <X size={12} />
         </button>
       </div>
-      <style>{`
-        @keyframes hint-fade-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   )
 }

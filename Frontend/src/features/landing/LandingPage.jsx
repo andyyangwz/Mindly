@@ -1,4 +1,4 @@
-import "./LandingPage.css";
+import "../../styles/landing/index.css";
 import FloatingOrbs from "./components/FloatingOrbs";
 import ThemeToggle from "./components/ThemeToggle";
 import LanguageToggle from "./components/LanguageToggle";

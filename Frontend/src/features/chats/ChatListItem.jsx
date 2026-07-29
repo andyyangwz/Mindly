@@ -1,9 +1,9 @@
 import { useState, memo, useCallback, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { Edit3, Trash2 } from "lucide-react"
-import { theme } from "../../theme"
 import ContextMenu from "../../components/ui/ContextMenu"
 import ConfirmDialog from "../../components/ui/ConfirmDialog"
+import "../../styles/chats/index.css"
 
 const ChatListItem = memo(function ChatListItem({ chat, active, newSessionId, onSelect, onRename, onDelete }) {
   const { t } = useTranslation()
@@ -110,38 +110,18 @@ const ChatListItem = memo(function ChatListItem({ chat, active, newSessionId, on
       <div
         onContextMenu={handleContextMenu}
         onClick={() => { if (!isRenaming) onSelect(chat.id) }}
-        style={{
-          width: "100%",
-          padding: "7px 12px",
-          borderRadius: 8,
-          background: active ? `color-mix(in srgb, ${theme.primary} 10%, transparent)` : "transparent",
-          borderLeft: active ? `3px solid ${theme.primary}` : "3px solid transparent",
-          cursor: isRenaming ? "default" : "pointer",
-          marginBottom: 1,
-          transition: "background 0.12s",
-          boxSizing: "border-box",
-        }}
-        onMouseEnter={(e) => { if (!active && !isRenaming) e.currentTarget.style.background = "var(--color-hover, #F9FAFB)" }}
-        onMouseLeave={(e) => { if (!active && !isRenaming) e.currentTarget.style.background = "transparent" }}
+        className={`cli-item${active ? " active" : ""}${isRenaming ? " renaming" : ""}`}
       >
         {isRenaming ? (
           <input ref={inputRef} value={renameValue} onChange={(e) => setRenameValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submitRename() } if (e.key === "Escape") cancelRename() }}
             onBlur={submitRename} onClick={(e) => e.stopPropagation()}
-            style={{ width: "100%", padding: "4px 6px", border: `1.5px solid ${theme.primary}`, borderRadius: 6,
-              fontSize: 13, fontWeight: 500, color: theme.dark, background: "var(--color-card, white)", outline: "none",
-              fontFamily: "inherit", boxSizing: "border-box" }} />
+            className="cli-input" />
         ) : (
-          <p style={{
-            fontSize: 13,
-            fontWeight: active ? 600 : 500,
-            color: active ? theme.primaryText : theme.dark,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            margin: 0,
-            lineHeight: "22px",
-          }}>{revealCount !== null ? chat.title?.slice(0, revealCount) : chat.title}</p>
+          <p className={`cli-title${active ? " active" : ""}`}
+            style={{ color: active ? "var(--color-primary-text)" : "var(--color-dark)" }}>
+            {revealCount !== null ? chat.title?.slice(0, revealCount) : chat.title}
+          </p>
         )}
       </div>
 

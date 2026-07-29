@@ -1,0 +1,68 @@
+/* ===== Feature Grid (4-column cognitive toolkit) ===== */
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.feature-card {
+  border-radius: 20px;
+}
+
+@media (max-width: 900px) {
+  .feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Feature Card Variants ===== */
+
+.feature-card {
+  border-radius: 20px;
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-border);
+  padding: 28px 24px;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--landing-shadow-md);
+  border-color: var(--landing-accent-soft);
+}
+
+.feature-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  opacity: 0.9;
+}
+
+.feature-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--landing-text);
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+
+.feature-card-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--landing-text-secondary);
+  margin: 0;
+  font-weight: 350;
+}

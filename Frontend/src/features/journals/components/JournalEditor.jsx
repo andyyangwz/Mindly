@@ -28,6 +28,7 @@ import EmojiPicker from "../../../components/ui/EmojiPicker"
 import RichEditor from "../../../components/editor/RichEditor"
 import { refreshPinnedJournals } from "../../../hooks/usePinnedJournals"
 import { config } from "../../../config"
+import "../../../styles/journals/index.css"
 
 function stripHtml(html) {
   if (!html) return ""
@@ -43,7 +44,7 @@ function textToHtml(text) {
 const API = config.API_BASE_URL
 
 
-export default function JournalEditor({ journalId, isNew, onBack, onDelete, toggleFavorite, togglePinned, toggleAllowAI, onChatAboutIt, chatAboutItLoading, deleting, onAssignFolders, folders, journals, updateJournal }) {
+export default function JournalEditor({ journalId, onBack, onDelete, toggleFavorite, togglePinned, toggleAllowAI, onChatAboutIt, chatAboutItLoading, deleting, onAssignFolders, folders, journals, updateJournal }) {
   const { t } = useTranslation()
 
   const [journal, setJournal] = useState(null)
@@ -361,11 +362,7 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
     setConfirmDelete(false)
     setShowInvalidWarning(false)
     if (origPushRef.current) window.history.pushState = origPushRef.current
-    if (journal) {
-      await onDelete(journal.id)
-    } else {
-      onBack()
-    }
+    await onDelete(journal.id)
   }
 
   const handleMouseUp = useCallback(() => {
@@ -582,16 +579,15 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
 
   if (loading && !journal) {
     return (
-      <div style={{ minHeight: "100vh", background: theme.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Loader2 size={22} color={theme.primary} style={{ animation: "spin 0.8s linear infinite" }} />
-        <style>{`@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }`}</style>
+      <div className="je-loading">
+        <Loader2 size={22} color={theme.primary} className="je-save-spin" />
       </div>
     )
   }
 
   if (!journal) {
     return (
-      <div style={{ minHeight: "100vh", background: theme.bg, display: "flex", alignItems: "center", justifyContent: "center", color: theme.muted, fontSize: 14 }}>
+      <div className="je-not-found">
         Journal not found
       </div>
     )
@@ -601,19 +597,8 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
   const slotCount = Math.min(Math.max(filledCount + 1, 3), 10)
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "8px 24px",
-          position: "sticky",
-          top: 0,
-          zIndex: 20,
-          background: theme.bg,
-        }}
-      >
+    <div className="je-container">
+      <div className="je-top-bar">
         <button
           onClick={() => {
             if (isInvalid) {
@@ -625,137 +610,103 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
             setHighlights([])
             setSelectedText("")
           }}
-          style={{
-            display: "flex", alignItems: "center", gap: 4,
-            background: "none", border: "none", cursor: "pointer",
-            fontSize: 13, color: theme.muted, fontWeight: 400,
-            padding: "4px 6px", borderRadius: 6, transition: "all 0.15s",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+          className="je-back-btn"
         >
           <ChevronLeft size={15} color={theme.muted} /> {t("journal.detail.back")}
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: 2, position: "relative" }} ref={actionsRef}>
           <button
-            onClick={() => { if (journal) togglePinned(journal.id) }}
-            aria-label={journal?.isPinned ? t("journal.detail.pinned") : t("journal.detail.pin")}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: 6, border: "none", background: "transparent", cursor: "pointer", color: journal?.isPinned ? "#3B82F6" : theme.muted, transition: "all 0.15s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+            onClick={() => togglePinned(journal.id)}
+            aria-label={journal.isPinned ? t("journal.detail.pinned") : t("journal.detail.pin")}
+            className="je-action-btn"
+            style={{ color: journal.isPinned ? "#3B82F6" : theme.muted }}
           >
-            <Pin size={15} fill={journal?.isPinned ? "#3B82F6" : "none"} color={journal?.isPinned ? "#3B82F6" : theme.muted} />
+            <Pin size={15} fill={journal.isPinned ? "#3B82F6" : "none"} color={journal.isPinned ? "#3B82F6" : theme.muted} />
           </button>
 
           <button
-            onClick={() => { if (journal) toggleAllowAI(journal.id) }}
-            aria-label={journal?.allowAI ? t("journal.detail.stopSharing") : t("journal.detail.allowSharing")}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: 6, border: "none", background: "transparent", cursor: "pointer", color: journal?.allowAI ? theme.primary : theme.muted, transition: "all 0.15s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+            onClick={() => toggleAllowAI(journal.id)}
+            aria-label={journal.allowAI ? t("journal.detail.stopSharing") : t("journal.detail.allowSharing")}
+            className="je-action-btn"
+            style={{ color: journal.allowAI ? theme.primary : theme.muted }}
           >
-            <MessageCircle size={15} fill={journal?.allowAI ? theme.primary : "none"} color={journal?.allowAI ? theme.primary : theme.muted} />
+            <MessageCircle size={15} fill={journal.allowAI ? theme.primary : "none"} color={journal.allowAI ? theme.primary : theme.muted} />
           </button>
 
           <button
-            onClick={() => { if (journal) toggleFavorite(journal.id) }}
-            aria-label={journal?.isFavorite ? t("journal.detail.favorited") : t("journal.detail.favorite")}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: 6, border: "none", background: "transparent", cursor: "pointer", color: theme.muted, transition: "all 0.15s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+            onClick={() => toggleFavorite(journal.id)}
+            aria-label={journal.isFavorite ? t("journal.detail.favorited") : t("journal.detail.favorite")}
+            className="je-action-btn"
+            style={{ color: theme.muted }}
           >
-            <Star size={15} fill={journal?.isFavorite ? "#F59E0B" : "none"} color={journal?.isFavorite ? "#F59E0B" : theme.muted} />
+            <Star size={15} fill={journal.isFavorite ? "#F59E0B" : "none"} color={journal.isFavorite ? "#F59E0B" : theme.muted} />
           </button>
 
           <button
             onClick={() => setShowActions((s) => !s)}
             aria-label="More actions"
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: 6, border: "none", background: showActions ? theme.bg : "transparent", cursor: "pointer", color: theme.muted, transition: "all 0.15s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
-            onMouseLeave={(e) => { if (!showActions) e.currentTarget.style.background = "transparent" }}
+            className="je-action-btn je-action-btn-more"
+            style={{ background: showActions ? theme.bg : "transparent" }}
           >
             <MoreHorizontal size={15} />
           </button>
 
           {showActions && (
-            <div style={{
-              position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30,
-              background: "var(--color-card, white)", borderRadius: 10,
-              border: `1px solid ${theme.border}`, boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-              padding: "6px", minWidth: 180, display: "flex", flexDirection: "column", gap: 2,
-            }}>
+            <div className="je-actions-menu">
               <ActionRow icon={<Trash2 size={14} />} label={t("journal.detail.delete")} onClick={() => { handleDelete(); setShowActions(false) }} color="#EF4444" />
             </div>
           )}
 
-          <div style={{ marginLeft: 8, display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: theme.muted, userSelect: "none" }}>
+          <div className="je-save-state">
             {saveState === "editing" && (
-              <span style={{ color: theme.muted }}>Editing</span>
+              <span className="je-save-editing">Editing</span>
             )}
             {saveState === "saving" && (
               <>
-                <RefreshCw size={12} style={{ animation: "spin 0.8s linear infinite" }} />
+                <RefreshCw size={12} className="je-save-spin" />
                 <span>Saving...</span>
               </>
             )}
             {saveState === "saved" && (
               <>
                 <Check size={12} color="#10B981" />
-                <span style={{ color: "#10B981" }}>Saved</span>
+                <span className="je-save-saved">Saved</span>
               </>
             )}
             {saveState === "failed" && (
               <>
                 <AlertTriangle size={12} color="#EF4444" />
-                <span style={{ color: "#EF4444" }}>Save Failed</span>
+                <span className="je-save-failed">Save Failed</span>
               </>
             )}
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 32px 50vh" }}>
+      <div className="je-content">
         <input
           ref={titleRef}
           value={title}
           onChange={handleTitleChange}
           placeholder="Untitled"
-          className="jd-title-input"
-          style={{
-            fontSize: 38, fontWeight: 700, color: theme.dark,
-            border: "none", outline: "none", background: "transparent",
-            boxShadow: "none",
-            width: "100%", padding: 0, margin: "0 0 16px",
-            lineHeight: 1.25, letterSpacing: "-0.02em",
-            fontFamily: "inherit",
-            caretColor: theme.primary,
-          }}
+          className="je-title-input"
         />
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, position: "relative" }} data-emoji-area>
+        <div className="je-emoji-row">
+          <div className="je-emoji-slots" data-emoji-area>
             {editingEmojis ? (
               <>
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className={emojiAnimating && emojis[i] ? "emoji-pop-in" : ""} style={{ animationDelay: emojiAnimating && emojis[i] ? `${i * 0.12}s` : "0s" }}>
+                  <div key={i} className={emojiAnimating && emojis[i] ? "je-emoji-pop" : ""} style={{ animationDelay: emojiAnimating && emojis[i] ? `${i * 0.12}s` : "0s" }}>
                     <EmojiPicker value={emojis[i] || ""} onChange={(val) => setEmoji(i, val)} size={44} />
                   </div>
                 ))}
                 <button
                   onClick={() => { autoFillEmojis(); setEditingEmojis(false) }}
-                  disabled={emojiLoading || !content.replace(/<[^>]*>/g, "").trim()}
-                  style={{
-                    height: 36, padding: "0 12px", borderRadius: 18,
-                    border: `1px solid ${theme.border}`,
-                    background: "transparent",
-                    color: emojiLoading || !content.replace(/<[^>]*>/g, "").trim() ? theme.muted : theme.dark,
-                    fontSize: 12, fontWeight: 500, cursor: emojiLoading || !content.replace(/<[^>]*>/g, "").trim() ? "default" : "pointer",
-                    flexShrink: 0, whiteSpace: "nowrap",
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = theme.border + "33" }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+                  disabled={emojiLoading || !stripHtml(content).trim()}
+                  className="je-auto-fill-btn"
+                  style={{ color: emojiLoading || !stripHtml(content).trim() ? theme.muted : theme.dark }}
                 >
                   {emojiLoading ? "..." : "Auto Fill"}
                 </button>
@@ -767,57 +718,39 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
                   <div
                     key={i}
                     onClick={() => setEditingEmojis(true)}
-                    className={`jd-emoji-slot${emojiAnimating && emoji ? " emoji-pop-in" : ""}`}
-                    style={{
-                      width: 44, height: 44, borderRadius: "50%",
-                      border: `1.5px solid ${theme.border}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                      animationDelay: emojiAnimating && emoji ? `${i * 0.12}s` : "0s",
-                    }}
+                    className={`je-emoji-slot${emojiAnimating && emoji ? " je-emoji-pop" : ""}`}
+                    style={{ animationDelay: emojiAnimating && emoji ? `${i * 0.12}s` : "0s" }}
                   >
-                    {emoji ? <span style={{ fontSize: 26, lineHeight: 1 }}>{emoji}</span> : <span style={{ fontSize: 16, lineHeight: 1, color: theme.muted }}>+</span>}
+                    {emoji ? <span className="je-emoji-text">{emoji}</span> : <span className="je-emoji-plus">+</span>}
                   </div>
                 )
               })
             )}
           </div>
-          <div style={{ position: "relative" }}>
-            <p
-              onDoubleClick={handleDateDoubleClick}
-              style={{ fontSize: 13, color: theme.muted, margin: 0, fontWeight: 400, cursor: "default" }}
-            >
-              {formatDate(journal?.date || new Date().toISOString().slice(0, 10))}
+          <div className="je-date" style={{ position: "relative" }}>
+            <p onDoubleClick={handleDateDoubleClick} className="je-date" style={{ margin: 0 }}>
+              {formatDate(journal.date || new Date().toISOString().slice(0, 10))}
             </p>
             {showDateDisabled && (
-              <div style={{
-                position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50,
-                background: "rgba(30,27,75,0.92)", color: "white", borderRadius: 6,
-                padding: "5px 10px", fontSize: 11, fontWeight: 500, whiteSpace: "nowrap",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
-                animation: "jd-fade-out 2.5s forwards",
-              }}>
+              <div className="je-date-tooltip">
                 Date editing is not yet available
               </div>
             )}
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 40 }}>
+        <div className="je-folders-row">
           {folderIds.map((fid) => {
             const f = folders?.find((x) => x.id === fid)
             if (!f) return null
             return (
-              <span key={fid} style={{ fontSize: 12, background: "var(--color-hover)", color: theme.dark, borderRadius: 4, padding: "3px 8px", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <span key={fid} className="je-folder-badge">
                 {f.emoji} {f.name}
                 <button
                   type="button"
                   onClick={() => handleToggleFolder(fid)}
                   disabled={folderAssigning}
-                  style={{ background: "none", border: "none", cursor: folderAssigning ? "not-allowed" : "pointer", padding: 0, display: "flex", color: theme.muted, fontSize: 11, marginLeft: 1 }}
+                  className="je-folder-badge-btn"
                 >
                   <X size={11} />
                 </button>
@@ -828,7 +761,7 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
 
         <RichEditor
           ref={editorRef}
-          key={journal?.id || "new"}
+          key={journal.id || "new"}
           value={content}
           onChange={handleContentChange}
           onSelectionChange={setHasSelection}
@@ -837,16 +770,12 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
         />
 
         {selectedText && (
-          <div style={{
-            position: "fixed", bottom: 100, left: "50%", transform: "translateX(-50%)",
-            background: theme.dark, color: "white", borderRadius: 10,
-            padding: "10px 18px", display: "flex", alignItems: "center", gap: 12,
-            zIndex: 100, boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-          }}>
-            <span style={{ fontSize: 13 }}>&ldquo;{selectedText.slice(0, 40)}{selectedText.length > 40 ? "..." : ""}&rdquo;</span>
+          <div className="je-selected-bar" style={{ background: theme.dark, color: "white" }}>
+            <span className="je-selected-text">&ldquo;{selectedText.slice(0, 40)}{selectedText.length > 40 ? "..." : ""}&rdquo;</span>
             <button
               onClick={saveHighlight}
-              style={{ background: theme.primary, border: "none", borderRadius: 6, padding: "6px 14px", color: "white", fontSize: 12, cursor: "pointer", fontWeight: 500 }}
+              className="je-selected-save-btn"
+              style={{ background: theme.primary }}
             >
               {t("journal.detail.saveHighlight")}
             </button>
@@ -854,18 +783,16 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
         )}
 
         {highlights.length > 0 && (
-          <div style={{ marginTop: 48, paddingTop: 24, borderTop: `1px solid ${theme.border}` }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: theme.dark, marginBottom: 12, display: "flex", alignItems: "center", gap: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div className="je-highlights-section">
+            <p className="je-highlights-title">
               <Star size={13} fill="#F59E0B" color="#F59E0B" /> {t("journal.detail.savedHighlights", { count: highlights.length })}
             </p>
             {highlights.map((h, i) => (
-              <div key={i} style={{ padding: "10px 0", borderBottom: i < highlights.length - 1 ? `1px solid ${theme.border}` : "none", fontSize: 14, color: theme.dark, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                <span style={{ lineHeight: 1.6 }}>&ldquo;{h}&rdquo;</span>
+              <div key={i} className="je-highlight-item">
+                <span className="je-highlight-text">&ldquo;{h}&rdquo;</span>
                 <button
                   onClick={() => setHighlights((hh) => hh.filter((_, idx) => idx !== i))}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: theme.muted, padding: 4, flexShrink: 0, borderRadius: 4 }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-hover)" }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+                  className="je-highlight-remove"
                 >
                   <X size={13} />
                 </button>
@@ -875,38 +802,26 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
         )}
       </div>
 
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: "var(--sidebar-width)",
-          right: 0,
-          zIndex: 20,
-          background: theme.bg,
-          padding: "10px 32px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          borderTop: `1px solid ${theme.border}`,
-        }}
-      >
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+      <div className="je-bottom-bar">
+          <div className="je-bottom-left">
             {voiceError && (
-              <div style={{ padding: "6px 10px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#EF4444", fontSize: 11, display: "flex", alignItems: "center", gap: 6 }}>
+              <div className="je-voice-error">
                 <span>{voiceError}</span>
-                <button onClick={() => setVoiceError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#EF4444", padding: 2, display: "flex" }}><X size={12} /></button>
+                <button onClick={() => setVoiceError(null)} className="je-voice-error-btn"><X size={12} /></button>
               </div>
             )}
 
-            <div style={{ display: "flex", gap: 4 }}>
+            <div className="je-ai-tools">
               <AiToolButton icon={Wand2} label="Smoothen" phase="smoothen" onClick={() => callTransform("smoothen", "Smoothen")} disabled={buttonsDisabled} isProcessing={isProcessing} />
               <AiToolButton icon={Type} label="Auto Format" phase="autoformat" onClick={() => callTransform("autoformat", "Auto Format")} disabled={buttonsDisabled} isProcessing={isProcessing} accent />
               <AiToolButton icon={Sparkles} label="Restructure" phase="restructure" onClick={() => callTransform("restructure", "Restructure")} disabled={buttonsDisabled} isProcessing={isProcessing} />
             </div>
 
-            <div style={{ width: 1, height: 24, background: theme.border, flexShrink: 0 }} />
+            <div className="je-divider" />
 
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div className="je-voice-controls">
               {voicePhase !== "idle" && voicePhase !== "recorded" && voicePhase !== "transcribing" && (
-                <span style={{ fontSize: 12, fontWeight: 500, fontVariantNumeric: "tabular-nums", color: theme.dark }}>
+                <span className="je-voice-timer">
                   {formatTime(voiceTimer)}
                 </span>
               )}
@@ -915,7 +830,8 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
                   type="button"
                   onClick={startRecording}
                   disabled={isProcessing}
-                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`, color: "white", fontSize: 11, fontWeight: 600, cursor: isProcessing ? "not-allowed" : "pointer", opacity: isProcessing ? 0.5 : 1 }}
+                  className="je-record-btn"
+                  style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`, opacity: isProcessing ? 0.5 : 1 }}
                 >
                   <Mic size={12} /> {voicePhase === "idle" ? "Record" : "Again"}
                 </button>
@@ -924,7 +840,7 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
                 <button
                   type="button"
                   onClick={stopRecording}
-                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: 8, border: "none", background: "#EF4444", color: "white", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+                  className="je-stop-btn"
                 >
                   <Square size={12} /> Stop
                 </button>
@@ -933,57 +849,51 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
                 <button
                   type="button"
                   onClick={transcribe}
-                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`, color: "white", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+                  className="je-transcribe-btn"
+                  style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
                 >
                   <ArrowRight size={12} /> Transcribe
                 </button>
               )}
               {voicePhase === "transcribing" && (
-                <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 12px", color: theme.muted, fontSize: 11 }}>
-                  <Loader2 size={12} style={{ animation: "spin 0.8s linear infinite" }} /> Transcribing...
+                <div className="je-transcribing">
+                  <Loader2 size={12} className="je-transcribing-spin" /> Transcribing...
                 </div>
               )}
             </div>
 
             {voicePhase === "recording" && (
-              <div style={{ width: 200, height: 36, borderRadius: 6, background: "var(--color-input)", overflow: "hidden", flexShrink: 0 }}>
-                <canvas ref={canvasRef} width={600} height={36} style={{ width: "100%", height: "100%" }} />
+              <div className="je-waveform">
+                <canvas ref={canvasRef} width={600} height={36} />
               </div>
             )}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, position: "relative" }} ref={folderFabRef}>
+          <div className="je-bottom-right" ref={folderFabRef}>
             <button
               type="button"
               data-folder-fab-btn
               onClick={() => setShowFolderFab((v) => !v)}
-              style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 8, border: `1px solid ${showFolderFab ? theme.primary : theme.border}`, background: showFolderFab ? "rgba(124,58,237,0.06)" : "var(--color-card, white)", cursor: "pointer", fontSize: 11, fontWeight: 500, color: showFolderFab ? theme.primary : theme.dark, transition: "all 0.2s" }}
-              onMouseEnter={(e) => { if (!showFolderFab) { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary } }}
-              onMouseLeave={(e) => { if (!showFolderFab) { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.dark } }}
+              className={showFolderFab ? "je-folder-btn je-folder-btn-active" : "je-folder-btn"}
             >
               <Folder size={12} /> Folder
             </button>
             {showFolderFab && (
-              <div style={{
-                position: "absolute", bottom: "calc(100% + 8px)", right: 0, zIndex: 60,
-                background: "var(--color-card, white)", borderRadius: 12,
-                border: `1px solid ${theme.border}`, boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                padding: 14, minWidth: 220,
-              }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Current Folder</p>
+              <div className="je-folder-menu">
+                <p className="je-folder-menu-label">Current Folder</p>
                 {folderIds.length === 0 ? (
-                  <p style={{ fontSize: 12, color: theme.muted, margin: "0 0 10px", fontStyle: "italic" }}>No folder assigned</p>
+                  <p className="je-folder-menu-empty">No folder assigned</p>
                 ) : (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 10 }}>
+                  <div className="je-folder-menu-badges">
                     {folderIds.map((fid) => {
                       const f = folders?.find((x) => x.id === fid)
                       if (!f) return null
-                      return <span key={fid} style={{ fontSize: 12, background: "var(--color-hover)", borderRadius: 4, padding: "3px 8px", fontWeight: 500 }}>{f.emoji} {f.name}</span>
+                      return <span key={fid} className="je-folder-menu-badge">{f.emoji} {f.name}</span>
                     })}
                   </div>
                 )}
-                <div style={{ borderTop: `1px solid ${theme.border}`, paddingTop: 8, marginTop: 4 }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: theme.muted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Move to</p>
+                <div className="je-folder-menu-divider">
+                  <p className="je-folder-menu-move">Move to</p>
                   {folders?.map((f) => {
                     const isSelected = folderIds.includes(f.id)
                     return (
@@ -992,21 +902,12 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
                         type="button"
                         onClick={() => handleToggleFolder(f.id)}
                         disabled={folderAssigning}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 8,
-                          padding: "6px 8px", borderRadius: 6, border: "none",
-                          background: isSelected ? "var(--color-hover)" : "transparent",
-                          cursor: folderAssigning ? "not-allowed" : "pointer",
-                          width: "100%", textAlign: "left", fontSize: 13, color: theme.dark,
-                          fontWeight: isSelected ? 500 : 400, opacity: folderAssigning ? 0.6 : 1,
-                          transition: "all 0.1s",
-                        }}
-                        onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "var(--color-hover)" }}
-                        onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "transparent" }}
+                        className={`je-folder-menu-item${isSelected ? " je-folder-menu-item-selected" : ""}`}
+                        style={{ color: theme.dark }}
                       >
-                        <span style={{ fontSize: 15 }}>{f.emoji}</span>
-                        <span style={{ flex: 1 }}>{f.name}</span>
-                        {isSelected && <span style={{ fontSize: 11, color: theme.primary }}>✓</span>}
+                        <span className="je-folder-menu-item-emoji">{f.emoji}</span>
+                        <span className="je-folder-menu-item-name">{f.name}</span>
+                        {isSelected && <span className="je-folder-menu-item-check">✓</span>}
                       </button>
                     )
                   })}
@@ -1016,59 +917,21 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
 
             <button
               type="button"
-              onClick={() => { if (journal) onChatAboutIt() }}
+              onClick={() => onChatAboutIt()}
               disabled={chatAboutItLoading}
-              style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 8, border: `1px solid ${theme.border}`, background: "var(--color-card, white)", cursor: chatAboutItLoading ? "not-allowed" : "pointer", fontSize: 11, fontWeight: 500, color: theme.dark, opacity: chatAboutItLoading ? 0.6 : 1, transition: "all 0.2s" }}
-              onMouseEnter={(e) => { if (!chatAboutItLoading) { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary } }}
-              onMouseLeave={(e) => { if (!chatAboutItLoading) { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.dark } }}
+              className="je-chat-btn"
             >
-              {chatAboutItLoading ? <Loader2 size={12} style={{ animation: "spin 0.8s linear infinite" }} /> : <MessageCircle size={12} />} Spill AI
+              {chatAboutItLoading ? <Loader2 size={12} className="je-save-spin" /> : <MessageCircle size={12} />} Spill AI
             </button>
           </div>
       </div>
 
       {showInvalidWarning && (
-        <div
-          className="jd-invalid-snackbar"
-          style={{
-            position: "fixed",
-            bottom: 24,
-            left: "50%",
-            zIndex: 200,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "12px 16px 12px 20px",
-            background: "rgba(30,27,75,0.92)",
-            color: "white",
-            borderRadius: 12,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
-            fontSize: 13,
-            fontWeight: 500,
-            whiteSpace: "nowrap",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            border: "1px solid rgba(255,255,255,0.1)",
-          }}
-        >
+        <div className="je-invalid-snackbar">
           <span>Please input a title and at least 1 emoji.</span>
           <button
             onClick={() => setConfirmDelete(true)}
-            style={{
-              background: "rgba(239,68,68,0.15)",
-              border: "1px solid rgba(239,68,68,0.3)",
-              borderRadius: 6,
-              padding: "5px 12px",
-              color: "#EF4444",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.25)" }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.15)" }}
+            className="je-invalid-delete-btn"
           >
             Delete Journal
           </button>
@@ -1078,7 +941,7 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
       <ConfirmDialog
         open={confirmDelete}
         title={t("journal.detail.deleteDialog")}
-        message={t("journal.detail.deleteConfirm", { title: journal?.title })}
+        message={t("journal.detail.deleteConfirm", { title: journal.title })}
         confirmLabel={t("journal.detail.confirm")}
         cancelLabel={t("common.cancel")}
         variant="danger"
@@ -1086,52 +949,6 @@ export default function JournalEditor({ journalId, isNew, onBack, onDelete, togg
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmDelete(false)}
       />
-
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
-        .emoji-pop-in { animation: emoji-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-        @keyframes emoji-pop {
-          0% { opacity: 0; transform: scale(0.5) translateY(8px); }
-          60% { opacity: 1; transform: scale(1.15) translateY(-2px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .jd-title-input:focus {
-          outline: none !important;
-          border: none !important;
-          box-shadow: none !important;
-          -webkit-appearance: none !important;
-        }
-        .jd-title-input::placeholder {
-          color: var(--color-muted);
-          font-style: normal;
-        }
-        .jd-emoji-slot {
-          cursor: default;
-          user-select: none;
-          -webkit-user-select: none;
-        }
-        .jd-emoji-slot:hover {
-          cursor: pointer;
-        }
-        @keyframes jd-fade-out {
-          0%, 70% { opacity: 1; }
-          100% { opacity: 0; pointer-events: none; }
-        }
-        .jd-invalid-snackbar {
-          animation: jd-snackbar-in 0.8s ease-out forwards;
-        }
-        @keyframes jd-snackbar-in {
-          0% { transform: translateX(-50%) translateY(100%); opacity: 0; }
-          30% { transform: translateX(-50%) translateY(0); opacity: 1; }
-          40% { transform: translateX(calc(-50% - 5px)); }
-          50% { transform: translateX(calc(-50% + 5px)); }
-          60% { transform: translateX(calc(-50% - 4px)); }
-          70% { transform: translateX(calc(-50% + 4px)); }
-          80% { transform: translateX(calc(-50% - 2px)); }
-          90% { transform: translateX(calc(-50% + 2px)); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
     </div>
   )
 }
@@ -1140,14 +957,8 @@ function ActionRow({ icon, label, onClick, color = "var(--color-dark)" }) {
   return (
     <button
       onClick={onClick}
-      style={{
-        display: "flex", alignItems: "center", gap: 8,
-        padding: "7px 10px", borderRadius: 8, border: "none",
-        background: "transparent", color, fontSize: 13, fontWeight: 400,
-        cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.1s",
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-hover)" }}
-      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+      className="je-action-row"
+      style={{ color }}
     >
       {icon} <span>{label}</span>
     </button>
@@ -1155,37 +966,21 @@ function ActionRow({ icon, label, onClick, color = "var(--color-dark)" }) {
 }
 
 function AiToolButton({ icon: Icon, label, phase, onClick, disabled, isProcessing, accent }) {
+  const isDisabled = disabled
+  const cls = `je-ai-tool-btn${accent ? " je-ai-tool-btn-accent" : " je-ai-tool-btn-default"}${isDisabled ? " je-ai-tool-btn-disabled" : " je-ai-tool-btn-enabled"}`
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
+      disabled={isDisabled}
+      className={cls}
       style={{
-        display: "flex", alignItems: "center", gap: 4,
-        padding: "5px 10px", borderRadius: 8,
-        border: `1px solid ${disabled ? theme.border : accent ? theme.primary : theme.border}`,
-        background: disabled ? "var(--color-card, white)" : accent ? "rgba(124,58,237,0.06)" : "var(--color-card, white)",
-        color: disabled ? theme.muted : accent ? theme.primary : theme.dark,
-        fontSize: 11, fontWeight: 500,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1, transition: "all 0.2s",
-      }}
-      onMouseEnter={(e) => {
-        if (!disabled) {
-          e.currentTarget.style.borderColor = theme.primary
-          e.currentTarget.style.background = accent ? "rgba(124,58,237,0.12)" : "rgba(124,58,237,0.06)"
-          e.currentTarget.style.color = theme.primary
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!disabled) {
-          e.currentTarget.style.borderColor = accent ? theme.primary : theme.border
-          e.currentTarget.style.background = accent ? "rgba(124,58,237,0.06)" : "var(--color-card, white)"
-          e.currentTarget.style.color = accent ? theme.primary : theme.dark
-        }
+        border: `1px solid ${isDisabled ? theme.border : accent ? theme.primary : theme.border}`,
+        color: isDisabled ? theme.muted : accent ? theme.primary : theme.dark,
+        background: isDisabled ? "var(--color-card, white)" : accent ? "rgba(124,58,237,0.06)" : "var(--color-card, white)",
       }}
     >
-      {isProcessing ? <Loader2 size={12} style={{ animation: "spin 0.8s linear infinite" }} /> : <Icon size={12} />}
+      {isProcessing ? <Loader2 size={12} className="je-save-spin" /> : <Icon size={12} />}
       {label}
     </button>
   )

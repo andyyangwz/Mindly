@@ -16,20 +16,14 @@ function Orb({ orb, index }) {
 
   return (
     <div
+      className="floating-orb"
       style={{
-        position: "absolute",
         width: orb.size,
         height: orb.size,
         left: `calc(${orb.x} + ${offset.x}px)`,
         top: `calc(${orb.y} + ${offset.y}px)`,
-        borderRadius: "50%",
-        background: "var(--landing-orb)",
         filter: `blur(${orb.blur}px)`,
-        opacity: 0.5,
-        pointerEvents: "none",
         animation: `orbFloat ${orb.speed}s ease-in-out infinite alternate`,
-        transform: "translate(-50%, -50%)",
-        willChange: "transform",
       }}
     />
   );
@@ -37,10 +31,7 @@ function Orb({ orb, index }) {
 
 export default function FloatingOrbs({ count = 5 }) {
   return (
-    <div style={{
-      position: "fixed", inset: 0, overflow: "hidden",
-      zIndex: 0, pointerEvents: "none",
-    }}>
+    <div className="floating-orbs-container">
       <style>{`
         @keyframes orbFloat {
           0% { transform: translate(-50%, -50%) translate(0, 0) scale(1); }

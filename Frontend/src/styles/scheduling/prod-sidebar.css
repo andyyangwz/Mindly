@@ -1,0 +1,239 @@
+.apa-container {
+  background: var(--color-card, white);
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.apa-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+}
+
+.apa-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.apa-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.apa-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-dark);
+  margin: 0;
+}
+
+.apa-subtitle {
+  font-size: 11px;
+  color: var(--color-muted);
+  margin: 2px 0 0;
+}
+
+.apa-chevron-box {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.apa-expandable {
+  overflow: hidden;
+}
+
+.apa-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 0 18px 18px;
+}
+
+.apa-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.apa-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-dark);
+  margin: 0;
+}
+
+.apa-suggestion-card {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  margin-bottom: 6px;
+  background: var(--color-card, white);
+  align-items: flex-start;
+}
+
+.apa-suggestion-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.apa-suggestion-text {
+  font-size: 12px;
+  color: var(--color-dark);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.apa-scheduler-box {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: visible;
+  position: relative;
+}
+
+.apa-textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 12px;
+  font-size: 12px;
+  color: var(--color-dark);
+  background: var(--color-card, white);
+  font-family: inherit;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.apa-scheduler-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 6px 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+.apa-send-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: none;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.apa-mascot {
+  position: absolute;
+  left: -16px;
+  bottom: -16px;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.12));
+}
+
+.rd-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(0,0,0,0.18);
+  transition: opacity 280ms ease;
+}
+
+.rd-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 90vw;
+  z-index: 901;
+  background: var(--color-card, white);
+  border-left: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rd-drawer-inline {
+  flex-shrink: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-card, white);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.rd-drawer-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.rd-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card, white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  z-index: 1;
+  transition: all 0.15s;
+}
+
+.rd-header-area {
+  flex-shrink: 0;
+  padding: 20px 20px 0 20px;
+}
+
+.rd-content-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.rd-content-area-with-header {
+  padding: 12px 20px 20px 20px;
+}
+
+.rd-content-area-alone {
+  padding: 20px;
+}
+
+.rd-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 902;
+  background: rgba(0,0,0,0.18);
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}

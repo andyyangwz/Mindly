@@ -2,10 +2,10 @@ import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { useParams, useNavigate, useLocation, useOutletContext } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import WaveformAnimation from "../../components/ui/WaveformAnimation"
+import "../../styles/spill/index.css"
 
 const SPILL_PERSONALITY_KEY = "mindly_spill_personality"
 import { Send, Loader2, MessageCircle, BookOpen, Mic, Square, X } from "lucide-react"
-import { theme } from "../../theme"
 import InfoButton from "../../components/tutorial/InfoButton"
 import { useChat } from "../../hooks/useChat"
 import { spillAIService } from "../../services/spillAIService"
@@ -13,21 +13,6 @@ import PersonalitySelector from "./components/PersonalitySelector"
 import ForwardJournalPopover from "./components/ForwardJournalPopover"
 import JournalPreviewCard from "./components/JournalPreviewCard"
 import { getPersonalityAvatar } from "./utils/personalityAvatars"
-
-const PERSONALITY_BUBBLE_STYLES = {
-  empathetic: {
-    borderLeft: `3px solid color-mix(in srgb, ${theme.primary} 30%, transparent)`,
-    boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
-  },
-  problem_solver: {
-    borderLeft: `3px solid #14B8A6`,
-    boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
-  },
-  motivational: {
-    borderLeft: `3px solid #FFC107`,
-    boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
-  },
-}
 
 function formatChatTime(iso) {
   if (!iso) return ""
@@ -41,17 +26,10 @@ function formatChatTime(iso) {
 }
 
 const ChatBubble = memo(({ msg, personality, isStreaming, isError }) => {
-  const [hovered, setHovered] = useState(false)
-
   if (msg.role === "system") {
     return (
-      <div style={{ textAlign: "center", marginBottom: 20 }}>
-        <span style={{
-          fontSize: 11, color: theme.muted, background: theme.bg,
-          padding: "4px 12px", borderRadius: 12,
-        }}>
-          {msg.content}
-        </span>
+      <div className="sa-sys-msg">
+        <span className="sa-sys-badge">{msg.content}</span>
       </div>
     )
   }
@@ -60,20 +38,11 @@ const ChatBubble = memo(({ msg, personality, isStreaming, isError }) => {
 
   if (msg.role === "user") {
     return (
-      <div onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)} style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
-        <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+      <div className="sa-user-msg">
+        <div className="sa-user-inner">
           {jc && <JournalPreviewCard title={jc.title} content={jc.content} compact />}
-          <div style={{
-            padding: "14px 18px",
-            borderRadius: "20px 20px 4px 20px",
-            background: "linear-gradient(135deg, #5B3CC4, #4A2FA8)",
-            color: "white",
-            fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-line",
-            boxShadow: "0 4px 16px #5B3CC444",
-          }}>
-            {msg.content}
-          </div>
-          <span style={{ fontSize: 11, color: hovered ? "var(--color-muted)" : "transparent", userSelect: "none", transition: "color 0.15s ease" }}>{formatChatTime(msg.createdAt)}</span>
+          <div className="sa-user-bubble">{msg.content}</div>
+          <span className="sa-timestamp">{formatChatTime(msg.createdAt)}</span>
         </div>
       </div>
     )
@@ -81,42 +50,23 @@ const ChatBubble = memo(({ msg, personality, isStreaming, isError }) => {
 
   const msgPersonality = msg.personalityMode || "empathetic"
   const avatarSrc = getPersonalityAvatar(msgPersonality)
-  const bubbleStyle = PERSONALITY_BUBBLE_STYLES[msgPersonality] || PERSONALITY_BUBBLE_STYLES.empathetic
 
   return (
-    <div onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)} style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "flex-end" }}>
-      <div style={{ flexShrink: 0, alignSelf: "flex-start" }}>
-        <img
-          key={msgPersonality}
-          src={avatarSrc}
-          alt=""
-          style={{
-            width: 36, height: 36, borderRadius: "50%",
-            objectFit: "cover",
-            border: `2px solid color-mix(in srgb, ${theme.primary} 25%, transparent)`,
-            boxShadow: `0 0 0 2px var(--color-card), 0 4px 12px rgba(0,0,0,0.08)`,
-            animation: "mascotFadeIn 0.35s ease-out",
-          }}
-        />
+    <div className="sa-ai-msg">
+      <div className="sa-ai-avatar-wrap">
+        <img key={msgPersonality} src={avatarSrc} alt="" className="sa-ai-avatar" />
       </div>
-      <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 4 }}>
+      <div className="sa-ai-inner">
         {jc && <JournalPreviewCard title={jc.title} content={jc.content} compact />}
-        <div style={{
-          padding: "14px 18px",
-          borderRadius: "20px 20px 20px 4px",
-          background: isError ? "#FEF2F2" : "var(--color-card)",
-          color: isError ? "#DC2626" : theme.dark,
-          fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-line",
-          ...bubbleStyle,
-        }}>
+        <div className={`sa-ai-bubble sa-bubble-${msgPersonality}${isError ? " sa-ai-bubble-error" : ""}`}>
           {isStreaming && !msg.content ? (
-            <span style={{ color: theme.muted, fontStyle: "italic" }}>Typing...</span>
+            <span className="sa-typing-text">Typing...</span>
           ) : (
             msg.content
           )}
         </div>
         {!isStreaming && (
-          <span style={{ fontSize: 11, color: hovered ? "var(--color-muted)" : "transparent", userSelect: "none", transition: "color 0.15s ease" }}>{formatChatTime(msg.createdAt)}</span>
+          <span className="sa-timestamp">{formatChatTime(msg.createdAt)}</span>
         )}
       </div>
     </div>
@@ -561,53 +511,31 @@ export default function SpillAIPage() {
     }
   }, [input, forwardedJournal, isNewChat, chatId, navigate, sending, personality, flushStreamingContent, t])
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-      <div
-        style={{
-          padding: "8px 28px",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          background: "var(--color-card)",
-        }}
-      >
-        <div data-tutorial-target="ai-personalities" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <MessageCircle size={14} color={theme.muted} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: theme.muted, letterSpacing: "0.01em" }}>
-            {t("spill.header")}
-          </span>
-        </div>
+  const canSend = (input.trim() || forwardedJournal) && !sending
 
+  return (
+    <div className="sa-page">
+      <div className="sa-header">
+        <div data-tutorial-target="ai-personalities" className="sa-header-left">
+          <MessageCircle size={14} color="var(--color-muted)" />
+          <span className="sa-header-label">{t("spill.header")}</span>
+        </div>
         <PersonalitySelector personality={personality} onChange={handlePersonalityChange} />
         <InfoButton tutorialId="ai-personalities" />
       </div>
 
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } } @keyframes mascotFadeIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }`}</style>
-      <div
-        ref={scrollContainerRef}
-        onScroll={handleChatScroll}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "24px 80px",
-        }}
-      >
+      <div ref={scrollContainerRef} onScroll={handleChatScroll} className="sa-scroll-container">
         {localMessages.length === 0 && initialized && !loading && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100%" }}>
-            <div style={{ textAlign: "center", userSelect: "none" }}>
-              <p style={{ fontSize: 15, fontWeight: 600, color: theme.dark, margin: "0 0 6px", lineHeight: 1.3 }}>
-                {t("spill.emptyState")}
-              </p>
-              <p style={{ fontSize: 13, color: theme.muted, margin: 0, lineHeight: 1.4 }}>
-                {t("spill.emptyStateSub")}
-              </p>
+          <div className="sa-empty-wrapper">
+            <div className="sa-empty-inner">
+              <p className="sa-empty-title">{t("spill.emptyState")}</p>
+              <p className="sa-empty-sub">{t("spill.emptyStateSub")}</p>
             </div>
           </div>
         )}
 
         {localMessages.length > 0 && (
-          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div className="sa-chat-container">
             {localMessages.map((msg) => (
               <ChatBubble
                 key={msg.id}
@@ -617,19 +545,12 @@ export default function SpillAIPage() {
                 isError={msg.isError}
               />
             ))}
-
           </div>
         )}
       </div>
 
-      <div
-        style={{
-          padding: "12px 80px 20px",
-          borderTop: `1px solid ${theme.border}`,
-          background: "var(--color-card)",
-        }}
-      >
-        <div style={{ maxWidth: 900, margin: "0 auto", position: "relative" }}>
+      <div className="sa-input-wrapper">
+        <div className="sa-input-inner">
           {showJournalPicker && (
             <ForwardJournalPopover
               onSelect={handleForwardJournal}
@@ -638,7 +559,7 @@ export default function SpillAIPage() {
           )}
 
           {forwardedJournal && (
-            <div style={{ marginBottom: 8 }}>
+            <div className="sa-forwarded-journal-wrap">
               <JournalPreviewCard
                 title={forwardedJournal.title}
                 content={forwardedJournal.content}
@@ -648,44 +569,16 @@ export default function SpillAIPage() {
             </div>
           )}
 
-          <div
-            style={{
-              background: "transparent",
-              borderRadius: 16,
-              border: `1px solid ${theme.border}`,
-              padding: "8px 8px 8px 16px",
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 8,
-              boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-            }}
-          >
-            <div data-tutorial-target="forward-journal" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <div className="sa-input-border">
+            <div data-tutorial-target="forward-journal" className="sa-journal-picker-area">
               <button
                 onClick={() => setShowJournalPicker(o => !o)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 5,
-                  padding: "6px 10px",
-                  border: `1px solid ${showJournalPicker ? `color-mix(in srgb, ${theme.primary} 33%, transparent)` : theme.border}`,
-                  borderRadius: 8,
-                  background: showJournalPicker ? `color-mix(in srgb, ${theme.primary} 8%, transparent)` : "transparent",
-                  cursor: "pointer", transition: "all 0.15s",
-                  fontSize: 11, fontWeight: 500, color: theme.muted,
-                  flexShrink: 0, marginBottom: 4,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = theme.primary
-                  e.currentTarget.style.color = theme.primary
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = showJournalPicker ? `color-mix(in srgb, ${theme.primary} 33%, transparent)` : theme.border
-                  e.currentTarget.style.color = theme.muted
-                }}
+                className={`sa-journal-btn${showJournalPicker ? " sa-journal-btn-active" : ""}`}
               >
                 <BookOpen size={12} />
                 {t("spill.journal")}
               </button>
-              <InfoButton tutorialId="forward-journal" style={{ marginBottom: 4 }} />
+              <span className="sa-info-btn-margin"><InfoButton tutorialId="forward-journal" /></span>
             </div>
 
             {recordingPhase === "idle" ? (
@@ -704,148 +597,58 @@ export default function SpillAIPage() {
                     }
                   }}
                   placeholder={forwardedJournal ? t("spill.inputPlaceholderJournal") : t("spill.inputPlaceholder")}
-                  style={{
-                    flex: 1,
-                    border: "none",
-                    outline: "none",
-                    boxShadow: "none",
-                    fontSize: 14,
-                    color: theme.dark,
-                    background: "var(--color-card)",
-                    minWidth: 0,
-                    resize: "none",
-                    fontFamily: "inherit",
-                    lineHeight: "22px",
-                    padding: "2px 0 2px 12px",
-                    overflow: "auto",
-                    maxHeight: 120,
-                    height: 27,
-                  }}
+                  className="sa-textarea"
                 />
 
-                <div style={{ display: "flex", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
+                <div className="sa-btn-group">
                   <button
                     onClick={send}
-                    disabled={(!input.trim() && !forwardedJournal) || sending}
-                    style={{
-                      background: (input.trim() || forwardedJournal) && !sending
-                        ? "linear-gradient(135deg, #5B3CC4, #4A2FA8)"
-                        : theme.bg,
-                      border: "none",
-                      borderRadius: "50%",
-                      width: 36, height: 36,
-                      cursor: (input.trim() || forwardedJournal) && !sending ? "pointer" : "default",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      transition: "all 0.15s",
-                      flexShrink: 0,
-                    }}
+                    disabled={!canSend}
+                    className={`sa-send-btn${canSend ? " sa-send-btn-active" : ""}`}
                   >
                     {sending ? (
-                      <Loader2 size={15} color={theme.muted} style={{ animation: "spin 1s linear infinite" }} />
+                      <Loader2 size={15} color="var(--color-muted)" className="sa-spin" />
                     ) : (
-                      <Send size={15} color={(input.trim() || forwardedJournal) ? "white" : theme.muted} />
+                      <Send size={15} color={canSend ? "white" : "var(--color-muted)"} />
                     )}
                   </button>
 
                   <button
                     onClick={startRecording}
                     disabled={sending}
-                    style={{
-                      background: "transparent",
-                      border: `1px solid ${theme.border}`,
-                      borderRadius: "50%",
-                      width: 36, height: 36,
-                      cursor: sending ? "default" : "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      transition: "all 0.15s",
-                      flexShrink: 0,
-                      color: theme.muted,
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = theme.primary; e.currentTarget.style.color = theme.primary }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.muted }}
+                    className={`sa-mic-btn${sending ? " sa-mic-btn-disabled" : ""}`}
                   >
                     <Mic size={15} />
                   </button>
                 </div>
               </>
             ) : recordingPhase === "recording" ? (
-              <div style={{
-                flex: 1, display: "flex", flexDirection: "column", gap: 8,
-                padding: "4px 0",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div className="sa-recording-area">
+                <div className="sa-recording-row">
                   <WaveformAnimation analyser={analyser} width={200} height={44} barCount={24} />
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                    <span style={{
-                      width: 8, height: 8, borderRadius: "50%",
-                      background: "#DC2626",
-                      animation: "pulse 1.2s ease-in-out infinite",
-                    }} />
-                    <span style={{ fontSize: 12, fontWeight: 600, color: theme.muted, fontVariantNumeric: "tabular-nums" }}>
-                      {formatTime(recordingTimer)}
-                    </span>
-                    <span style={{ fontSize: 11, color: theme.muted, fontWeight: 500 }}>
-                      {t("spill.recording")}
-                    </span>
+                  <div className="sa-recording-info">
+                    <span className="sa-recording-dot" />
+                    <span className="sa-recording-timer">{formatTime(recordingTimer)}</span>
+                    <span className="sa-recording-label">{t("spill.recording")}</span>
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                  <button
-                    onClick={cancelRecording}
-                    style={{
-                      padding: "6px 12px", borderRadius: 8,
-                      border: `1px solid ${theme.border}`,
-                      background: "transparent",
-                      color: theme.muted, fontSize: 11, fontWeight: 600,
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}
-                  >
-                    {t("common.cancel")}
-                  </button>
-                  <button
-                    onClick={stopRecording}
-                    style={{
-                      padding: "6px 12px", borderRadius: 8,
-                      border: "none",
-                      background: "#DC2626",
-                      color: "#fff", fontSize: 11, fontWeight: 600,
-                      cursor: "pointer", fontFamily: "inherit",
-                      display: "flex", alignItems: "center", gap: 5,
-                    }}
-                  >
+                <div className="sa-recording-actions">
+                  <button onClick={cancelRecording} className="sa-cancel-btn">{t("common.cancel")}</button>
+                  <button onClick={stopRecording} className="sa-stop-btn">
                     <Square size={10} fill="currentColor" />
                     {t("spill.stopRecording")}
                   </button>
                 </div>
               </div>
             ) : recordingPhase === "transcribing" ? (
-              <div style={{
-                flex: 1, display: "flex", alignItems: "center", gap: 10,
-                padding: "8px 12px",
-              }}>
-                <Loader2 size={16} color={theme.primary} style={{ animation: "spin 1s linear infinite" }} />
-                <span style={{ fontSize: 13, color: theme.muted, fontWeight: 500 }}>
-                  {t("spill.transcribing")}
-                </span>
+              <div className="sa-transcribing-area">
+                <Loader2 size={16} color="var(--color-primary)" className="sa-spin" />
+                <span className="sa-transcribing-text">{t("spill.transcribing")}</span>
               </div>
             ) : (
-              <div style={{
-                flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "8px 12px",
-              }}>
-                <span style={{ fontSize: 12, color: "#DC2626", fontWeight: 500 }}>
-                  {recordingError}
-                </span>
-                <button
-                  onClick={() => setRecordingPhase("idle")}
-                  style={{
-                    padding: "4px 10px", borderRadius: 6,
-                    border: "none", background: "transparent",
-                    color: theme.muted, fontSize: 11, fontWeight: 600,
-                    cursor: "pointer", fontFamily: "inherit",
-                    display: "flex", alignItems: "center", gap: 4,
-                  }}
-                >
+              <div className="sa-error-area">
+                <span className="sa-error-text">{recordingError}</span>
+                <button onClick={() => setRecordingPhase("idle")} className="sa-error-close-btn">
                   <X size={12} />
                   {t("common.close")}
                 </button>

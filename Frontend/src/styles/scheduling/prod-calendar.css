@@ -1,0 +1,573 @@
+.ch-header {
+  padding: 20px 32px 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-card, white);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ch-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ch-top-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ch-top-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ch-icon-btn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  color: var(--color-dark);
+}
+
+.ch-icon-btn:hover {
+  background: var(--color-bg);
+  border-color: var(--color-accent);
+}
+
+.ch-icon-btn:disabled {
+  cursor: not-allowed;
+  color: var(--color-muted);
+  opacity: 0.4;
+}
+
+.ch-icon-btn:disabled:hover {
+  background: transparent;
+  border-color: var(--color-border);
+}
+
+.ch-month-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-dark);
+  transition: background 0.15s;
+}
+
+.ch-month-btn:hover {
+  background: var(--color-bg);
+}
+
+.ch-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+}
+
+.ch-mode-btn {
+  border-radius: 8px;
+  height: 32px;
+  padding: 0 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.ch-mode-btn-fixed {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+}
+
+.ch-mode-btn-fixed:hover {
+  border-color: var(--color-accent);
+  color: var(--color-dark);
+}
+
+.ch-mode-btn-reschedule {
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: white;
+}
+
+.ch-sync-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-dark);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  transform: scale(1);
+}
+
+.ch-sync-btn:hover {
+  border-color: var(--color-accent);
+  background: var(--color-bg);
+}
+
+.ch-sync-btn:disabled {
+  cursor: not-allowed;
+}
+
+.ch-sync-btn:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+.ch-sync-btn.ch-syncing {
+  border-color: var(--color-primary) !important;
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent), 0 0 20px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.ch-sync-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 12px;
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--color-primary) 15%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.ch-syncing .ch-sync-glow {
+  opacity: 1;
+  animation: syncGlowPulse 1.8s ease-in-out infinite;
+}
+
+.ch-sync-icon {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+}
+
+.ch-sync-icon.ch-spinning {
+  animation: syncSmoothRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.ch-sync-label {
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ch-today-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ch-today-btn-default {
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-dark);
+}
+
+.ch-today-btn-default:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.ch-today-btn-active {
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+}
+
+.ch-add-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ch-add-btn:hover {
+  background: var(--color-secondary);
+  border-color: var(--color-secondary);
+}
+
+.ch-create-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 1000;
+  background: var(--color-card, white);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 4px;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.ch-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+  text-align: left;
+  font-family: inherit;
+}
+
+.ch-menu-item:hover {
+  background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+}
+
+.ch-menu-icon-box {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ch-menu-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-dark);
+}
+
+.ch-menu-item-desc {
+  font-size: 10px;
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.ch-menu-separator {
+  height: 1px;
+  background: var(--color-border);
+  margin: 4px 0;
+}
+
+.ch-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-dark);
+  color: white;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  z-index: 1200;
+  pointer-events: none;
+}
+
+.ch-day-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.ch-day-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  outline: none;
+  background: transparent;
+}
+
+.ch-day-btn:not(.ch-day-btn-active):not(.ch-day-btn-inactive-month):hover {
+  background: color-mix(in srgb, var(--color-bg) 60%, transparent);
+}
+
+.ch-day-btn-active {
+  opacity: 1;
+}
+
+.ch-day-btn-inactive-month {
+  opacity: 0.35;
+}
+
+.ch-day-btn-inactive-month:hover {
+  background: transparent !important;
+  cursor: default;
+}
+
+.ch-day-name {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ch-day-num {
+  font-size: 15px;
+  font-weight: 700;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+@keyframes syncSmoothRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes syncGlowPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.08); }
+}
+
+.ch-month-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--color-card, white);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 8px;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  width: 168px;
+}
+
+.ch-month-option {
+  padding: 6px 2px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.1s;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  background: transparent;
+  color: var(--color-dark);
+  font-family: inherit;
+}
+
+.ch-month-option:hover {
+  background: var(--color-bg);
+}
+
+.ch-month-option-selected {
+  background: var(--color-primary) !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.ch-relative {
+  position: relative;
+}
+
+.ch-flex-row {
+  display: flex;
+  gap: 4px;
+}
+
+.ch-menu-item-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.ch-menu-icon-green {
+  background: #10B98114;
+}
+.ch-menu-icon-indigo {
+  background: #6366F114;
+}
+.ch-menu-icon-amber {
+  background: #F59E0B14;
+}
+.ch-menu-icon-purple {
+  background: #7C3AED14;
+}
+
+.cg-grid {
+  display: flex;
+  padding: 0 32px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  outline: none;
+}
+
+.cg-gutter {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.cg-hour-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-right: 12px;
+  padding-top: 3px;
+}
+
+.cg-hour-label {
+  font-size: 10px;
+  user-select: none;
+  letter-spacing: 0.01em;
+}
+
+.cg-canvas {
+  flex: 1;
+  position: relative;
+  touch-action: none;
+}
+
+.cg-canvas-inner {
+  position: relative;
+}
+
+.cg-grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.cg-time-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.cg-time-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #F87171;
+  margin-left: 4px;
+  box-shadow: 0 0 0 1px white;
+  flex-shrink: 0;
+}
+
+.cg-time-line {
+  flex: 1;
+  height: 1px;
+  background: #F87171;
+  margin-left: 4px;
+}
+
+.pc-container {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-card, white);
+  border-radius: 0;
+  position: relative;
+}
+
+.pc-calendar-body {
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes cg-sync-sweep {
+  0% { top: -2%; opacity: 0; }
+  8% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 102%; opacity: 0; }
+}
+
+.cg-sync-sweep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40%;
+  pointer-events: none;
+  z-index: 20;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-primary) 6%, transparent) 30%,
+    color-mix(in srgb, var(--color-primary) 10%, transparent) 50%,
+    color-mix(in srgb, var(--color-primary) 6%, transparent) 70%,
+    transparent 100%
+  );
+  animation: cg-sync-sweep 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: top, opacity;
+}
+
+.cg-sync-sweep::before {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 45%;
+  height: 10%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-primary) 20%, transparent) 30%,
+    color-mix(in srgb, var(--color-primary) 30%, transparent) 50%,
+    color-mix(in srgb, var(--color-primary) 20%, transparent) 70%,
+    transparent 100%
+  );
+  border-radius: 50%;
+  filter: blur(6px);
+}

@@ -19,7 +19,7 @@ const TUTORIAL_CONTENT = {
     ],
   },
 
-  "productivity-score": {
+  "scheduling-score": {
     title: "Productivity Score",
     tooltip: "Calculated from today's activities — shows Unknown if none are tracked",
     description:
@@ -42,11 +42,11 @@ const TUTORIAL_CONTENT = {
 
   // ─── HOME ───────────────────────────────────────
 
-  "habit-relics": {
-    title: "Habit Relics",
+  "progress-tracker": {
+    title: "Progress Tracker",
     tooltip: "Equip, track, and evolve your personal growth relics",
     description:
-      "Equip up to three Habit Relics — each one tracks a daily habit you've committed to. See your progress at a glance with progress rings, status badges, and streak counters.",
+      "Equip up to three Progress Tracker — each one tracks a daily habit you've committed to. See your progress at a glance with progress rings, status badges, and streak counters.",
     steps: [
       {
         title: "Equipped Relics",
@@ -63,24 +63,24 @@ const TUTORIAL_CONTENT = {
     ],
   },
 
-  "habit-relics-onboarding": {
+  "progress-tracker-onboarding": {
     title: "Habit Relic Tutorial",
     tooltip: "A guided tour through relics — from equipping to tracking progress",
     description:
       "A step-by-step walkthrough of the Habit Relic system — what they are, how to manage them via drag-and-drop, and how to track your daily progress.",
     steps: [
       {
-        targetId: "habit-relics",
-        title: "What Are Habit Relics?",
-        text: "Habit Relics are your personal growth companions. Each one tracks a daily habit you've committed to. Equip up to three relics to your active loadout, update your progress daily, and watch your consistency grow.",
+        targetId: "progress-tracker",
+        title: "What Are Progress Tracker?",
+        text: "Progress Tracker are your personal growth companions. Each one tracks a daily habit you've committed to. Equip up to three relics to your active loadout, update your progress daily, and watch your consistency grow.",
       },
       {
-        targetId: "habit-relics-equipped",
+        targetId: "progress-tracker-equipped",
         title: "Your Equipped Relics",
         text: "This is your active loadout — up to three relics you're currently nurturing. Each card shows a progress ring, icon, current count vs target, and a status badge. Double-click any card to edit its properties.",
       },
       {
-        targetId: "habit-relics-actions",
+        targetId: "progress-tracker-actions",
         title: "Actions & Inventory",
         text: "'Change Relics' opens the Relic Manager where you can equip/unequip using drag-and-drop. '+' creates a new relic. 'Update Progress' lets you add daily progress to any relic.",
       },
@@ -135,11 +135,11 @@ const TUTORIAL_CONTENT = {
     ],
   },
 
-  "home-dashboard": {
-    title: "Home Dashboard",
-    tooltip: "Your personal command center for growth and productivity",
+  "dashboard-page": {
+    title: "Dashboard",
+    tooltip: "Your personal command center for growth and scheduling",
     description:
-      "The Home Dashboard brings together daily inspiration, quick actions, your weekly overview, and habit relics in one focused space.",
+      "The Home page brings together daily inspiration, quick actions, your weekly overview, and progress trackers in one focused space.",
     steps: [
       {
         title: "Daily Inspiration",
@@ -215,14 +215,14 @@ const TUTORIAL_CONTENT = {
 
   // ─── PRODUCTIVITY ──────────────────────────────
 
-  "productivity-calendar": {
+  "scheduling-calendar": {
     title: "Productivity Calendar",
     tooltip: "Schedule activities, manage tasks, and organize your day",
     description:
       "A visual daily calendar where you can plan time-blocked activities, set deadline-driven tasks, and adjust everything with drag-and-drop or right-click actions.",
     steps: [
       {
-        targetId: "productivity-calendar",
+        targetId: "scheduling-calendar",
         title: "Day View & Navigation",
         text: "The calendar shows one day at a time in a vertical 24-hour timeline. Use the day picker row at the top to jump between days, click the month name to pick any month, or use the left/right arrows to move week-by-week. The 'Today' button returns you to the current date.",
       },
@@ -381,7 +381,7 @@ const TUTORIAL_CONTENT = {
 
   "relic-archive": {
     title: "Change Relics",
-    tooltip: "Equip, unequip, and manage your habit relics",
+    tooltip: "Equip, unequip, and manage your progress trackers",
     description:
       "The Change Relics modal lets you curate your equipped relics. Drag from the Archive onto the Constellation to equip, or drag equipped relics back to the Archive to unequip.",
     steps: [
@@ -412,7 +412,7 @@ const TUTORIAL_CONTENT = {
       {
         title: "What Is the Weekly Overview?",
         targetId: "weekly-overview",
-        text: "This is your weekly performance dashboard. It shows how much focused work you've logged this week, how many tasks you completed, and how your productive time breaks down across each day.",
+        text: "This is your weekly performance overview. It shows how much focused work you've logged this week, how many tasks you completed, and how your productive time breaks down across each day.",
       },
       {
         title: "Navigating Weeks",

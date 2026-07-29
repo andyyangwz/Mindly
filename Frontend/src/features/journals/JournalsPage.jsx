@@ -5,10 +5,10 @@ import { Loader, X } from "lucide-react"
 import { useJournals } from "../../hooks/useJournals"
 import { refreshPinnedJournals } from "../../hooks/usePinnedJournals"
 import { journalService } from "../../services/journalService"
-import { theme } from "../../theme"
 import JournalList from "./components/JournalList"
 import JournalEditor from "./components/JournalEditor"
 import FolderExplorer from "./folders/FolderExplorer"
+import "../../styles/journals/index.css"
 
 const SPILL_PERSONALITY_KEY = "mindly_spill_personality"
 
@@ -227,7 +227,7 @@ export default function JournalsPage() {
 
   if (loading && journals.length === 0) {
     return (
-      <div style={{ padding: "60px 32px", textAlign: "center", color: theme.muted, fontSize: 14 }}>
+      <div className="journals-loading">
         {t("journal.loadingJournals")}
       </div>
     )
@@ -235,7 +235,7 @@ export default function JournalsPage() {
 
   if (error && journals.length === 0) {
     return (
-      <div style={{ padding: "60px 32px", textAlign: "center", color: "#EF4444", fontSize: 14 }}>
+      <div className="journals-error">
         {t("common.errors.loadJournal", { error })}
       </div>
     )
@@ -244,31 +244,17 @@ export default function JournalsPage() {
   return (
     <>
       {activeFolder && (
-        <div style={{
-          padding: "14px 32px",
-          background: `color-mix(in srgb, ${theme.primary} 8%, transparent)`,
-          borderBottom: `1px solid color-mix(in srgb, ${theme.primary} 15%, transparent)`,
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 24 }}>{activeFolder.emoji}</span>
+        <div className="journals-folder-banner">
+          <div className="journals-folder-info">
+            <span className="journals-folder-emoji">{activeFolder.emoji}</span>
             <div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: theme.dark, margin: 0 }}>{activeFolder.name}</p>
-              <p style={{ fontSize: 12, color: theme.muted, margin: "2px 0 0" }}>
+              <p className="journals-folder-name">{activeFolder.name}</p>
+              <p className="journals-folder-count">
                 {journals.length} {journals.length === 1 ? "journal" : "journals"}
               </p>
             </div>
           </div>
-          <button
-            onClick={handleCloseFolder}
-            style={{
-              display: "flex", alignItems: "center", gap: 6, padding: "7px 14px",
-              borderRadius: 10, border: "none", background: "var(--color-card, white)",
-              color: theme.dark, fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-card, white)" }}
-          >
+          <button onClick={handleCloseFolder} className="journals-back-btn">
             <X size={14} /> Back to All Journals
           </button>
         </div>

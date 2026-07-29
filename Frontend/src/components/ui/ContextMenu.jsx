@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
-import { theme } from "../../theme"
 import { Portal } from "../../utils/portal"
+import "../../styles/shared/index.css"
 
 export default function ContextMenu({ open, x, y, items, onClose, children }) {
   const menuRef = useRef(null)
@@ -36,33 +36,15 @@ export default function ContextMenu({ open, x, y, items, onClose, children }) {
         <div
           ref={menuRef}
           role="menu"
-          style={{
-            position: "fixed",
-            left: adjustedX,
-            top: adjustedY,
-            width: menuWidth,
-            background: "var(--color-card, white)",
-            borderRadius: 12,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.06)",
-            border: `1px solid ${theme.border}`,
-            padding: "4px",
-            zIndex: theme.z.contextMenu,
-          }}
+          className="ctx-menu"
+          style={{ left: adjustedX, top: adjustedY, width: menuWidth }}
         >
           {items.map((item, index) => (
             <button
               key={index}
               role="menuitem"
               onClick={() => { item.onClick(); onClose() }}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                padding: "8px 12px", borderRadius: 8, border: "none",
-                background: "transparent", cursor: "pointer", fontSize: 13,
-                fontWeight: 500, color: item.danger ? "#EF4444" : theme.dark,
-                transition: "background 0.1s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent" }}
+              className={`ctx-menu-item${item.danger ? " ctx-menu-item--danger" : ""}`}
             >
               {item.icon && <item.icon size={15} />}
               {item.label}

@@ -4,9 +4,9 @@
   },
   "nav": {
     "mainMenu": "Main Menu",
-    "home": "Home",
+    "dashboard": "Dashboard",
     "journals": "Journals",
-    "productivity": "Schedule",
+    "scheduling": "Schedule",
     "insight": "Insights",
     "recentChats": "Recent Chats",
     "noChats": "No chats yet",
@@ -23,9 +23,9 @@
     "basicPlan": "Basic Plan",
     "settings": "Settings",
     "logout": "Log Out",
-    "habitRelics": "Habit Relics"
+    "progressTracker": "Progress Tracker"
   },
-  "home": {
+  "dashboard": {
     "hero": {
       "welcome": "Welcome back, {{name}}!"
     },
@@ -40,7 +40,7 @@
     },
     "statsGrid": {
       "title": "Overview",
-      "productivityPercentage": "Productivity %",
+      "schedulingPercentage": "Productivity %",
       "taskLeft": "Task Left",
       "totalUnproductiveTime": "Total Unproductive Time"
     },
@@ -54,7 +54,7 @@
       "title": "Daily Inspiration"
     },
     "habitRelics": {
-      "title": "Habit Relics",
+      "title": "Progress Tracker",
       "subtitle": "Collect, upgrade, and master your relics",
       "beAMaster": "Be a Master",
       "noRelics": "No relics yet — tap + to forge a new one",
@@ -71,7 +71,7 @@
       }
     },
     "createGoal": {
-      "title": "Create Habit Relic",
+      "title": "Create Progress Tracker",
       "iconLabel": "Icon",
       "titleLabel": "Title *",
       "titlePlaceholder": "e.g., Workout, Read Books, Practice Coding",
@@ -88,7 +88,7 @@
       }
     },
     "editGoal": {
-      "title": "Edit Habit Relic",
+      "title": "Edit Progress Tracker",
       "iconLabel": "Icon",
       "titleLabel": "Title *",
       "titlePlaceholder": "e.g., Workout, Read Books, Practice Coding",
@@ -251,7 +251,7 @@
       "favorites": "Favorites"
     }
   },
-  "productivity": {
+  "scheduling": {
     "page": {
       "title": "Today's Plan & Tasks",
       "smartSuggestions": "Smart Suggestions",
@@ -340,7 +340,7 @@
       "endLabel": "End",
       "startsLabel": "Starts",
       "dueLabel": "Due",
-      "productivityLabel": "Productivity",
+      "schedulingLabel": "Productivity",
       "statusLabel": "Status",
       "priorityLabel": "Priority",
       "colorLabel": "Color",
@@ -498,7 +498,7 @@
     "aiPoweredDesc": "Great progress! Productivity improved by <strong>8%</strong> and you've maintained a <strong>7-day streak</strong>. Your focus peaks between 9\u201311 AM. Consider scheduling lighter tasks on Fridays when focus naturally dips.",
     "quickWins": "Quick Wins",
     "stats": {
-      "productivityScore": "Productivity Score",
+      "schedulingScore": "Productivity Score",
       "totalStudyTime": "Total Study Time",
       "focusSessions": "Focus Sessions",
       "scoreUnit": "/100",
@@ -657,7 +657,7 @@
         { "title": "How to Improve", "text": "Plan realistic daily task counts. Break large tasks into smaller ones to build momentum. Use the Productivity Calendar to schedule focused time blocks for each task." }
       ]
     },
-    "productivity-score": {
+    "scheduling-score": {
       "title": "Productivity Score",
       "tooltip": "Ratio of productive vs total tracked time today",
       "description": "Your productivity score is the percentage of tracked time today that you spent on Productive activities vs Unproductive ones. Only activities marked with a productivity level count toward this score.",
@@ -667,8 +667,8 @@
         { "title": "Keep in Mind", "text": "Neutral activities (like lunch, commuting, breaks) don't affect the score. The goal isn't 100% — a balanced day with rest and focused work is healthy and sustainable." }
       ]
     },
-    "habit-relics": {
-      "title": "Habit Relics",
+    "progress-tracker": {
+      "title": "Progress Tracker",
       "tooltip": "Equip, track, and evolve your personal growth relics",
       "description": "Equip meaningful growth relics that remind you of who you're becoming. Each relic tracks a daily habit you've committed to — update your progress and watch your streak grow.",
       "steps": [
@@ -687,13 +687,13 @@
         { "title": "Reflection Prompts", "text": "Each insight includes a gentle prompt to help you reflect and adjust your approach going forward." }
       ]
     },
-    "home-dashboard": {
-      "title": "Home Dashboard",
-      "tooltip": "Your personal command center for growth and productivity",
-      "description": "The Home Dashboard brings together your daily inspiration, quick actions, weekly overview, and habit relics in one calm, focused space.",
+    "dashboard-page": {
+      "title": "Dashboard",
+      "tooltip": "Your personal command center for growth and scheduling",
+      "description": "The Dashboard brings together your daily inspiration, quick actions, weekly overview, and progress trackers in one calm, focused space.",
       "steps": [
         { "title": "Daily Inspiration", "text": "Start each day with a meaningful prompt or reflection to set your intention." },
-        { "title": "Quick Actions", "text": "Jump into journaling, productivity planning, or a reflective AI conversation with one click." }
+        { "title": "Quick Actions", "text": "Jump into journaling, scheduling, or a reflective AI conversation with one click." }
       ]
     },
     "writing-assistant": {
@@ -725,12 +725,12 @@
         { "title": "Enhance", "text": "Use Smoothen to clean up speech artifacts, Auto Format for structure, or Restructure for deeper clarity." }
       ]
     },
-    "productivity-calendar": {
+    "scheduling-calendar": {
       "title": "Productivity Calendar",
       "tooltip": "Schedule activities, manage tasks, and organize your week",
       "description": "A visual week calendar where you can plan time-blocked activities, set deadline-driven tasks, and adjust everything with drag-and-drop.",
       "steps": [
-        { "targetId": "productivity-calendar", "title": "Week View & Navigation", "text": "The calendar shows one day at a time in a vertical 24-hour timeline. Use the day picker row at the top to jump between days, the left/right arrows to move week-by-week, or click the month name to pick any month. The 'Today' button returns you to the current day." },
+        { "targetId": "scheduling-calendar", "title": "Week View & Navigation", "text": "The calendar shows one day at a time in a vertical 24-hour timeline. Use the day picker row at the top to jump between days, the left/right arrows to move week-by-week, or click the month name to pick any month. The 'Today' button returns you to the current day." },
         { "targetId": "add-activity-btn", "title": "Adding an Activity", "text": "Click the '+ Add' button in the top-right and select 'Activity', or right-click any empty time slot and choose 'Activity'. You can also double-click an empty spot on the grid and type inline — no modal needed. Set the title, time range, priority, and color." },
         { "targetId": "add-menu-options", "title": "Activity vs Task — What's the Difference?", "text": "An Activity is a time-blocked event with a start and end time — like 'Gym 9–10 AM'. You can resize it by dragging its edges. A Task has a deadline — like 'Assignment due Friday'. It shows a start block on your schedule plus a deadline marker on the due date. Tasks cannot be resized (fixed 1-hour duration)." },
         { "targetId": "voice-option", "title": "Activity/Task Insertion by Voice", "text": "Click '+ Add' > 'Use Voice' or right-click > 'Use Voice'. Record your plan naturally — say 'Gym tomorrow at 7 PM' or 'Database assignment due Friday' — and the AI autofills the form. Review and submit." },
@@ -743,11 +743,11 @@
     },
     "smart-suggestions": {
       "title": "Smart Suggestions",
-      "tooltip": "AI-powered recommendations to optimize your productivity",
+      "tooltip": "AI-powered recommendations to optimize your schedule",
       "description": "Smart Suggestions analyze your calendar, task load, and energy patterns to recommend meaningful adjustments to your week.",
       "steps": [
         { "title": "Intelligent Recommendations", "text": "The AI identifies opportunities — like rescheduling low-energy tasks to your peak hours or breaking down large tasks." },
-        { "title": "Productivity Guidance", "text": "Get insights about your productivity patterns, such as which times of day you're most effective." }
+        { "title": "Scheduling Guidance", "text": "Get insights about your scheduling patterns, such as which times of day you're most effective." }
       ]
     },
     "voice-scheduling": {
@@ -811,7 +811,7 @@
       "tooltip": "See your performance for the week at a glance",
       "description": "The Weekly Overview shows your productive hours, task completions, and daily trends for the current week.",
       "steps": [
-        { "title": "What Is the Weekly Overview?", "text": "This is your weekly performance dashboard — it shows how much focused work you've done this week, how many tasks you completed, and how your productive time breaks down across each day.", "targetId": "weekly-overview" },
+        { "title": "What Is the Weekly Overview?", "text": "This is your weekly performance overview — it shows how much focused work you've done this week, how many tasks you completed, and how your productive time breaks down across each day.", "targetId": "weekly-overview" },
         { "title": "Navigating Weeks", "text": "Use the left and right arrows next to the date range to view previous or future weeks.", "targetId": "weekly-overview-nav" },
         { "title": "Daily Bar Chart", "text": "Each bar represents one day of the week. The taller the bar, the more productive time you logged that day. Today's bar is highlighted.", "targetId": "weekly-overview-chart" },
         { "title": "Weekly Stats Summary", "text": "Total Hours is the sum of all productive time tracked this week. Tasks Done counts how many tasks you completed. Average Day shows your average productive hours per day.", "targetId": "weekly-overview-stats" }
@@ -917,7 +917,7 @@
     },
     "pricing": {
       "title": "Choose Your Journey",
-      "subtitle": "Start for free and unlock advanced productivity tools when you're ready.",
+      "subtitle": "Start for free and unlock advanced scheduling tools when you're ready.",
       "valueTitle": "Unlock Your Full Potential",
       "valueDesc": "Get personalized insights, AI-assisted planning, and premium coaching tools designed to help you build consistency and achieve your goals.",
       "featureCol": "Feature",
@@ -935,7 +935,7 @@
         "yearlySave": "Save 11%"
       },
       "features": [
-        { "feature": "Weekly Insights", "desc": "Personalized productivity insights and reflections." },
+        { "feature": "Weekly Insights", "desc": "Personalized scheduling insights and reflections." },
         { "feature": "Monthly Insights", "desc": "Deeper analysis of your monthly trends." },
         { "feature": "AI Scheduler", "desc": "AI helps organize schedules and suggest optimal planning." },
         { "feature": "Voice Transcription", "desc": "Convert voice recordings into activities and tasks." },

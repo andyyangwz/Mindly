@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react"
-import { theme } from "../../theme"
+import "../../styles/shared/index.css"
 
 const SlashCommandList = forwardRef(function SlashCommandList({ items, command, editor }, ref) {
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -50,40 +50,14 @@ const SlashCommandList = forwardRef(function SlashCommandList({ items, command, 
 
   if (!displayItems.length) {
     return (
-      <div
-        ref={scrollContainerRef}
-        style={{
-          background: "var(--color-card, white)",
-          borderRadius: 12,
-          border: `1px solid ${theme.border}`,
-          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-          padding: "8px 4px",
-          minWidth: 180,
-          maxHeight: 260,
-          overflowY: "auto",
-        }}
-      >
-        <div style={{ padding: "8px 12px", fontSize: 12, color: theme.muted }}>
-          No commands found.
-        </div>
+      <div ref={scrollContainerRef} className="sc-list sc-list--empty">
+        <div className="sc-empty-text">No commands found.</div>
       </div>
     )
   }
 
   return (
-    <div
-      ref={scrollContainerRef}
-      style={{
-        background: "var(--color-card, white)",
-        borderRadius: 12,
-        border: `1px solid ${theme.border}`,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-        padding: "6px 4px",
-        minWidth: 180,
-        maxHeight: 260,
-        overflowY: "auto",
-      }}
-    >
+    <div ref={scrollContainerRef} className="sc-list">
       {displayItems.map((item, i) => {
         const Icon = item.icon
         const isSelected = i === selectedIndex
@@ -91,42 +65,13 @@ const SlashCommandList = forwardRef(function SlashCommandList({ items, command, 
           <button
             key={item.label}
             data-index={i}
+            data-selected={isSelected}
             onClick={() => commandRef.current(item)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              width: "100%",
-              padding: "8px 12px",
-              borderRadius: 8,
-              border: "none",
-              background: isSelected
-                ? `color-mix(in srgb, ${theme.primary} 10%, transparent)`
-                : "transparent",
-              cursor: "pointer",
-              textAlign: "left",
-              fontSize: 13,
-              fontWeight: isSelected ? 500 : 400,
-              color: isSelected ? theme.primary : theme.dark,
-              transition: "background 0.08s",
-            }}
+            className="sc-item"
             onMouseEnter={() => setSelectedIndex(i)}
           >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 7,
-                background: isSelected
-                  ? `color-mix(in srgb, ${theme.primary} 12%, transparent)`
-                  : "var(--color-hover)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Icon size={14} color={isSelected ? theme.primary : theme.muted} />
+            <div data-selected={isSelected} className="sc-item-icon">
+              <Icon size={14} />
             </div>
             {item.label}
           </button>

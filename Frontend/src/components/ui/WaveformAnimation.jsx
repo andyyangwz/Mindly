@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback } from "react"
-import { theme } from "../../theme"
+import "../../styles/shared/index.css"
 
 export default function WaveformAnimation({ analyser, width = 320, height = 64, barCount = 28 }) {
   const canvasRef = useRef(null)
@@ -17,7 +17,7 @@ export default function WaveformAnimation({ analyser, width = 320, height = 64, 
       ctx.clearRect(0, 0, w, h)
 
       const isDark = document.documentElement.getAttribute("data-theme") !== "light"
-      const primary = theme.primary || "#8B5CF6"
+      const primary = "var(--color-primary)"
       const barColor = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.35)"
       const glowColor = isDark ? `${primary}44` : `${primary}22`
 
@@ -83,12 +83,8 @@ export default function WaveformAnimation({ analyser, width = 320, height = 64, 
       ref={canvasRef}
       width={width}
       height={height}
-      style={{
-        width,
-        height,
-        borderRadius: 8,
-        display: "block",
-      }}
+      className="wa-canvas"
+      style={{ width, height }}
     />
   )
 }

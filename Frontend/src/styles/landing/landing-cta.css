@@ -1,0 +1,126 @@
+/* ===== Transformation Section ===== */
+
+.transformation-card {
+  border-radius: 20px;
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-border);
+  padding: 32px 28px;
+  transition: all 0.3s;
+}
+
+.transformation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--landing-shadow-lg);
+}
+
+.transformation-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+  text-align: center;
+}
+
+.transformation-label--muted {
+  color: var(--landing-text-muted);
+  opacity: 0.5;
+}
+
+.transformation-label--accent {
+  color: var(--landing-accent);
+}
+
+.transformation-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.transformation-arrow-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--landing-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transformation-arrow-circle--dim {
+  opacity: 0.15;
+}
+
+.transformation-arrow-circle--mid {
+  opacity: 0.4;
+}
+
+.transformation-arrow-line {
+  width: 1px;
+  height: 60px;
+  background: var(--landing-border);
+}
+
+.transformation-arrow-text {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--landing-text-muted);
+  opacity: 0.4;
+  writing-mode: vertical-rl;
+}
+
+.transformation-trait {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--landing-card-bg);
+  border: 1px solid var(--landing-border);
+}
+
+.transformation-trait-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.transformation-trait-dot--muted {
+  background: var(--landing-text-muted);
+  opacity: 0.3;
+}
+
+.transformation-trait-dot--accent {
+  background: var(--landing-accent);
+  opacity: 0.6;
+}
+
+.transformation-trait-text {
+  font-size: 13px;
+}
+
+.transformation-trait-text--muted {
+  color: var(--landing-text-secondary);
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.transformation-trait-text--accent {
+  color: var(--landing-text);
+  font-weight: 500;
+}
+
+/* ===== Final CTA ===== */
+
+.final-cta-tagline {
+  margin-top: 80px;
+  font-size: 11px;
+  color: var(--landing-text-muted);
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
