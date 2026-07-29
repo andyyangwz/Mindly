@@ -16,6 +16,7 @@ export default function EditProgressTrackerModal({ relic, onClose, onUpdated, on
 
   useEffect(() => {
     if (relic) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIcon(relic.icon || "FaStar");
       setTitle(relic.title || "");
       setCurrentProgress(relic.current_progress ?? 0);

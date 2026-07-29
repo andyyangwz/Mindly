@@ -4,7 +4,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import { Menu, X } from "lucide-react"
 import Sidebar from "./Sidebar"
 import SpotlightOverlay from "./tutorial/SpotlightOverlay"
-import { useChat } from "../hooks/useChat"
+import { useChat } from "../hooks/shared/useChat"
 import "../styles/shared/index.css"
 
 export default function AppLayout() {
@@ -23,6 +23,7 @@ export default function AppLayout() {
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1024px)")
     mqlRef.current = mql
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMobile(mql.matches)
     const handler = (e) => setIsMobile(e.matches)
     mql.addEventListener("change", handler)

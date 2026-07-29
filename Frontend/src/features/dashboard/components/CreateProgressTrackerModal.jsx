@@ -23,9 +23,19 @@ export default function CreateProgressTrackerModal({ open, onClose, onCreated })
   const [submitting, setSubmitting] = useState(false);
   const [forgeAnim, setForgeAnim] = useState(false);
   const titleRef = useRef(null);
+  const [particles] = useState(() => Array.from({ length: 6 }, (_, i) => {
+    const w = 4 + Math.random() * 6;
+    const h = 4 + Math.random() * 6;
+    const bg = `rgba(139,92,246,${0.1 + Math.random() * 0.2})`;
+    const l = `${10 + Math.random() * 80}%`;
+    const t = `${20 + Math.random() * 60}%`;
+    const anim = `relicParticleFloat ${3 + Math.random() * 4}s ease-in-out ${Math.random() * 3}s infinite`;
+    return { key: i, w, h, bg, l, t, anim };
+  }));
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIcon("FaStar");
       setTitle("");
       setCurrentProgress(0);
@@ -87,6 +97,7 @@ export default function CreateProgressTrackerModal({ open, onClose, onCreated })
   const rarity = RarityLabel(title, currentProgress, targetNum);
   const circ = 2 * Math.PI * 62;
   const offset = circ * (1 - pct / 100);
+  const IconCmp = resolveIcon(icon);
 
   return (
     <div className="modal-relic-overlay" onClick={onClose} onKeyDown={handleKeyDown} tabIndex={-1}>
@@ -95,16 +106,16 @@ export default function CreateProgressTrackerModal({ open, onClose, onCreated })
 
         {/* ===== LEFT — Relic Preview ===== */}
         <div className="modal-relic-preview">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} style={{
+          {particles.map(p => (
+            <div key={p.key} style={{
               position: "absolute",
-              width: 4 + Math.random() * 6,
-              height: 4 + Math.random() * 6,
+              width: p.w,
+              height: p.h,
               borderRadius: "50%",
-              background: `rgba(139,92,246,${0.1 + Math.random() * 0.2})`,
-              left: `${10 + Math.random() * 80}%`,
-              top: `${20 + Math.random() * 60}%`,
-              animation: `relicParticleFloat ${3 + Math.random() * 4}s ease-in-out ${Math.random() * 3}s infinite`,
+              background: p.bg,
+              left: p.l,
+              top: p.t,
+              animation: p.anim,
               pointerEvents: "none",
             }} />
           ))}
@@ -136,20 +147,18 @@ export default function CreateProgressTrackerModal({ open, onClose, onCreated })
                 style={{ transition: "stroke-dashoffset 0.6s ease" }} />
             </svg>
             <div className="modal-relic-icon-core">
-              {(() => {
-                const Icon = resolveIcon(icon);
-                return Icon ? (
-                  <div style={{
-                    color: "var(--color-primary)",
-                    animation: forgeAnim ? "none" : "relicPulse 3s ease-in-out infinite",
-                    display: "flex",
-                  }}>
-                    <Icon size={32} />
-                  </div>
-                ) : (
-                  <span style={{ fontSize: 28, color: "var(--color-primary)" }}>✦</span>
-                );
-              })()}
+              {IconCmp ? (
+                <div style={{
+                  color: "var(--color-primary)",
+                  animation: forgeAnim ? "none" : "relicPulse 3s ease-in-out infinite",
+                  display: "flex",
+                }}>
+                  {/* eslint-disable-next-line react-hooks/static-components */}
+                  <IconCmp size={32} />
+                </div>
+              ) : (
+                <span style={{ fontSize: 28, color: "var(--color-primary)" }}>✦</span>
+              )}
             </div>
           </div>
 

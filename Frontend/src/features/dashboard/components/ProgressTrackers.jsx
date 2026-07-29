@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Target, Ribbon, Plus, Settings, ArrowUp } from "lucide-react";
-import { useProgressTrackers } from "../hooks/useProgressTrackers";
+import { useProgressTrackers } from "../../../hooks/dashboard/useProgressTrackers";
 import { resolveIcon } from "../components/IconPicker";
 import CreateProgressTrackerModal from "../components/CreateProgressTrackerModal";
 import EditProgressTrackerModal from "../components/EditProgressTrackerModal";
@@ -63,11 +63,12 @@ export default function ProgressTrackers() {
     [displayRelics]
   );
 
-  const inventory = useMemo(() => displayRelics.filter((g) => !g.is_equipped), [displayRelics]);
+
 
   // Auto-open/close modals during tutorial
   useEffect(() => {
     if (tutorialId !== "progress-tracker-onboarding") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRelicManagerMode(null);
       setUpdateProgressOpen(false);
       return;

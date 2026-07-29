@@ -6,7 +6,14 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 44px;
+}
+
+.dashboard-desktop > * + * {
+  margin-top: 44px;
+}
+
+.dashboard-desktop > :nth-child(2) {
+  margin-top: 20px;
 }
 
 .dashboard-mobile {
@@ -17,7 +24,14 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 36px;
+}
+
+.dashboard-mobile > * + * {
+  margin-top: 36px;
+}
+
+.dashboard-mobile > :nth-child(2) {
+  margin-top: 16px;
 }
 
 .dashboard-grid-2col {

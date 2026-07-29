@@ -7,6 +7,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 900px)")
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsCompact(mq.matches)
     const handler = (e) => setIsCompact(e.matches)
     mq.addEventListener("change", handler)

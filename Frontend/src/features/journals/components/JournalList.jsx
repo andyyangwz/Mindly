@@ -19,11 +19,6 @@ function formatSingleDate(dateStr) {
   return d.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
 }
 
-function cleanPreview(text) {
-  if (!text) return text
-  return text.replace(/\n+/g, " ").replace(/\s+/g, " ").trim()
-}
-
 function formatDateRange(from, to) {
   if (!from && !to) return null
 
@@ -72,16 +67,15 @@ export default function JournalList({
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, journal: null })
   const toast = useToast()
   const { tutorialId, tutorialStep } = useTutorial()
-  const [tutorialJournal, setTutorialJournal] = useState(null)
   const [hoveredId, setHoveredId] = useState(null)
   const [pressedId, setPressedId] = useState(null)
   const [displayCount, setDisplayCount] = useState(8)
   const sentinelRef = useRef(null)
   const contextAutoOpened = useRef(false)
 
-  useEffect(() => {
+  const tutorialJournalData = useMemo(() => {
     if (tutorialId === "journal-page") {
-      setTutorialJournal({
+      return {
         id: "tutorial-journal",
         title: "Sample Journal Entry",
         preview: "This is a demonstration journal entry. Click to see how journals open for reading and editing. This card is here to help you explore the journal interface.",
@@ -90,14 +84,17 @@ export default function JournalList({
         isPinned: false,
         isFavorite: false,
         folderIds: [],
-      })
-    } else {
-      setTutorialJournal(null)
+      }
     }
+    return null
   }, [tutorialId])
 
+  const handleCloseContextMenu = useCallback(() => {
+    setContextMenu((prev) => ({ ...prev, open: false }))
+  }, [])
+
   useEffect(() => {
-    if (tutorialId === "journal-page" && tutorialStep === 7 && tutorialJournal && !contextAutoOpened.current) {
+    if (tutorialId === "journal-page" && tutorialStep === 7 && tutorialJournalData && !contextAutoOpened.current) {
       contextAutoOpened.current = true
       requestAnimationFrame(() => {
         const cardEl = document.querySelector('[data-tutorial-journal="true"]')
@@ -108,14 +105,14 @@ export default function JournalList({
             open: true,
             x: rect.left + rect.width / 2,
             y: rect.top + rect.height / 2,
-            journal: tutorialJournal,
+            journal: tutorialJournalData,
           })
         }
       })
     } else if (tutorialId !== "journal-page" || tutorialStep !== 7) {
       contextAutoOpened.current = false
     }
-  }, [tutorialId, tutorialStep, tutorialJournal])
+  }, [tutorialId, tutorialStep, tutorialJournalData, handleCloseContextMenu])
 
   useEffect(() => {
     if (!showDatePopover) return
@@ -189,15 +186,11 @@ export default function JournalList({
   }, [journals, filter, search, dateFrom, dateTo])
 
   const displayJournals = useMemo(() => {
-    if (tutorialJournal) {
-      return [tutorialJournal, ...filtered]
+    if (tutorialJournalData) {
+      return [tutorialJournalData, ...filtered]
     }
     return filtered
-  }, [filtered, tutorialJournal])
-
-  useEffect(() => {
-    setDisplayCount(8)
-  }, [displayJournals])
+  }, [filtered, tutorialJournalData])
 
   useEffect(() => {
     const sentinel = sentinelRef.current
@@ -228,10 +221,6 @@ export default function JournalList({
     e.preventDefault()
     e.stopPropagation()
     setContextMenu({ open: true, x: e.clientX, y: e.clientY, journal })
-  }, [])
-
-  const handleCloseContextMenu = useCallback(() => {
-    setContextMenu((prev) => ({ ...prev, open: false }))
   }, [])
 
   const handleContextSave = useCallback(

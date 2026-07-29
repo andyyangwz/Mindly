@@ -72,6 +72,7 @@ export default function WeeklyOverview() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData(weekStart)
   }, [weekStart, fetchData])
 

@@ -10,25 +10,13 @@ import {
 } from "../utils/calendarConstants"
 import { Field, In, Pill, Row, Grid, Actions, Error, ErrMsg } from "../modals/ActivityFormFields"
 import InteractiveProgressBar from "../components/InteractiveProgressBar"
+import { randomTime } from "../../../utils/editor"
 import "../../../styles/scheduling/index.css"
 
 const TASK_ACCENT = "#6366F1"
 const ANIM_CHAR_MS = 38
 const ANIM_SHUFFLE_MS = 90
 const ANIM_SHUFFLE_COUNT = 5
-
-function randomTime() {
-  const h = String(Math.floor(Math.random() * 24)).padStart(2, "0")
-  const m = String(Math.floor(Math.random() * 60)).padStart(2, "0")
-  return `${h}:${m}`
-}
-
-function randomDateNear(base) {
-  if (!base) return base
-  const d = new Date(base + "T00:00:00")
-  d.setDate(d.getDate() + Math.floor(Math.random() * 5) - 2)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-}
 
 const INITIAL_STATE = {
   title: "",
@@ -116,7 +104,7 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
       const desc = target.description
 
       if (!title) {
-        setTitleDone(true)
+        setTimeout(() => setTitleDone(true), 0)
       } else {
         let i = 0
         const id = setInterval(() => {
@@ -131,7 +119,7 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
       }
 
       if (!desc) {
-        setDescriptionDone(true)
+        setTimeout(() => setDescriptionDone(true), 0)
       } else {
         let i = 0
         const id = setInterval(() => {
@@ -168,42 +156,51 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
       voiceTimersRef.current.push(id)
     } else if (!voiceAutofill) {
       voicePrevIdRef.current = null
-      setTitleDone(true)
-      setDescriptionDone(true)
-      setStartDateDone(true)
-      setStartTimeDone(true)
-      setDeadlineDateDone(true)
-      setDeadlineTimeDone(true)
-      if (editingActivity) {
-        const prog = editingActivity.progress ?? 0
-        setInitialProgress(prog)
-        setForm({
-          title: editingActivity.title,
-          description: editingActivity.description || "",
-          startDate: editingActivity.startDatetime ? editingActivity.startDatetime.slice(0, 10) : "",
-          startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
-          deadlineDate: editingActivity.endDatetime ? editingActivity.endDatetime.slice(0, 10) : "",
-          deadlineTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
-          color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
-          priority: editingActivity.priority || "medium",
-          productivityLevel: editingActivity.productivityLevel || null,
-          progress: prog,
-        })
-      } else if (selectedSlot) {
-        setInitialProgress(0)
-        setForm({
-          ...INITIAL_STATE,
-          startDate: toDateStr(selectedSlot.date),
-          deadlineDate: toDateStr(selectedSlot.date),
-          deadlineTime: "23:59",
-        })
-      } else {
-        setInitialProgress(0)
-        setForm(INITIAL_STATE)
-      }
+      setTimeout(() => {
+        setTitleDone(true)
+        setDescriptionDone(true)
+        setStartDateDone(true)
+        setStartTimeDone(true)
+        setDeadlineDateDone(true)
+        setDeadlineTimeDone(true)
+      }, 0)
+      setTimeout(() => {
+        if (editingActivity) {
+          const prog = editingActivity.progress ?? 0
+          setInitialProgress(prog)
+          setForm({
+            title: editingActivity.title,
+            description: editingActivity.description || "",
+            startDate: editingActivity.startDatetime ? editingActivity.startDatetime.slice(0, 10) : "",
+            startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
+            deadlineDate: editingActivity.endDatetime ? editingActivity.endDatetime.slice(0, 10) : "",
+            deadlineTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
+            color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
+            priority: editingActivity.priority || "medium",
+            productivityLevel: editingActivity.productivityLevel || null,
+            progress: prog,
+          })
+        } else if (selectedSlot) {
+          setInitialProgress(0)
+          setForm({
+            ...INITIAL_STATE,
+            startDate: toDateStr(selectedSlot.date),
+            deadlineDate: toDateStr(selectedSlot.date),
+            deadlineTime: "23:59",
+          })
+        } else {
+          setInitialProgress(0)
+          setForm(INITIAL_STATE)
+        }
+        setErrors({})
+        setSaving(false)
+      }, 0)
+    } else {
+      setTimeout(() => {
+        setErrors({})
+        setSaving(false)
+      }, 0)
     }
-    setErrors({})
-    setSaving(false)
   }, [open, editingActivity, selectedSlot, voiceAutofill, clearVoiceTimers])
 
   useEffect(() => {
@@ -363,7 +360,7 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
                   </Field>
                   <Field label="Priority">
                     <Row gap={6} wrap>
-                      {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
+                      {Object.entries(PRIORITY_LABELS).map(([key]) => (
                         <Pill
                           key={key}
                           active={form.priority === key}
@@ -467,40 +464,40 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
                 </Field>
                 <Field label="Priority">
                   <Row gap={6} wrap>
-                    {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
-                      <Pill
-                        key={key}
-                        active={form.priority === key}
-                        accent="var(--color-primary)"
-                        onClick={() => set("priority", key)}
-                        compact
-                      >
-                        {t(`scheduling.eventForm.priority_${key}`)}
-                      </Pill>
-                    ))}
-                  </Row>
-                </Field>
-              </div>
-              <div>
-                <Field label="Task Name" error={errors.title}>
-                  <In
-                    ref={titleRef}
-                    value={form.title}
-                    onChange={(e) => set("title", e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) handleSubmit() }}
-                    placeholder="e.g. Assignment Submission, Project Due"
-                    error={errors.title}
-                  />
-                </Field>
-                <Field label="Description">
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => set("description", e.target.value)}
-                    placeholder="Objectives, requirements, notes..."
-                    rows={3}
-                    className="atm-textarea"
-                  />
-                </Field>
+                  {Object.entries(PRIORITY_LABELS).map(([key]) => (
+                    <Pill
+                      key={key}
+                      active={form.priority === key}
+                      accent="var(--color-primary)"
+                      onClick={() => set("priority", key)}
+                      compact
+                    >
+                      {t(`scheduling.eventForm.priority_${key}`)}
+                    </Pill>
+                  ))}
+                </Row>
+              </Field>
+            </div>
+            <div>
+              <Field label="Task Name" error={errors.title}>
+                <In
+                  ref={titleRef}
+                  value={form.title}
+                  onChange={(e) => set("title", e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) handleSubmit() }}
+                  placeholder="e.g. Assignment Submission, Project Due"
+                  error={errors.title}
+                />
+              </Field>
+              <Field label="Description">
+                <textarea
+                  value={form.description}
+                  onChange={(e) => set("description", e.target.value)}
+                  placeholder="Objectives, requirements, notes..."
+                  rows={3}
+                  className="atm-textarea"
+                />
+              </Field>
                 <Field label="Color">
                   <Row gap={5} wrap>
                     {ACTIVITY_COLORS.map((c) => (

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from "react"
 import TUTORIAL_CONTENT from "./tutorialContent"
 
@@ -26,13 +27,12 @@ export function TutorialProvider({ children }) {
   const [tutorialStep, setTutorialStep] = useState(-1)
   const [spotlightRect, setSpotlightRect] = useState(null)
   const [smartHint, setSmartHint] = useState(null)
-  const hintTimers = useRef({})
 
   const dismissedHints = useRef(loadSet(STORAGE_HINTS))
   const viewedTutorials = useRef(loadSet(STORAGE_VIEWED))
   const rectCache = useRef({})
 
-  const openTutorial = useCallback((id, config) => {
+  const openTutorial = useCallback((id) => {
     const content = TUTORIAL_CONTENT[id]
     if (!content?.steps?.length) return
     const targetId = content.steps[0].targetId || id

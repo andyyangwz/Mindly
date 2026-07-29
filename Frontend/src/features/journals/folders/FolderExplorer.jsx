@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
-import { X, Search, Plus, Folder, Pencil, Trash2, Check, Loader2 } from "lucide-react"
+import { X, Search, Plus, Pencil, Trash2, Check, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Portal } from "../../../utils/portal"
 import "../../../styles/journals/index.css"
@@ -187,6 +187,7 @@ function CreateFolderForm({ onSubmit, onCancel }) {
       setEmoji("")
       inputRef.current?.focus()
     } catch {
+      /* ignore */
     } finally {
       setLoading(false)
     }
@@ -381,7 +382,10 @@ export default function FolderExplorer({
     }
   }, [ctxMenu.open])
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open)
+
+  if (open !== prevOpen) {
+    setPrevOpen(open)
     if (!open) {
       setSearch("")
       setShowCreate(false)
@@ -391,7 +395,7 @@ export default function FolderExplorer({
       setDeleteTarget(null)
       setDragTargetId(null)
     }
-  }, [open])
+  }
 
   const filteredFolders = useMemo(() => {
     if (!search.trim()) return folders
@@ -441,6 +445,7 @@ export default function FolderExplorer({
       await onDeleteFolder(deleteTarget.id)
       setDeleteTarget(null)
     } catch {
+      /* ignore */
     } finally {
       setDeleting(false)
     }

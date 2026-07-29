@@ -6,11 +6,6 @@ import AuthInput from "./AuthInput";
 import GoogleButton from "./GoogleButton";
 import "../../styles/auth/index.css";
 
-const INPUTS = {
-  login: ["email", "password"],
-  signup: ["firstName", "lastName", "email", "password", "confirmPassword"],
-};
-
 const slideFade = {
   enter: { opacity: 0, y: 8 },
   center: { opacity: 1, y: 0 },

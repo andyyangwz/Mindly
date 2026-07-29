@@ -7,6 +7,12 @@ export function formatDate(dateStr) {
   });
 }
 
+export function formatTimer(seconds) {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+}
+
 export function formatMinutes(totalMin) {
   const total = Math.round(totalMin)
   const h = Math.floor(total / 60)

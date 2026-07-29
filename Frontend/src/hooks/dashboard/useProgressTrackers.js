@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { progressTrackerService } from "../services/progressTrackerService";
+import { progressTrackerService } from "../../features/dashboard/services/progressTrackerService";
 
 export function useProgressTrackers() {
   const [relics, setRelics] = useState([]);
@@ -20,6 +20,7 @@ export function useProgressTrackers() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRelics();
   }, [fetchRelics]);
 

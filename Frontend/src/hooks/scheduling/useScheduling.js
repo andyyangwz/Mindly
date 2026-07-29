@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react"
-import { schedulingService } from "../services/schedulingService"
-import { notifyTasksUpdated } from "../utils/events"
+import { schedulingService } from "../../services/schedulingService"
+import { notifyTasksUpdated } from "../../utils/events"
 
 function toDateStr(date) {
   const y = date.getFullYear()

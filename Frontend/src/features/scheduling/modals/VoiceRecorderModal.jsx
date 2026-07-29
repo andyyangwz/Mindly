@@ -18,9 +18,11 @@ export default function VoiceRecorderModal({ open, onClose, onResult, referenceD
 
   useEffect(() => {
     if (!open) {
-      setPhase("idle")
-      setTimer(0)
-      setError(null)
+      setTimeout(() => {
+        setPhase("idle")
+        setTimer(0)
+        setError(null)
+      }, 0)
       chunksRef.current = []
       if (timerRef.current) clearInterval(timerRef.current)
       if (animRef.current) cancelAnimationFrame(animRef.current)

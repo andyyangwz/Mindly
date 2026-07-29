@@ -1,8 +1,8 @@
 export const HOUR_HEIGHT = 72
 export const TIME_COL_WIDTH = 80
-export const EVENT_CANVAS_LEFT_PAD = 12
-export const RIGHT_PAD = 24
-export const COL_GAP = 4
+const EVENT_CANVAS_LEFT_PAD = 12
+const RIGHT_PAD = 24
+const COL_GAP = 4
 
 export function layoutEvents(events, canvasWidth, hourHeight = 60) {
   if (!events.length) return []
@@ -189,16 +189,6 @@ export function formatHour(hour) {
   return `${hour - 12} PM`
 }
 
-export function formatDateRange(startDatetime, endDatetime) {
-  if (!startDatetime || !endDatetime) return ""
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-  const start = new Date(startDatetime.slice(0, 10) + "T00:00:00")
-  const end = new Date(endDatetime.slice(0, 10) + "T00:00:00")
-  const fmt = (d, showYear) => `${d.getDate()} ${months[d.getMonth()]}${showYear ? ` ${d.getFullYear()}` : ""}`
-  const showYear = start.getFullYear() !== end.getFullYear()
-  return `${fmt(start, showYear)} – ${fmt(end, showYear)}`
-}
-
 export function formatTime(timeStr) {
   if (!timeStr) return ""
   const [h, m] = timeStr.split(":").map(Number)
@@ -221,6 +211,52 @@ export function isSameDay(a, b) {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   )
+}
+
+export function getDaySegment(activity, dateStr) {
+  const sd = new Date(activity.startDatetime)
+  const ed = new Date(activity.endDatetime)
+  const target = new Date(dateStr + "T00:00:00")
+  const nextDay = new Date(target)
+  nextDay.setDate(nextDay.getDate() + 1)
+
+  if (ed <= target || sd >= nextDay) return null
+
+  const startsOnDay = sd >= target && sd < nextDay
+  const endsOnDay = ed > target && ed < nextDay
+  const startsBefore = sd < target
+  const endsAfter = ed >= nextDay
+
+  const dayStart = dateStr + "T00:00"
+  const dayEnd = dateStr + "T23:59"
+
+  const segmentStart = startsBefore || !startsOnDay ? dayStart : activity.startDatetime.slice(0, 16)
+  const segmentEnd = endsAfter || !endsOnDay ? dayEnd : activity.endDatetime.slice(0, 16)
+
+  return {
+    ...activity,
+    segmentStart,
+    segmentEnd,
+    startTime: startsBefore ? undefined : activity.startTime,
+    endTime: endsAfter ? undefined : activity.endTime,
+    isCrossDay: startsBefore || endsAfter,
+    continuesPrev: startsBefore,
+    continuesNext: endsAfter,
+  }
+}
+
+const segmentCache = new Map()
+
+export function getCachedDaySegment(activity, dateStr) {
+  const key = `${activity.id}|${dateStr}`
+  if (segmentCache.has(key)) return segmentCache.get(key)
+  const seg = getDaySegment(activity, dateStr)
+  segmentCache.set(key, seg)
+  return seg
+}
+
+export function clearSegmentCache() {
+  segmentCache.clear()
 }
 
 

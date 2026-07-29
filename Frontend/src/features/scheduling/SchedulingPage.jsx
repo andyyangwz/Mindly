@@ -46,15 +46,15 @@ export default function SchedulingPage() {
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [selectedPlanDate, setSelectedPlanDate] = useState(() => new Date());
   const datePickerRef = useRef(null);
-  const [isCompact, setIsCompact] = useState(false);
+  const [isCompact, setIsCompact] = useState(() => window.matchMedia("(max-width: 1000px)").matches);
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState("plan");
   const [allReminders, setAllReminders] = useState([]);
   const [remindersLoading, setRemindersLoading] = useState(true);
   const [viewingReminder, setViewingReminder] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isWideScreen, setIsWideScreen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia("(max-width: 1024px)").matches);
+  const [isWideScreen, setIsWideScreen] = useState(() => window.matchMedia("(min-width: 1100px)").matches);
   const [taskStatusFilter, setTaskStatusFilter] = useState("all");
   const [showFilterPopover, setShowFilterPopover] = useState(false);
   const filterBtnRef = useRef(null);
@@ -115,8 +115,17 @@ export default function SchedulingPage() {
   }, []);
 
   useEffect(() => {
-    fetchAllTasks();
-  }, [fetchAllTasks]);
+    (async () => {
+      try {
+        const result = await schedulingService.getAll();
+        setAllTasks(result.events);
+      } catch {
+        setAllTasks([]);
+      } finally {
+        setTasksLoading(false);
+      }
+    })();
+  }, []);
 
   const fetchAllReminders = useCallback(async () => {
     try {
@@ -130,8 +139,17 @@ export default function SchedulingPage() {
   }, []);
 
   useEffect(() => {
-    fetchAllReminders();
-  }, [fetchAllReminders]);
+    (async () => {
+      try {
+        const result = await reminderService.getAll();
+        setAllReminders(result.reminders);
+      } catch {
+        setAllReminders([]);
+      } finally {
+        setRemindersLoading(false);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const handler = () => { fetchAllTasks(); fetchAllReminders(); };
@@ -153,6 +171,7 @@ export default function SchedulingPage() {
       setCalendarRefreshKey(k => k + 1);
       notifyTasksUpdated();
     } catch {
+      /* ignore */
     }
   }, []);
 
@@ -166,6 +185,7 @@ export default function SchedulingPage() {
       setCalendarRefreshKey(k => k + 1);
       notifyTasksUpdated();
     } catch {
+      /* ignore */
     }
   }, []);
 
@@ -177,6 +197,7 @@ export default function SchedulingPage() {
       setCalendarRefreshKey(k => k + 1);
       notifyTasksUpdated();
     } catch {
+      /* ignore */
     }
   }, []);
 
@@ -205,16 +226,16 @@ export default function SchedulingPage() {
       setViewingReminder(null);
       notifyTasksUpdated();
     } catch {
+      /* ignore */
     }
   }, []);
 
   useEffect(() => {
-    setDonePage(1);
+    setTimeout(() => setDonePage(1), 0);
   }, [taskStatusFilter, allTasks.length]);
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1000px)")
-    setIsCompact(mql.matches)
     const handler = (e) => setIsCompact(e.matches)
     mql.addEventListener("change", handler)
     return () => mql.removeEventListener("change", handler)
@@ -222,7 +243,6 @@ export default function SchedulingPage() {
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1024px)")
-    setIsMobile(mql.matches)
     const handler = (e) => setIsMobile(e.matches)
     mql.addEventListener("change", handler)
     return () => mql.removeEventListener("change", handler)
@@ -230,7 +250,6 @@ export default function SchedulingPage() {
 
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1100px)")
-    setIsWideScreen(mql.matches)
     const handler = (e) => setIsWideScreen(e.matches)
     mql.addEventListener("change", handler)
     return () => mql.removeEventListener("change", handler)
@@ -273,6 +292,7 @@ export default function SchedulingPage() {
       setCalendarRefreshKey(k => k + 1);
       notifyTasksUpdated();
     } catch {
+      /* ignore */
     }
   }, []);
 
@@ -318,7 +338,7 @@ export default function SchedulingPage() {
   const isDrawerInline = isWideScreen
 
   return (
-    <div className="pp-container" style={{ left: isMobile ? 0 : 260 }}>
+    <div className="pp-container" style={{ left: isMobile ? 0 : 260, top: isMobile ? 56 : 0 }}>
       {/* Workspace: calendar + inline panel */}
       <div className="pp-workspace">
         <div ref={calScrollRef} className="pp-calendar-area">
@@ -332,10 +352,10 @@ export default function SchedulingPage() {
             className="pp-drawer-btn"
             style={{
               right: drawerOpen ? 320 : 0,
-              transform: `translateY(-50%) rotate(${drawerOpen ? 180 : 0}deg)`,
+              transform: "translateY(-50%)",
             }}
           >
-            <ChevronLeft size={22} strokeWidth={2.5} />
+            {drawerOpen ? <ChevronRight size={22} strokeWidth={2.5} /> : <ChevronLeft size={22} strokeWidth={2.5} />}
           </button>
         )}
 

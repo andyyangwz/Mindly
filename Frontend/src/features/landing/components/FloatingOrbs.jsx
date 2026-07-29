@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const ORBS = [
   { size: 500, x: "10%", y: "20%", blur: 120, speed: 20 },
@@ -8,7 +8,7 @@ const ORBS = [
   { size: 250, x: "20%", y: "80%", blur: 70, speed: 28 },
 ];
 
-function Orb({ orb, index }) {
+function Orb({ orb }) {
   const [offset] = useState(() => ({
     x: Math.random() * 60 - 30,
     y: Math.random() * 60 - 30,
@@ -41,7 +41,7 @@ export default function FloatingOrbs({ count = 5 }) {
         }
       `}</style>
       {ORBS.slice(0, count).map((orb, i) => (
-        <Orb key={i} orb={orb} index={i} />
+        <Orb key={i} orb={orb} />
       ))}
     </div>
   );

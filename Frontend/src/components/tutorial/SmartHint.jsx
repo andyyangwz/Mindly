@@ -18,7 +18,7 @@ function saveDismissed(set) {
 }
 
 export default function SmartHint({ id, text, position = "bottom-left", offset = 12 }) {
-  const { openTutorial } = useTutorial()
+  useTutorial()
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {

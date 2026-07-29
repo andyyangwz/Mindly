@@ -4,18 +4,13 @@ import { X, Bell } from "lucide-react"
 import { Portal } from "../../../utils/portal"
 import { ACTIVITY_COLORS, COLOR_NAME_MAP, PRIORITY_LABELS, toDateStr } from "../utils/calendarConstants"
 import { Field, In, Pill, Row, Actions, Error } from "../modals/ActivityFormFields"
+import { randomTime } from "../../../utils/editor"
 import "../../../styles/scheduling/index.css"
 
 const REMINDER_ACCENT = "#F59E0B"
 const ANIM_CHAR_MS = 38
 const ANIM_SHUFFLE_MS = 90
 const ANIM_SHUFFLE_COUNT = 5
-
-function randomTime() {
-  const h = String(Math.floor(Math.random() * 24)).padStart(2, "0")
-  const m = String(Math.floor(Math.random() * 60)).padStart(2, "0")
-  return `${h}:${m}`
-}
 
 const INITIAL_STATE = {
   title: "",
@@ -88,7 +83,7 @@ export default function AddReminderModal({ open, onClose, onSave, editingReminde
       const desc = target.description
 
       if (!title) {
-        setTitleDone(true)
+        setTimeout(() => setTitleDone(true), 0)
       } else {
         let i = 0
         const id = setInterval(() => {
@@ -103,7 +98,7 @@ export default function AddReminderModal({ open, onClose, onSave, editingReminde
       }
 
       if (!desc) {
-        setDescriptionDone(true)
+        setTimeout(() => setDescriptionDone(true), 0)
       } else {
         let i = 0
         const id = setInterval(() => {
@@ -135,30 +130,39 @@ export default function AddReminderModal({ open, onClose, onSave, editingReminde
       voiceTimersRef.current.push(id)
     } else if (!voiceAutofill) {
       voicePrevIdRef.current = null
-      setTitleDone(true)
-      setDescriptionDone(true)
-      setDateDone(true)
-      setTimeDone(true)
-      if (editingReminder) {
-        setForm({
-          title: editingReminder.title,
-          description: editingReminder.description || "",
-          date: editingReminder.date || (editingReminder.datetime ? editingReminder.datetime.slice(0, 10) : ""),
-          time: editingReminder.time || (editingReminder.datetime ? editingReminder.datetime.slice(11, 16) : "09:00"),
-          color: editingReminder.color ? (COLOR_NAME_MAP[editingReminder.color.toLowerCase()] || editingReminder.color) : "#7C3AED",
-          priority: editingReminder.priority || "medium",
-        })
-      } else if (selectedSlot) {
-        setForm({
-          ...INITIAL_STATE,
-          date: toDateStr(selectedSlot.date),
-        })
-      } else {
-        setForm(INITIAL_STATE)
-      }
+      setTimeout(() => {
+        setTitleDone(true)
+        setDescriptionDone(true)
+        setDateDone(true)
+        setTimeDone(true)
+      }, 0)
+      setTimeout(() => {
+        if (editingReminder) {
+          setForm({
+            title: editingReminder.title,
+            description: editingReminder.description || "",
+            date: editingReminder.date || (editingReminder.datetime ? editingReminder.datetime.slice(0, 10) : ""),
+            time: editingReminder.time || (editingReminder.datetime ? editingReminder.datetime.slice(11, 16) : "09:00"),
+            color: editingReminder.color ? (COLOR_NAME_MAP[editingReminder.color.toLowerCase()] || editingReminder.color) : "#7C3AED",
+            priority: editingReminder.priority || "medium",
+          })
+        } else if (selectedSlot) {
+          setForm({
+            ...INITIAL_STATE,
+            date: toDateStr(selectedSlot.date),
+          })
+        } else {
+          setForm(INITIAL_STATE)
+        }
+        setErrors({})
+        setSaving(false)
+      }, 0)
+    } else {
+      setTimeout(() => {
+        setErrors({})
+        setSaving(false)
+      }, 0)
     }
-    setErrors({})
-    setSaving(false)
   }, [open, editingReminder, selectedSlot, voiceAutofill, clearVoiceTimers])
 
   useEffect(() => {
@@ -271,7 +275,7 @@ export default function AddReminderModal({ open, onClose, onSave, editingReminde
               </Field>
               <Field label="Priority">
                 <Row gap={6} wrap>
-                  {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
+                  {Object.entries(PRIORITY_LABELS).map(([key]) => (
                     <Pill
                       key={key}
                       active={form.priority === key}
@@ -342,7 +346,7 @@ export default function AddReminderModal({ open, onClose, onSave, editingReminde
               </Field>
               <Field label="Priority">
                 <Row gap={6} wrap>
-                  {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
+                  {Object.entries(PRIORITY_LABELS).map(([key]) => (
                     <Pill
                       key={key}
                       active={form.priority === key}

@@ -1,50 +1,33 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import {
-  ChevronLeft,
-  Star,
-  Pin,
-  Trash2,
-  MessageCircle,
-  X,
-  Loader2,
-  MoreHorizontal,
-  Folder,
-  Mic,
-  Square,
-  ArrowRight,
-  Sparkles,
-  Wand2,
-  Type,
-  Check,
-  AlertTriangle,
-  RefreshCw,
+  ChevronLeft, Star, Pin, Trash2, MessageCircle, X, Loader2,
+  MoreHorizontal, Folder, Mic, Square, ArrowRight, Sparkles,
+  Wand2, Type, Check, AlertTriangle, RefreshCw,
 } from "lucide-react"
 import { theme } from "../../../theme"
 import { formatDate } from "../../../utils/formatters"
+import { stripHtml, textToHtml } from "../../../utils/editor"
 import { journalService } from "../../../services/journalService"
 import ConfirmDialog from "../../../components/ui/ConfirmDialog"
 import EmojiPicker from "../../../components/ui/EmojiPicker"
 import RichEditor from "../../../components/editor/RichEditor"
-import { refreshPinnedJournals } from "../../../hooks/usePinnedJournals"
+import useJournalAutosave from "../../../hooks/journals/useJournalAutosave"
+import useJournalVoice from "../../../hooks/journals/useJournalVoice"
+import useJournalAI from "../../../hooks/journals/useJournalAI"
+import useJournalHighlights from "../../../hooks/journals/useJournalHighlights"
+import useJournalNavigationGuard from "../../../hooks/journals/useJournalNavigationGuard"
+import useJournalFolders from "../../../hooks/journals/useJournalFolders"
 import { config } from "../../../config"
 import "../../../styles/journals/index.css"
 
-function stripHtml(html) {
-  if (!html) return ""
-  const doc = new DOMParser().parseFromString(html, "text/html")
-  return doc.body.textContent || ""
-}
-
-function textToHtml(text) {
-  const paragraphs = text.split("\n").filter(Boolean)
-  return paragraphs.map((p) => `<p>${p}</p>`).join("")
-}
-
 const API = config.API_BASE_URL
 
-
-export default function JournalEditor({ journalId, onBack, onDelete, toggleFavorite, togglePinned, toggleAllowAI, onChatAboutIt, chatAboutItLoading, deleting, onAssignFolders, folders, journals, updateJournal }) {
+export default function JournalEditor({
+  journalId, onBack, onDelete, toggleFavorite, togglePinned,
+  toggleAllowAI, onChatAboutIt, chatAboutItLoading, deleting,
+  onAssignFolders, folders, journals, updateJournal,
+}) {
   const { t } = useTranslation()
 
   const [journal, setJournal] = useState(null)
@@ -52,63 +35,104 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [emojis, setEmojis] = useState(["📝", "", ""])
-  const [folderIds, setFolderIds] = useState([])
   const titleRef = useRef(null)
   const editorRef = useRef(null)
 
-  const [saveState, setSaveState] = useState("idle")
-  const dirtyRef = useRef(false)
-  const saveTimerRef = useRef(null)
-  const originalRef = useRef(null)
-
-  const [highlights, setHighlights] = useState([])
-  const [selectedText, setSelectedText] = useState("")
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [showActions, setShowActions] = useState(false)
-  const [showFolderFab, setShowFolderFab] = useState(false)
-  const [folderAssigning, setFolderAssigning] = useState(false)
   const [editingEmojis, setEditingEmojis] = useState(false)
   const [emojiAnimating, setEmojiAnimating] = useState(false)
   const [emojiLoading, setEmojiLoading] = useState(false)
   const [showDateDisabled, setShowDateDisabled] = useState(false)
   const dateDisabledTimerRef = useRef(null)
-
   const actionsRef = useRef(null)
-  const folderFabRef = useRef(null)
   const prevJournalIdRef = useRef(journalId)
 
-  const [voicePhase, setVoicePhase] = useState("idle")
-  const [voiceTimer, setVoiceTimer] = useState(0)
-  const [voiceError, setVoiceError] = useState(null)
-  const mediaRecorderRef = useRef(null)
-  const chunksRef = useRef([])
-  const streamRef = useRef(null)
-  const timerRef = useRef(null)
-  const canvasRef = useRef(null)
-  const analyserRef = useRef(null)
-  const animRef = useRef(null)
-  const [hasSelection, setHasSelection] = useState(false)
+  const voice = useJournalVoice()
+  const { voicePhase, voiceTimer, voiceError, startRecording, stopRecording, formatTime, setVoiceError, canvasRef, transcribe } = voice
+  const highlights = useJournalHighlights()
+  const folderState = useJournalFolders({ journal, folders, onAssignFolders })
+  const { folderIds, showFolderFab, setShowFolderFab, folderAssigning, handleToggleFolder, folderFabRef } = folderState
+
+  const autosave = useJournalAutosave({
+    journal, title, content, emojis,
+    folderIds,
+    updateJournal, journals, journalId,
+    onTitleChange: setTitle,
+  })
+
+  const ai = useJournalAI({ editorRef, saveNow: autosave.saveNow, setContent })
+
+  const isProcessing = voicePhase === "transcribing" || ai.isProcessing
+  const buttonsDisabled = isProcessing || !highlights.hasSelection
 
   const isInvalid = !title.trim() || emojis.filter(Boolean).length === 0
-  const [showInvalidWarning, setShowInvalidWarning] = useState(false)
+  const error = voiceError || ai.aiError
 
-  const isInvalidRef = useRef(false)
-  isInvalidRef.current = isInvalid
-  const origPushRef = useRef(null)
+  const guard = useJournalNavigationGuard({ dirtyRef: autosave.dirtyRef, isInvalid })
 
-  const isProcessing = voicePhase === "transcribing" || voicePhase === "smoothen" || voicePhase === "restructure" || voicePhase === "autoformat"
-  const buttonsDisabled = isProcessing || !hasSelection
+  const [showActions, setShowActions] = useState(false)
+
+  useEffect(() => {
+    if (prevJournalIdRef.current !== journalId) {
+      prevJournalIdRef.current = journalId
+      setLoading(true)
+      setJournal(null)
+      setTitle("")
+      setContent("")
+      setEmojis(["📝", "", ""])
+      highlights.setHighlights([])
+      highlights.setSelectedText("")
+    }
+  }, [journalId, highlights])
+
+  useEffect(() => {
+    if (journalId && !journal) {
+      ;(async () => {
+        try {
+          const data = await journalService.getAll({ per_page: 1000 })
+          const j = data.journals.find((x) => x.id === journalId)
+          if (j) {
+            setJournal(j)
+            setTitle(j.title)
+            setContent(j.content)
+            const emo = j.emojis.length >= 3 ? [...j.emojis] : [...j.emojis, ...Array(3 - j.emojis.length).fill("")]
+            setEmojis(emo)
+            autosave.setOriginal({ title: j.title, content: j.content, emojis: j.emojis, folderIds: j.folderIds || [] })
+            journalService.recordOpen(journalId).catch(() => {})
+          }
+        } catch {
+          /* ignore */
+        } finally {
+          setLoading(false)
+        }
+      })()
+    }
+  }, [journalId, journal, autosave])
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-      if (animRef.current) cancelAnimationFrame(animRef.current)
       if (dateDisabledTimerRef.current) clearTimeout(dateDisabledTimerRef.current)
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop())
-      }
     }
   }, [])
+
+  const saveEmojisNow = useCallback(async () => {
+    if (!journal) return
+    const trimmed = emojis.filter(Boolean).length > 0 ? emojis : ["📝", "", ""]
+    if (!autosave.originalRef.current ||
+        JSON.stringify(trimmed) === JSON.stringify(autosave.originalRef.current.emojis)) return
+    autosave.saveNow()
+  }, [journal, emojis, autosave])
+
+  useEffect(() => {
+    if (!editingEmojis) return
+    const handleClick = (e) => {
+      if (!e.target.closest("[data-emoji-area]") && !e.target.closest(".EmojiPickerReact")) {
+        saveEmojisNow()
+        setEditingEmojis(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [editingEmojis, saveEmojisNow])
 
   useEffect(() => {
     if (!showActions) return
@@ -124,273 +148,30 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
     }
   }, [showActions])
 
-  useEffect(() => {
-    if (!showFolderFab) return
-    const handleClick = (e) => {
-      if (folderFabRef.current && !folderFabRef.current.contains(e.target) && !e.target.closest("[data-folder-fab-btn]")) {
-        setShowFolderFab(false)
-      }
-    }
-    const handleKey = (e) => { if (e.key === "Escape") setShowFolderFab(false) }
-    document.addEventListener("mousedown", handleClick)
-    document.addEventListener("keydown", handleKey)
-    return () => {
-      document.removeEventListener("mousedown", handleClick)
-      document.removeEventListener("keydown", handleKey)
-    }
-  }, [showFolderFab])
-
-  const saveEmojisNow = useCallback(async () => {
-    if (!journal) return
-    const trimmed = emojis.filter(Boolean).length > 0 ? emojis : ["📝", "", ""]
-    if (!originalRef.current || JSON.stringify(trimmed) === JSON.stringify(originalRef.current.emojis)) return
-    setSaveState("saving")
-    try {
-      if (updateJournal) {
-        await updateJournal(journal.id, { emojis: trimmed })
-      } else {
-        await journalService.update(journal.id, { emojis: trimmed })
-      }
-      if (originalRef.current) originalRef.current = { ...originalRef.current, emojis: trimmed }
-      setSaveState("saved")
-      refreshPinnedJournals()
-    } catch {
-      setSaveState("failed")
-    }
-  }, [journal, emojis, updateJournal])
-
-  useEffect(() => {
-    if (!editingEmojis) return
-    const handleClick = (e) => {
-      if (!e.target.closest("[data-emoji-area]") && !e.target.closest(".EmojiPickerReact")) {
-        saveEmojisNow()
-        setEditingEmojis(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClick)
-    return () => document.removeEventListener("mousedown", handleClick)
-  }, [editingEmojis, saveEmojisNow])
-
-  const loadJournal = useCallback(async (id) => {
-    setLoading(true)
-    try {
-      const data = await journalService.getAll({ per_page: 1000 })
-      const j = data.journals.find((x) => x.id === id)
-      if (j) {
-        setJournal(j)
-        setTitle(j.title)
-        setContent(j.content)
-        setEmojis(j.emojis.length >= 3 ? [...j.emojis] : [...j.emojis, ...Array(3 - j.emojis.length).fill("")])
-        setFolderIds(j.folderIds || [])
-        originalRef.current = { title: j.title, content: j.content, emojis: j.emojis, folderIds: j.folderIds || [] }
-        journalService.recordOpen(id).catch(() => {})
-      }
-    } catch {
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (prevJournalIdRef.current !== journalId) {
-      prevJournalIdRef.current = journalId
-      setLoading(true)
-      setJournal(null)
-      setTitle("")
-      setContent("")
-      setEmojis(["📝", "", ""])
-      setFolderIds([])
-      setHighlights([])
-      setSelectedText("")
-      setSaveState("idle")
-      dirtyRef.current = false
-      originalRef.current = null
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    }
-  }, [journalId])
-
-  useEffect(() => {
-    if (journalId && !journal) {
-      loadJournal(journalId)
-    }
-  }, [journalId, journal, loadJournal])
-
-  function getUniqueTitleForJournal(baseTitle) {
-    if (!journals) return baseTitle
-    const existingTitles = new Set(
-      journals.filter((j) => j.id !== journalId).map((j) => j.title)
-    )
-    if (!existingTitles.has(baseTitle)) return baseTitle
-    let num = 2
-    while (existingTitles.has(`${baseTitle} #${num}`)) num++
-    return `${baseTitle} #${num}`
-  }
-
-  const saveNow = useCallback(async () => {
-    if (!dirtyRef.current) return
-    if (!journal) return
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    setSaveState("saving")
-    try {
-      const changes = {}
-      let titleToSave = title
-      if (title !== originalRef.current.title) {
-        titleToSave = getUniqueTitleForJournal(title || "Untitled")
-        changes.title = titleToSave
-        if (titleToSave !== title) setTitle(titleToSave)
-      }
-      if (content !== originalRef.current.content) changes.content = content
-      if (JSON.stringify(emojis) !== JSON.stringify(originalRef.current.emojis)) changes.emojis = emojis.filter(Boolean).length > 0 ? emojis : ["📝", "", ""]
-      if (JSON.stringify(folderIds) !== JSON.stringify(originalRef.current.folderIds)) changes.folderIds = folderIds
-      if (Object.keys(changes).length === 0) {
-        setSaveState("saved")
-        return
-      }
-      if (updateJournal) {
-        await updateJournal(journal.id, changes)
-      } else {
-        await journalService.update(journal.id, changes)
-      }
-      originalRef.current = { ...originalRef.current, ...changes }
-      dirtyRef.current = false
-      setSaveState("saved")
-      refreshPinnedJournals()
-    } catch {
-      setSaveState("failed")
-    }
-  }, [journal, title, content, emojis, folderIds, updateJournal, journals, journalId])
-
-  useEffect(() => {
-    if (dirtyRef.current) return
-    if (!journal) return
-    const isDirty = originalRef.current && (title !== originalRef.current.title || content !== originalRef.current.content || JSON.stringify(emojis) !== JSON.stringify(originalRef.current.emojis) || JSON.stringify(folderIds) !== JSON.stringify(originalRef.current.folderIds))
-    if (isDirty) {
-      dirtyRef.current = true
-      setSaveState("editing")
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(() => saveNow(), 2000)
-    }
-  }, [title, content, emojis, folderIds, journal])
-
-  useEffect(() => {
-    const handler = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
-        e.preventDefault()
-        if (dirtyRef.current) saveNow()
-      }
-    }
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
-  }, [saveNow])
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (isInvalidRef.current || dirtyRef.current) {
-        e.preventDefault()
-        e.returnValue = ""
-      }
-    }
-    window.addEventListener("beforeunload", handler)
-    return () => window.removeEventListener("beforeunload", handler)
-  }, [])
-
-  useEffect(() => {
-    if (!isInvalid) return
-
-    const origPush = window.history.pushState.bind(window.history)
-    origPushRef.current = origPush
-    let savedUrl = window.location.href
-
-    window.history.pushState = function (state, title, url) {
-      if (url !== undefined) {
-        let target
-        try { target = new URL(url, window.location.origin).href } catch { target = url }
-        if (target !== window.location.href) {
-          setShowInvalidWarning(true)
-          return
-        }
-      }
-      origPush(state, title, url)
-      savedUrl = window.location.href
-    }
-
-    const handlePopState = () => {
-      window.history.pushState(null, "", savedUrl)
-      setShowInvalidWarning(true)
-    }
-    window.addEventListener("popstate", handlePopState)
-
-    return () => {
-      window.history.pushState = origPush
-      window.removeEventListener("popstate", handlePopState)
-    }
-  }, [isInvalid])
-
   const handleContentChange = useCallback((html) => {
     setContent(html)
-    dirtyRef.current = true
-    setSaveState("editing")
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => saveNow(), 2000)
-  }, [saveNow])
+    autosave.scheduleAutosave()
+  }, [autosave])
 
   const handleTitleChange = useCallback((e) => {
     setTitle(e.target.value)
-    dirtyRef.current = true
-    setSaveState("editing")
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => saveNow(), 2000)
-  }, [saveNow])
+    autosave.scheduleAutosave()
+  }, [autosave])
 
-  const handleToggleFolder = useCallback(async (folderId) => {
-    setFolderAssigning(true)
-    const next = folderIds.includes(folderId)
-      ? folderIds.filter((id) => id !== folderId)
-      : [...folderIds, folderId]
-    setFolderIds(next)
-    try {
-      await onAssignFolders(journal.id, next)
-      originalRef.current = { ...originalRef.current, folderIds: next }
-    } catch {
-    } finally {
-      setFolderAssigning(false)
-    }
-  }, [folderIds, journal, onAssignFolders])
-
-  const handleDelete = () => setConfirmDelete(true)
-  const handleConfirmDelete = async () => {
-    setConfirmDelete(false)
-    setShowInvalidWarning(false)
-    if (origPushRef.current) window.history.pushState = origPushRef.current
+  const handleDelete = useCallback(() => guard.setConfirmDelete(true), [guard])
+  const handleConfirmDelete = useCallback(async () => {
+    guard.setConfirmDelete(false)
+    guard.setShowInvalidWarning(false)
+    guard.restoreHistory()
     await onDelete(journal.id)
-  }
+  }, [guard, journal, onDelete])
 
-  const handleMouseUp = useCallback(() => {
-    const sel = window.getSelection()
-    const text = sel?.toString().trim()
-    if (text && text.length > 2) setSelectedText(text)
-    else setSelectedText("")
-  }, [])
-
-  const saveHighlight = useCallback(() => {
-    if (!selectedText || highlights.includes(selectedText)) return
-    setHighlights((h) => [...h, selectedText])
-    setSelectedText("")
-    window.getSelection()?.removeAllRanges()
-  }, [selectedText, highlights])
-
-  const setEmoji = useCallback((index, value) => {
-    setEmojis((prev) => {
-      const em = [...prev]
-      if (value) {
-        em[index] = value
-      } else if (em[index]) {
-        em.splice(index, 1)
-        em.push("")
-      }
-      return em
-    })
-  }, [])
+  const handleDateDoubleClick = useCallback(() => {
+    if (showDateDisabled) return
+    setShowDateDisabled(true)
+    if (dateDisabledTimerRef.current) clearTimeout(dateDisabledTimerRef.current)
+    dateDisabledTimerRef.current = setTimeout(() => setShowDateDisabled(false), 2500)
+  }, [showDateDisabled])
 
   const autoFillEmojis = useCallback(async () => {
     const text = stripHtml(content)
@@ -410,172 +191,36 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
       if (!Array.isArray(newEmojis) || newEmojis.length < 3) throw new Error("Could not generate emoji suggestions")
       setEmojiAnimating(true)
       setEmojis([newEmojis[0] || "", newEmojis[1] || "", newEmojis[2] || ""])
-      dirtyRef.current = true
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(() => saveNow(), 2000)
+      autosave.scheduleAutosave()
       setTimeout(() => setEmojiAnimating(false), 500)
     } catch (err) {
       setVoiceError(err.message)
     } finally {
       setEmojiLoading(false)
     }
-  }, [content, saveNow])
+  }, [content, autosave, setVoiceError])
 
-  const drawWaveform = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas || !analyserRef.current) return
-    const ctx = canvas.getContext("2d")
-    const bufferLength = analyserRef.current.frequencyBinCount
-    const dataArray = new Uint8Array(bufferLength)
-    const draw = () => {
-      if (!canvas || !analyserRef.current) return
-      animRef.current = requestAnimationFrame(draw)
-      analyserRef.current.getByteTimeDomainData(dataArray)
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      const isDark = document.documentElement.getAttribute("data-theme") !== "light"
-      ctx.shadowBlur = 12
-      ctx.shadowColor = isDark ? "rgba(124,58,237,0.25)" : "rgba(124,58,237,0.15)"
-      ctx.strokeStyle = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.25)"
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      const sliceWidth = canvas.width / bufferLength
-      let x = 0
-      for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0
-        const y = (v * canvas.height) / 2
-        if (i === 0) ctx.moveTo(x, y)
-        else ctx.lineTo(x, y)
-        x += sliceWidth
+  const setEmoji = useCallback((index, value) => {
+    setEmojis((prev) => {
+      const em = [...prev]
+      if (value) {
+        em[index] = value
+      } else if (em[index]) {
+        em.splice(index, 1)
+        em.push("")
       }
-      ctx.stroke()
-    }
-    draw()
+      return em
+    })
   }, [])
 
-  const startRecording = useCallback(async () => {
-    try {
-      setVoiceError(null)
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      streamRef.current = stream
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm"
-      const mediaRecorder = new MediaRecorder(stream, { mimeType })
-      mediaRecorderRef.current = mediaRecorder
-      chunksRef.current = []
-      const audioContext = new AudioContext()
-      const source = audioContext.createMediaStreamSource(stream)
-      const analyser = audioContext.createAnalyser()
-      analyser.fftSize = 256
-      source.connect(analyser)
-      analyserRef.current = analyser
-      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
-      mediaRecorder.onstop = () => {
-        analyserRef.current = null
-        audioContext.close()
-        stream.getTracks().forEach((t) => t.stop())
-        streamRef.current = null
-        if (animRef.current) cancelAnimationFrame(animRef.current)
-      }
-      mediaRecorder.start(250)
-      setVoicePhase("recording")
-      setVoiceTimer(0)
-      timerRef.current = setInterval(() => setVoiceTimer((t) => t + 1), 1000)
-      drawWaveform()
-    } catch (err) {
-      if (err.name === "NotAllowedError") {
-        setVoiceError("Microphone access denied. Please allow microphone permissions in your browser settings.")
-      } else {
-        setVoiceError(`Could not start recording: ${err.message}`)
-      }
-    }
-  }, [drawWaveform])
-
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      mediaRecorderRef.current.stop()
-    }
-    if (timerRef.current) clearInterval(timerRef.current)
-    if (animRef.current) cancelAnimationFrame(animRef.current)
-    setVoicePhase("recorded")
-  }, [])
-
-  const transcribe = useCallback(async () => {
-    if (chunksRef.current.length === 0) { setVoiceError("No audio recorded."); return }
-    setVoicePhase("transcribing")
-    setVoiceError(null)
-    try {
-      const blob = new Blob(chunksRef.current, { type: "audio/webm" })
-      const fd = new FormData()
-      fd.append("audio", blob, "recording.webm")
-      const token = localStorage.getItem("mindly-token")
-      const res = await fetch(`${API}/journals/voice/transcribe`, {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: fd,
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Transcription failed")
-      const html = textToHtml(data.text)
-      editorRef.current?.insertAtCursor(html)
-      setContent(editorRef.current?.getEditor()?.getHTML() || "")
-      dirtyRef.current = true
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(() => saveNow(), 2000)
-      chunksRef.current = []
-      setVoicePhase("idle")
-    } catch (err) {
-      setVoiceError(err.message)
-      setVoicePhase("recorded")
-    }
-  }, [saveNow])
-
-  const formatTime = useCallback((s) => {
-    const m = Math.floor(s / 60)
-    const sec = s % 60
-    return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
-  }, [])
-
-  const handleDateDoubleClick = useCallback(() => {
-    if (showDateDisabled) return
-    setShowDateDisabled(true)
-    if (dateDisabledTimerRef.current) clearTimeout(dateDisabledTimerRef.current)
-    dateDisabledTimerRef.current = setTimeout(() => setShowDateDisabled(false), 2500)
-  }, [showDateDisabled])
-
-  const callTransform = useCallback(async (endpoint, label) => {
-    const editor = editorRef.current?.getEditor()
-    if (!editor || editor.state.selection.empty) {
-      setVoiceError("Select text in the editor to transform.")
-      return
-    }
-    const preserveStructure = endpoint === "smoothen" || endpoint === "restructure"
-    const selectedHTML = editorRef.current?.getSelectedHTML() || ""
-    const selectedTextContent = editorRef.current?.getSelectedText() || ""
-    const input = preserveStructure ? { html: selectedHTML } : { text: selectedTextContent }
-    const raw = preserveStructure ? selectedHTML : selectedTextContent
-    if (!raw.trim()) { setVoiceError("Selected text is empty. Nothing to transform."); return }
-    setVoicePhase(endpoint)
-    setVoiceError(null)
-    try {
-      const token = localStorage.getItem("mindly-token")
-      const res = await fetch(`${API}/journals/voice/${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify(input),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || `${label} failed`)
-      const result = data.html || textToHtml(data.text)
-      editorRef.current?.replaceSelection(result)
-      setContent(editorRef.current?.getEditor()?.getHTML() || "")
-      dirtyRef.current = true
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(() => saveNow(), 2000)
-      setVoicePhase("idle")
-    } catch (err) {
-      setVoiceError(err.message)
-      setVoicePhase("idle")
-    }
-  }, [saveNow])
+  const handleTranscribe = useCallback(async () => {
+    const text = await transcribe()
+    if (!text) return
+    const html = textToHtml(text)
+    editorRef.current?.insertAtCursor(html)
+    setContent(editorRef.current?.getEditor()?.getHTML() || "")
+    autosave.scheduleAutosave()
+  }, [transcribe, autosave])
 
   if (loading && !journal) {
     return (
@@ -593,22 +238,19 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
     )
   }
 
-  const filledCount = emojis.filter(Boolean).length
-  const slotCount = Math.min(Math.max(filledCount + 1, 3), 10)
-
   return (
     <div className="je-container">
       <div className="je-top-bar">
         <button
           onClick={() => {
             if (isInvalid) {
-              setShowInvalidWarning(true)
+              guard.setShowInvalidWarning(true)
               return
             }
-            if (dirtyRef.current) saveNow()
+            if (autosave.dirtyRef.current) autosave.saveNow()
             onBack()
-            setHighlights([])
-            setSelectedText("")
+            highlights.setHighlights([])
+            highlights.setSelectedText("")
           }}
           className="je-back-btn"
         >
@@ -659,22 +301,22 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
           )}
 
           <div className="je-save-state">
-            {saveState === "editing" && (
+            {autosave.saveState === "editing" && (
               <span className="je-save-editing">Editing</span>
             )}
-            {saveState === "saving" && (
+            {autosave.saveState === "saving" && (
               <>
                 <RefreshCw size={12} className="je-save-spin" />
                 <span>Saving...</span>
               </>
             )}
-            {saveState === "saved" && (
+            {autosave.saveState === "saved" && (
               <>
                 <Check size={12} color="#10B981" />
                 <span className="je-save-saved">Saved</span>
               </>
             )}
-            {saveState === "failed" && (
+            {autosave.saveState === "failed" && (
               <>
                 <AlertTriangle size={12} color="#EF4444" />
                 <span className="je-save-failed">Save Failed</span>
@@ -764,16 +406,16 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
           key={journal.id || "new"}
           value={content}
           onChange={handleContentChange}
-          onSelectionChange={setHasSelection}
+          onSelectionChange={highlights.setHasSelection}
           showToolbar={false}
           bare
         />
 
-        {selectedText && (
+        {highlights.selectedText && (
           <div className="je-selected-bar" style={{ background: theme.dark, color: "white" }}>
-            <span className="je-selected-text">&ldquo;{selectedText.slice(0, 40)}{selectedText.length > 40 ? "..." : ""}&rdquo;</span>
+            <span className="je-selected-text">&ldquo;{highlights.selectedText.slice(0, 40)}{highlights.selectedText.length > 40 ? "..." : ""}&rdquo;</span>
             <button
-              onClick={saveHighlight}
+              onClick={highlights.saveHighlight}
               className="je-selected-save-btn"
               style={{ background: theme.primary }}
             >
@@ -782,16 +424,16 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
           </div>
         )}
 
-        {highlights.length > 0 && (
+        {highlights.highlights.length > 0 && (
           <div className="je-highlights-section">
             <p className="je-highlights-title">
-              <Star size={13} fill="#F59E0B" color="#F59E0B" /> {t("journal.detail.savedHighlights", { count: highlights.length })}
+              <Star size={13} fill="#F59E0B" color="#F59E0B" /> {t("journal.detail.savedHighlights", { count: highlights.highlights.length })}
             </p>
-            {highlights.map((h, i) => (
+            {highlights.highlights.map((h, i) => (
               <div key={i} className="je-highlight-item">
                 <span className="je-highlight-text">&ldquo;{h}&rdquo;</span>
                 <button
-                  onClick={() => setHighlights((hh) => hh.filter((_, idx) => idx !== i))}
+                  onClick={() => highlights.setHighlights((hh) => hh.filter((_, idx) => idx !== i))}
                   className="je-highlight-remove"
                 >
                   <X size={13} />
@@ -804,17 +446,17 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
 
       <div className="je-bottom-bar">
           <div className="je-bottom-left">
-            {voiceError && (
+            {error && (
               <div className="je-voice-error">
-                <span>{voiceError}</span>
-                <button onClick={() => setVoiceError(null)} className="je-voice-error-btn"><X size={12} /></button>
+                <span>{error}</span>
+                <button onClick={() => { setVoiceError(null); ai.setAiError(null) }} className="je-voice-error-btn"><X size={12} /></button>
               </div>
             )}
 
             <div className="je-ai-tools">
-              <AiToolButton icon={Wand2} label="Smoothen" phase="smoothen" onClick={() => callTransform("smoothen", "Smoothen")} disabled={buttonsDisabled} isProcessing={isProcessing} />
-              <AiToolButton icon={Type} label="Auto Format" phase="autoformat" onClick={() => callTransform("autoformat", "Auto Format")} disabled={buttonsDisabled} isProcessing={isProcessing} accent />
-              <AiToolButton icon={Sparkles} label="Restructure" phase="restructure" onClick={() => callTransform("restructure", "Restructure")} disabled={buttonsDisabled} isProcessing={isProcessing} />
+              <AiToolButton icon={Wand2} label="Smoothen" onClick={() => ai.callTransform("smoothen", "Smoothen")} disabled={buttonsDisabled} isProcessing={ai.isProcessing} />
+              <AiToolButton icon={Type} label="Auto Format" onClick={() => ai.callTransform("autoformat", "Auto Format")} disabled={buttonsDisabled} isProcessing={ai.isProcessing} accent />
+              <AiToolButton icon={Sparkles} label="Restructure" onClick={() => ai.callTransform("restructure", "Restructure")} disabled={buttonsDisabled} isProcessing={ai.isProcessing} />
             </div>
 
             <div className="je-divider" />
@@ -828,7 +470,7 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
               {(voicePhase === "idle" || voicePhase === "recorded") && (
                 <button
                   type="button"
-                  onClick={startRecording}
+                  onClick={() => startRecording}
                   disabled={isProcessing}
                   className="je-record-btn"
                   style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`, opacity: isProcessing ? 0.5 : 1 }}
@@ -839,7 +481,7 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
               {voicePhase === "recording" && (
                 <button
                   type="button"
-                  onClick={stopRecording}
+                  onClick={() => stopRecording}
                   className="je-stop-btn"
                 >
                   <Square size={12} /> Stop
@@ -848,7 +490,7 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
               {voicePhase === "recorded" && (
                 <button
                   type="button"
-                  onClick={transcribe}
+                  onClick={handleTranscribe}
                   className="je-transcribe-btn"
                   style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
                 >
@@ -926,11 +568,11 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
           </div>
       </div>
 
-      {showInvalidWarning && (
+      {guard.showInvalidWarning && (
         <div className="je-invalid-snackbar">
           <span>Please input a title and at least 1 emoji.</span>
           <button
-            onClick={() => setConfirmDelete(true)}
+            onClick={() => guard.setConfirmDelete(true)}
             className="je-invalid-delete-btn"
           >
             Delete Journal
@@ -939,7 +581,7 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
       )}
 
       <ConfirmDialog
-        open={confirmDelete}
+        open={guard.confirmDelete}
         title={t("journal.detail.deleteDialog")}
         message={t("journal.detail.deleteConfirm", { title: journal.title })}
         confirmLabel={t("journal.detail.confirm")}
@@ -947,7 +589,7 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
         variant="danger"
         loading={deleting}
         onConfirm={handleConfirmDelete}
-        onCancel={() => setConfirmDelete(false)}
+        onCancel={() => guard.setConfirmDelete(false)}
       />
     </div>
   )
@@ -955,17 +597,13 @@ export default function JournalEditor({ journalId, onBack, onDelete, toggleFavor
 
 function ActionRow({ icon, label, onClick, color = "var(--color-dark)" }) {
   return (
-    <button
-      onClick={onClick}
-      className="je-action-row"
-      style={{ color }}
-    >
+    <button onClick={onClick} className="je-action-row" style={{ color }}>
       {icon} <span>{label}</span>
     </button>
   )
 }
 
-function AiToolButton({ icon: Icon, label, phase, onClick, disabled, isProcessing, accent }) {
+function AiToolButton({ icon: Icon, label, onClick, disabled, isProcessing, accent }) {
   const isDisabled = disabled
   const cls = `je-ai-tool-btn${accent ? " je-ai-tool-btn-accent" : " je-ai-tool-btn-default"}${isDisabled ? " je-ai-tool-btn-disabled" : " je-ai-tool-btn-enabled"}`
   return (

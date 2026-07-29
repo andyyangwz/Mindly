@@ -26,7 +26,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
   const [updating, setUpdating] = useState(false);
   const [animTargets, setAnimTargets] = useState({});
   const [animPhase, setAnimPhase] = useState(null);
-  const [animStage, setAnimStage] = useState(null);
+  const [, setAnimStage] = useState(null);
   const [animParticles, setAnimParticles] = useState([]);
   const [animProgress, setAnimProgress] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -34,12 +34,12 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
   const [tutorialRelic, setTutorialRelic] = useState(null);
   const inputRef = useRef(null);
   const countFrameRef = useRef(null);
-  const rightPanelRef = useRef(null);
-  const orbWrapRef = useRef(null);
+
   const travelAnimRef = useRef(null);
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedId(null);
       setPendingOps({});
       setInputValue("1");
@@ -70,6 +70,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
         is_equipped: true,
         equipped_order: -1,
       };
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTutorialRelic(relic);
       if (open) {
         setSelectedId("tutorial-relic");
@@ -245,7 +246,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
         setPendingOps({});
         setSelectedId(null);
         setInputValue("1");
-      } catch {
+      } catch { /* ignore */
       } finally {
         setUpdating(false);
         setAnimPhase(null);
@@ -256,6 +257,16 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
     }, 800);
   };
 
+  const [ambientParticles] = useState(() => Array.from({ length: 4 }, (_, i) => {
+    const w = 3 + Math.random() * 4;
+    const h = 3 + Math.random() * 4;
+    const bg = `rgba(139,92,246,${0.1 + Math.random() * 0.15})`;
+    const l = `${15 + Math.random() * 70}%`;
+    const t = `${10 + Math.random() * 80}%`;
+    const anim = `upFadeIn ${3 + Math.random() * 3}s ease-in-out ${Math.random() * 2}s infinite`;
+    return { key: `ambient-${i}`, w, h, bg, l, t, anim };
+  }));
+
   if (!open) return null;
 
   const selected = selectedRelic;
@@ -265,7 +276,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
   const animVal = animProgress != null && animProgress.relicId === selected?.id ? animProgress.value : null;
   const selectedDisplayProgress = animVal !== null
     ? animVal
-    : (animTargets.hasOwnProperty(selected?.id) ? animTargets[selected.id] : selected?.current_progress || 0);
+    : (Object.hasOwn(animTargets, selected?.id) ? animTargets[selected.id] : selected?.current_progress || 0);
   const selectedPct = selected && selected.target > 0
     ? Math.min(Math.round((selectedDisplayProgress / selected.target) * 100), 100)
     : 0;
@@ -305,7 +316,7 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
                   const useAnim = animProgress != null && animProgress.relicId === goal.id;
                   const displayProgress = useAnim
                     ? animProgress.value
-                    : (animTargets.hasOwnProperty(goal.id) ? animTargets[goal.id] : goal.current_progress);
+                    : (Object.hasOwn(animTargets, goal.id) ? animTargets[goal.id] : goal.current_progress);
                   const pct = goal.target > 0 ? Math.min(Math.round((displayProgress / goal.target) * 100), 100) : 0;
                   const offset = 2 * Math.PI * 14 * (1 - pct / 100);
                   const status = getStatus(t, goal.current_progress, goal.target);
@@ -365,13 +376,12 @@ export default function UpdateProgressModal({ open, onClose, relics, onUpdate, o
           {selected ? (
             <>
               <div className="up-showcase">
-                {!animPhase && [...Array(4)].map((_, i) => (
-                  <div key={`ambient-${i}`} className="up-ambient-particle" style={{
-                    width: 3 + Math.random() * 4, height: 3 + Math.random() * 4,
-                    background: `rgba(139,92,246,${0.1 + Math.random() * 0.15})`,
-                    left: `${15 + Math.random() * 70}%`,
-                    top: `${10 + Math.random() * 80}%`,
-                    animation: `upFadeIn ${3 + Math.random() * 3}s ease-in-out ${Math.random() * 2}s infinite`,
+                {!animPhase && ambientParticles.map(p => (
+                  <div key={p.key} className="up-ambient-particle" style={{
+                    width: p.w, height: p.h,
+                    background: p.bg,
+                    left: p.l, top: p.t,
+                    animation: p.anim,
                   }} />
                 ))}
 

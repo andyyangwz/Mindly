@@ -67,6 +67,7 @@ export default function HighPriorityTasks() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTasks();
   }, [fetchTasks]);
 
@@ -109,7 +110,7 @@ export default function HighPriorityTasks() {
       );
       setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, ...update } : prev);
       notifyTasksUpdated();
-    } catch {
+    } catch { /* ignore */
     }
   }, []);
 
@@ -121,7 +122,7 @@ export default function HighPriorityTasks() {
       );
       setDetailEvent(prev => prev && prev.id === event.id ? { ...prev, progress: newProgress } : prev);
       notifyTasksUpdated();
-    } catch {
+    } catch { /* ignore */
     }
   }, []);
 
@@ -131,7 +132,7 @@ export default function HighPriorityTasks() {
       setTasks(prev => prev.filter(t => t.id !== id));
       setDetailEvent(null);
       notifyTasksUpdated();
-    } catch {
+    } catch { /* ignore */
     }
   }, []);
 

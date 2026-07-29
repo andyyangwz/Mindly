@@ -71,7 +71,7 @@ export const spillAIService = {
               callbacks.onError?.(event.error)
               break
           }
-        } catch (e) {
+        } catch {
           // ignore malformed JSON
         }
       }

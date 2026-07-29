@@ -54,6 +54,7 @@ const allIcons = Object.keys(iconSets).filter(
   (name) => /^[A-Z]/.test(name) && !name.startsWith("Icon") && isIconComponent(iconSets[name])
 );
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function resolveIcon(name) {
   return iconSets[name] || FaIcons.FaStar;
 }

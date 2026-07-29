@@ -1,6 +1,6 @@
 import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
-import { useRandomDashboardContent } from "../hooks/useRandomDashboardContent"
+import { useRandomDashboardContent } from "../../../hooks/dashboard/useRandomDashboardContent"
 import mascotSrc from "../../../assets/mascot_images/empathic.png"
 import "../../../styles/dashboard/index.css"
 

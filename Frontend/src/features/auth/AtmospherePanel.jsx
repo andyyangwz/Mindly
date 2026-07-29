@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Brain } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -52,11 +52,14 @@ function Orb({ isLight, color, size, x, y, duration }) {
 }
 
 function FloatingParticle({ isLight }) {
-  const x = useMemo(() => Math.random() * 100, []);
-  const y = useMemo(() => Math.random() * 100, []);
-  const size = useMemo(() => 1.5 + Math.random() * 2.5, []);
-  const duration = useMemo(() => 12 + Math.random() * 18, []);
-  const delay = useMemo(() => Math.random() * 10, []);
+  const [style] = useState(() => ({
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: 1.5 + Math.random() * 2.5,
+    duration: 12 + Math.random() * 18,
+    delay: Math.random() * 10,
+  }));
+  const { x, y, size, duration, delay } = style;
 
   return (
     <motion.div

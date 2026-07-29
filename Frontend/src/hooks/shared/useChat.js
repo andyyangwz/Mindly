@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react"
-import { chatService } from "../services/chatService"
+import { chatService } from "../../services/chatService"
 
 export function useChat() {
   const [sessions, setSessions] = useState([])

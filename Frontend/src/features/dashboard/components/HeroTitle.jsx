@@ -27,7 +27,6 @@ export default function HeroTitle() {
         }}
       >
         <h1>{t("dashboard.hero.welcome", { name: user?.first_name || "there" })} 👋</h1>
-        <p>{dateStr}</p>
       </div>
       <div
         style={{
@@ -42,6 +41,7 @@ export default function HeroTitle() {
       >
         <h1 style={{ margin: 0 }}>Dashboard</h1>
       </div>
+      <p style={{ margin: "6px 0 0" }}>{dateStr}</p>
     </div>
   )
 }

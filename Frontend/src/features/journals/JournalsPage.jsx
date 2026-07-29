@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Loader, X } from "lucide-react"
-import { useJournals } from "../../hooks/useJournals"
-import { refreshPinnedJournals } from "../../hooks/usePinnedJournals"
+import { X } from "lucide-react"
+import { useJournals } from "../../hooks/journals/useJournals"
+import { refreshPinnedJournals } from "../../hooks/journals/usePinnedJournals"
 import { journalService } from "../../services/journalService"
 import JournalList from "./components/JournalList"
 import JournalEditor from "./components/JournalEditor"
@@ -44,7 +44,6 @@ export default function JournalsPage() {
   const [deleting, setDeleting] = useState(false)
   const [chatAboutItLoading, setChatAboutItLoading] = useState(false)
   const [showFolderExplorer, setShowFolderExplorer] = useState(false)
-  const [activeFolder, setActiveFolder] = useState(null)
   const folderFetchRef = useRef(false)
 
   const {
@@ -55,7 +54,6 @@ export default function JournalsPage() {
     foldersLoading,
     activeFolderId,
     fetchJournals,
-    createJournal,
     updateJournal,
     deleteJournal,
     fetchFolders,
@@ -83,9 +81,7 @@ export default function JournalsPage() {
     }
   }, [activeFolderId, fetchJournals])
 
-  useEffect(() => {
-    setActiveFolder(folders.find((f) => f.id === activeFolderId) || null)
-  }, [activeFolderId, folders])
+  const activeFolder = useMemo(() => folders.find((f) => f.id === activeFolderId) || null, [activeFolderId, folders])
 
   useEffect(() => {
     if (!route.view || route.view === "list") {
@@ -109,6 +105,7 @@ export default function JournalsPage() {
       refreshPinnedJournals()
       navigate(`/app/journals/${journal.id}`)
     } catch {
+      /* ignore */
     }
   }
 
@@ -121,6 +118,7 @@ export default function JournalsPage() {
       refreshPinnedJournals()
       navigate("/app/journals")
     } catch {
+      /* ignore */
     } finally {
       setDeleting(false)
     }

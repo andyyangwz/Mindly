@@ -57,9 +57,12 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
   const onDragUpdateRef = useRef(onDragUpdate)
   const onDragEndRef = useRef(onDragEnd)
   const onResizeRef = useRef(onActivityResize)
-  onDragUpdateRef.current = onDragUpdate
-  onDragEndRef.current = onDragEnd
-  onResizeRef.current = onActivityResize
+
+  useEffect(() => {
+    onDragUpdateRef.current = onDragUpdate
+    onDragEndRef.current = onDragEnd
+    onResizeRef.current = onActivityResize
+  }, [onDragUpdate, onDragEnd, onActivityResize])
 
   // Cleanup ref for pointer listeners
   const pointerCleanupRef = useRef(null)

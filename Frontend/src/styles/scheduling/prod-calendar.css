@@ -10,20 +10,61 @@
 .ch-top-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 14px;
+  gap: 12px;
 }
 
 .ch-top-left {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .ch-top-right {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .ch-header {
+    padding: 16px 16px 0;
+  }
+  .ch-top-right {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ch-top-right .ch-separator {
+    display: none;
+  }
+  .ch-sync-label {
+    display: none;
+  }
+  .ch-sync-btn {
+    padding: 0 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .ch-mode-btn {
+    padding: 0 6px;
+  }
+  .ch-add-btn {
+    padding: 7px 10px;
+  }
+  .ch-today-btn {
+    padding: 7px 10px;
+  }
+  .ch-top-right {
+    gap: 3px;
+  }
 }
 
 .ch-icon-btn {

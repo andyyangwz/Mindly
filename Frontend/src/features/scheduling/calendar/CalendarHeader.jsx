@@ -85,7 +85,7 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
     return () => document.removeEventListener("mousedown", handler)
   }, [showCreateMenu])
 
-  const weekDays = useMemo(() => getWeekDays(currentDate), [toDateStr(currentDate)])
+  const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate])
   const today = new Date()
 
   const monthIndex = currentDate.getMonth()

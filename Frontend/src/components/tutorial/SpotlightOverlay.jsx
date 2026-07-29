@@ -78,7 +78,7 @@ export default function SpotlightOverlay() {
 
   useEffect(() => {
     if (tutorialId) setTutorialStep(step)
-  }, [tutorialId])
+  }, [tutorialId, step, setTutorialStep])
 
   const goToStep = useCallback((newStep) => {
     setStep(newStep)
@@ -149,15 +149,20 @@ export default function SpotlightOverlay() {
     return () => cancelAnimationFrame(raf)
   }, [visible, spotlightRect, step])
 
+  const retrySpotlightRef = useRef(null)
   const retrySpotlight = useCallback((targetId, attempt = 0) => {
     if (attempt > 10) return
     const el = document.querySelector(`[data-tutorial-target="${targetId}"]`)
       if (el) {
       updateSpotlightTarget(targetId, true)
     } else {
-      requestAnimationFrame(() => retrySpotlight(targetId, attempt + 1))
+      requestAnimationFrame(() => retrySpotlightRef.current(targetId, attempt + 1))
     }
   }, [updateSpotlightTarget])
+
+  useEffect(() => {
+    retrySpotlightRef.current = retrySpotlight
+  }, [retrySpotlight])
 
   useEffect(() => {
     if (!currentStep?.targetId) return

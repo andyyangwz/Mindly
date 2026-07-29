@@ -8,7 +8,7 @@ import { useTheme } from "../theme/ThemeProvider";
 import { useAuth } from "../context/AuthContext";
 import ChatListItem from "../features/chats/ChatListItem";
 import { useTranslation } from "react-i18next";
-import { useNavbarJournals, refreshPinnedJournals } from "../hooks/usePinnedJournals";
+import { useNavbarJournals, refreshPinnedJournals } from "../hooks/journals/usePinnedJournals";
 import ManageNavbarJournals from "../features/journals/components/ManageNavbarJournals";
 import "../styles/shared/index.css";
 

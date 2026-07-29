@@ -11,25 +11,13 @@ import {
   toDateStr,
 } from "../utils/calendarConstants"
 import { Field, In, Pill, Row, Grid, Actions, Error } from "./ActivityFormFields"
+import { randomTime } from "../../../utils/editor"
 import "../../../styles/scheduling/index.css"
 
 const ACTIVITY_ACCENT = "#10B981"
 const ANIM_CHAR_MS = 38
 const ANIM_SHUFFLE_MS = 90
 const ANIM_SHUFFLE_COUNT = 5
-
-function randomTime() {
-  const h = String(Math.floor(Math.random() * 24)).padStart(2, "0")
-  const m = String(Math.floor(Math.random() * 60)).padStart(2, "0")
-  return `${h}:${m}`
-}
-
-function randomDateNear(base) {
-  if (!base) return base
-  const d = new Date(base + "T00:00:00")
-  d.setDate(d.getDate() + Math.floor(Math.random() * 5) - 2)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-}
 
 const INITIAL_STATE = {
   title: "",
@@ -115,7 +103,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
       const desc = target.description
 
       if (!title) {
-        setTitleDone(true)
+        setTimeout(() => setTitleDone(true), 0)
       } else {
         let i = 0
         const id = setInterval(() => {
@@ -130,7 +118,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
       }
 
       if (!desc) {
-        setDescriptionDone(true)
+        setTimeout(() => setDescriptionDone(true), 0)
       } else {
         let i = 0
         const id = setInterval(() => {
@@ -167,46 +155,55 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
       voiceTimersRef.current.push(id)
     } else if (!voiceAutofill) {
       voicePrevIdRef.current = null
-      setTitleDone(true)
-      setDescriptionDone(true)
-      setStartDateDone(true)
-      setStartTimeDone(true)
-      setEndDateDone(true)
-      setEndTimeDone(true)
-      if (editingActivity) {
-        const sd = editingActivity.startDate || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(0, 10) : "")
-        const ed = editingActivity.endDate || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(0, 10) : sd)
-        setForm({
-          title: editingActivity.title,
-          description: editingActivity.description || "",
-          startDate: sd,
-          endDate: ed,
-          startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
-          endTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
-          color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
-          priority: editingActivity.priority || "medium",
-          productivityLevel: editingActivity.productivityLevel || "neutral",
-        })
-      } else if (selectedSlot) {
-        const now = new Date()
-        const hh = String(now.getHours()).padStart(2, "0")
-        const mm = String(now.getMinutes()).padStart(2, "0")
-        const currentTime = `${hh}:${mm}`
-        const defaultEnd = `${String((now.getHours() + 1) % 24).padStart(2, "0")}:${mm}`
-        const dateStr = toDateStr(selectedSlot.date)
-        setForm({
-          ...INITIAL_STATE,
-          startDate: dateStr,
-          endDate: dateStr,
-          startTime: selectedSlot.startTime || currentTime,
-          endTime: selectedSlot.endTime || defaultEnd,
-        })
-      } else {
-        setForm(INITIAL_STATE)
-      }
+      setTimeout(() => {
+        setTitleDone(true)
+        setDescriptionDone(true)
+        setStartDateDone(true)
+        setStartTimeDone(true)
+        setEndDateDone(true)
+        setEndTimeDone(true)
+      }, 0)
+      setTimeout(() => {
+        if (editingActivity) {
+          const sd = editingActivity.startDate || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(0, 10) : "")
+          const ed = editingActivity.endDate || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(0, 10) : sd)
+          setForm({
+            title: editingActivity.title,
+            description: editingActivity.description || "",
+            startDate: sd,
+            endDate: ed,
+            startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
+            endTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
+            color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
+            priority: editingActivity.priority || "medium",
+            productivityLevel: editingActivity.productivityLevel || "neutral",
+          })
+        } else if (selectedSlot) {
+          const now = new Date()
+          const hh = String(now.getHours()).padStart(2, "0")
+          const mm = String(now.getMinutes()).padStart(2, "0")
+          const currentTime = `${hh}:${mm}`
+          const defaultEnd = `${String((now.getHours() + 1) % 24).padStart(2, "0")}:${mm}`
+          const dateStr = toDateStr(selectedSlot.date)
+          setForm({
+            ...INITIAL_STATE,
+            startDate: dateStr,
+            endDate: dateStr,
+            startTime: selectedSlot.startTime || currentTime,
+            endTime: selectedSlot.endTime || defaultEnd,
+          })
+        } else {
+          setForm(INITIAL_STATE)
+        }
+        setErrors({})
+        setSaving(false)
+      }, 0)
+    } else {
+      setTimeout(() => {
+        setErrors({})
+        setSaving(false)
+      }, 0)
     }
-    setErrors({})
-    setSaving(false)
   }, [open, editingActivity, selectedSlot, voiceAutofill, clearVoiceTimers])
 
   useEffect(() => {
@@ -344,7 +341,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
                   </Field>
                   <Field label="Priority">
                     <Row gap={6} wrap>
-                      {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
+                      {Object.entries(PRIORITY_LABELS).map(([key]) => (
                         <Pill
                           key={key}
                           active={form.priority === key}
@@ -383,7 +380,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
                   </Field>
                   <Field label="Productivity Level">
                     <Row gap={6} wrap>
-                      {Object.entries(PRODUCTIVITY_LEVELS).map(([key, label]) => {
+                      {Object.entries(PRODUCTIVITY_LEVELS).map(([key]) => {
                         const dotColor = PRODUCTIVITY_LEVEL_COLORS[key]
                         const active = form.productivityLevel === key
                         return (
@@ -456,7 +453,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
                 </Field>
                 <Field label="Priority">
                   <Row gap={6} wrap>
-                    {Object.entries(PRIORITY_LABELS).map(([key, label]) => (
+                    {Object.entries(PRIORITY_LABELS).map(([key]) => (
                       <Pill
                         key={key}
                         active={form.priority === key}
@@ -492,7 +489,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
                 </Field>
                 <Field label="Productivity Level">
                   <Row gap={6} wrap>
-                    {Object.entries(PRODUCTIVITY_LEVELS).map(([key, label]) => {
+                    {Object.entries(PRODUCTIVITY_LEVELS).map(([key]) => {
                       const dotColor = PRODUCTIVITY_LEVEL_COLORS[key]
                       const active = form.productivityLevel === key
                       return (

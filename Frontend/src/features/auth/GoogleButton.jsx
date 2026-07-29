@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import "../../styles/auth/index.css";
@@ -7,9 +7,18 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 export default function GoogleButton({ isLight, onSuccess, onError }) {
   const { t } = useTranslation();
-  const [initialized, setInitialized] = useState(false);
   const [loading, setLoading] = useState(false);
   const btnRef = useRef(null);
+
+  const handleCredential = useCallback((response) => {
+    setLoading(true);
+    if (response?.credential) {
+      onSuccess(response.credential);
+    } else {
+      onError?.(t("auth.google.cancel"));
+      setLoading(false);
+    }
+  }, [onSuccess, onError, t]);
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
@@ -19,23 +28,12 @@ export default function GoogleButton({ isLight, onSuccess, onError }) {
           client_id: GOOGLE_CLIENT_ID,
           callback: handleCredential,
         });
-        setInitialized(true);
       } else {
         setTimeout(init, 300);
       }
     }
     init();
-  }, []);
-
-  function handleCredential(response) {
-    setLoading(true);
-    if (response?.credential) {
-      onSuccess(response.credential);
-    } else {
-      onError?.(t("auth.google.cancel"));
-      setLoading(false);
-    }
-  }
+  }, [handleCredential]);
 
   function handleClick() {
     if (!GOOGLE_CLIENT_ID) {
@@ -60,7 +58,7 @@ export default function GoogleButton({ isLight, onSuccess, onError }) {
             });
             div.querySelector("div")?.click();
           }
-        } catch {}
+        } catch { /* ignore */ }
       }
     });
   }

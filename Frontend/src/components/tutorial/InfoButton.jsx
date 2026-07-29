@@ -8,12 +8,12 @@ export default function InfoButton({ tutorialId, size = 14, style: customStyle, 
   const { openTutorial, isHintDismissed, dismissHint } = useTutorial()
   const content = TUTORIAL_CONTENT[tutorialId]
 
+  const [tooltipVisible, setTooltipVisible] = useState(false)
+  const btnRef = useRef(null)
+
   if (!content) return null
 
   const hasHint = !isHintDismissed(tutorialId)
-
-  const [tooltipVisible, setTooltipVisible] = useState(false)
-  const btnRef = useRef(null)
 
   const button = (
     <button

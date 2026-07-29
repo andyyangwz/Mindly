@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { journalService } from "../services/journalService"
+import { journalService } from "../../services/journalService"
 
 let _pinnedJournals = []
 let _navbarJournals = []

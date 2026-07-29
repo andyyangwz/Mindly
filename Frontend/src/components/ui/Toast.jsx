@@ -4,6 +4,7 @@ import { X, CheckCircle } from "lucide-react"
 import { Portal } from "../../utils/portal"
 import "../../styles/shared/index.css"
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
   const show = useCallback((message, { duration = 2500 } = {}) => {
     const event = new CustomEvent("app-toast", {

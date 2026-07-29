@@ -7,7 +7,7 @@ import "../../styles/spill/index.css"
 const SPILL_PERSONALITY_KEY = "mindly_spill_personality"
 import { Send, Loader2, MessageCircle, BookOpen, Mic, Square, X } from "lucide-react"
 import InfoButton from "../../components/tutorial/InfoButton"
-import { useChat } from "../../hooks/useChat"
+import { useChat } from "../../hooks/shared/useChat"
 import { spillAIService } from "../../services/spillAIService"
 import PersonalitySelector from "./components/PersonalitySelector"
 import ForwardJournalPopover from "./components/ForwardJournalPopover"
@@ -25,7 +25,7 @@ function formatChatTime(iso) {
   return `${day} ${month} ${year}, ${hh}.${mm}`
 }
 
-const ChatBubble = memo(({ msg, personality, isStreaming, isError }) => {
+const ChatBubble = memo(({ msg, isStreaming, isError }) => {
   if (msg.role === "system") {
     return (
       <div className="sa-sys-msg">
@@ -114,7 +114,7 @@ export default function SpillAIPage() {
 
   useEffect(() => {
     autoResize()
-  }, [input])
+  }, [input, autoResize])
 
   const cleanupRecording = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
@@ -127,6 +127,7 @@ export default function SpillAIPage() {
 
   useEffect(() => {
     if (recordingPhase === "idle") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRecordingTimer(0)
       setRecordingError(null)
       cleanupRecording()
@@ -290,6 +291,7 @@ export default function SpillAIPage() {
 
   useEffect(() => {
     if (isNewChat) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalMessages([])
       initialSyncDone.current = false
       navigatingFromSendRef.current = false
@@ -459,7 +461,7 @@ export default function SpillAIPage() {
             )
             setTimeout(() => fetchSessions?.(), 500)
           },
-          onError: (errorMsg) => {
+          onError: () => {
             if (streamingFlushTimerRef.current) {
               cancelAnimationFrame(streamingFlushTimerRef.current)
               streamingFlushTimerRef.current = null
@@ -509,7 +511,7 @@ export default function SpillAIPage() {
       setSending(false)
       streamingMessageIdRef.current = null
     }
-  }, [input, forwardedJournal, isNewChat, chatId, navigate, sending, personality, flushStreamingContent, t])
+  }, [input, forwardedJournal, isNewChat, chatId, navigate, sending, personality, flushStreamingContent, t, fetchSessions, addSession])
 
   const canSend = (input.trim() || forwardedJournal) && !sending
 

@@ -8,7 +8,7 @@ function getInitialTheme() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored === "light" || stored === "dark" || stored === "system") return stored
-  } catch {}
+  } catch { /* ignore */ }
   return "system"
 }
 
@@ -38,7 +38,7 @@ export function ThemeProvider({ children }) {
     setPreference(t)
     try {
       localStorage.setItem(STORAGE_KEY, t)
-    } catch {}
+    } catch { /* ignore */ }
   }, [])
 
   const toggleTheme = useCallback(() => {
@@ -54,6 +54,7 @@ export function ThemeProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
   const ctx = useContext(ThemeContext)
   if (!ctx) throw new Error("useTheme must be used within ThemeProvider")

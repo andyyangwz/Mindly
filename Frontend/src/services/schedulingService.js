@@ -55,37 +55,20 @@ export const schedulingService = {
 
   async update(id, data) {
     const body = toBackend(data)
-    const result = await api.put(`/scheduling/${id}`, body)
+    const result = await api.put(`/productivity/${id}`, body)
     return toFrontend(result.event)
   },
 
   async delete(id) {
-    const result = await api.delete(`/scheduling/${id}`)
+    const result = await api.delete(`/productivity/${id}`)
     return { deletedIds: result.deleted_ids || [id] }
   },
 
   async classifyTitle(title) {
-    const result = await api.post("/scheduling/classify", { title })
+    const result = await api.post("/productivity/classify", { title })
     return {
       productivityLevel: result.productivity_level || "neutral",
       priority: result.priority || "medium",
     }
-  },
-
-  async syncDayStatuses(dateStr) {
-    const now = new Date()
-    const y = now.getFullYear()
-    const m = String(now.getMonth() + 1).padStart(2, "0")
-    const d = String(now.getDate()).padStart(2, "0")
-    const h = String(now.getHours()).padStart(2, "0")
-    const min = String(now.getMinutes()).padStart(2, "0")
-    const todayStr = `${y}-${m}-${d}`
-    const localDatetime = `${todayStr}T${h}:${min}`
-    const result = await api.post("/scheduling/sync-status", {
-      date: dateStr,
-      current_datetime: localDatetime,
-      today_date: todayStr,
-    })
-    return result
   },
 }

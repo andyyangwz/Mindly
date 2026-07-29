@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { Plus, Target, Waves, Bell, Mic, Pencil, Trash2 } from "lucide-react"
+import { Target, Waves, Bell, Mic, Pencil, Trash2 } from "lucide-react"
 import "../../../styles/scheduling/index.css"
 
 const GAP = 6

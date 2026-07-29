@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react"
 import "../../styles/shared/index.css"
 
-const SlashCommandList = forwardRef(function SlashCommandList({ items, command, editor }, ref) {
+const SlashCommandList = forwardRef(function SlashCommandList({ items, command }, ref) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [, forceRender] = useState(0)
   const scrollContainerRef = useRef(null)

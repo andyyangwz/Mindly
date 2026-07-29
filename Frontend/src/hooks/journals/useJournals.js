@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { journalService } from "../services/journalService";
+import { journalService } from "../../services/journalService";
 
 export function useJournals() {
   const [journals, setJournals] = useState([]);
@@ -28,6 +28,7 @@ export function useJournals() {
       const result = await journalService.getFolders();
       setFolders(result.folders);
     } catch {
+      /* ignore */
     } finally {
       setFoldersLoading(false);
     }

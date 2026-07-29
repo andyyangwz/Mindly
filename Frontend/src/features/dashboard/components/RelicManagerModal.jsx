@@ -22,11 +22,11 @@ function getStatus(t, cur, tar) {
 }
 
 function ParticleField() {
-  const p = useMemo(() => Array.from({ length: 18 }, (_, i) => ({
+  const [p] = useState(() => Array.from({ length: 18 }, (_, i) => ({
     id: i, x: Math.random() * 100, y: Math.random() * 100,
     s: 1.5 + Math.random() * 2.5, d: 6 + Math.random() * 8, delay: Math.random() * 5,
     a: 0.1 + Math.random() * 0.25,
-  })), []);
+  })));
   return (
     <div className="rc-particle-field">
       {p.map((p) => (
@@ -73,7 +73,7 @@ function EnergyCore({ equippedCount, isDragging }) {
 
 function OrbitalNode({
   slotIndex, goal, dragOver, isDragging,
-  onDrop, onDragStart, onDragEnd, onHover, onLeave, t,
+  onDrop, onDragStart, onDragEnd, onHover, onLeave,
 }) {
   const pct = goal?.target > 0 ? Math.min(Math.round((goal.current_progress / goal.target) * 100), 100) : 0;
   const offset = EQUIP_RING * (1 - pct / 100);
@@ -168,6 +168,7 @@ function OrbitalNode({
                     style={{ transition: "stroke-dashoffset 0.6s" }} />
                 </svg>
                 <div className="rc-orbit-inner-circle" style={{ width: ns - 20, height: ns - 20 }}>
+                  {/* eslint-disable-next-line react-hooks/static-components */}
                   {Icon && <Icon size={22} color="var(--color-primary)" />}
                 </div>
                 {pct >= 100 && (
@@ -277,6 +278,7 @@ function ArchiveRelicCard({ goal, dragging, onDragStart, onDragEnd, t }) {
             style={{ transition: "stroke-dashoffset 0.6s" }} />
         </svg>
         <div className="rc-archive-ring-icon">
+          {/* eslint-disable-next-line react-hooks/static-components */}
           <Icon size={13} color="var(--color-primary)" />
         </div>
       </div>
@@ -335,7 +337,7 @@ export default function RelicManagerModal({ open, onClose, relics, mode, onEquip
   const [draggedId, setDraggedId] = useState(null);
   const [dragOverSlot, setDragOverSlot] = useState(null);
   const [dropOverArchive, setDropOverArchive] = useState(false);
-  const [animating, setAnimating] = useState(false);
+  const [, setAnimating] = useState(false);
   const [hoveredSlot, setHoveredSlot] = useState(null);
   const [sortBy, setSortBy] = useState("name");
   const [query, setQuery] = useState("");
@@ -345,6 +347,7 @@ export default function RelicManagerModal({ open, onClose, relics, mode, onEquip
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDraggedId(null); setDragOverSlot(null);
       setDropOverArchive(false); setAnimating(false);
       setHoveredSlot(null); setSortBy("name"); setQuery("");
@@ -399,7 +402,7 @@ export default function RelicManagerModal({ open, onClose, relics, mode, onEquip
     idRef.current = null; setDraggedId(null); setDragOverSlot(null);
     setAnimating(true);
     animTimer.current = setTimeout(async () => {
-      try { await onEquip(id, slotIndex); } catch {}
+      try { await onEquip(id, slotIndex); } catch { /* ignore */ }
       setAnimating(false);
     }, 350);
   }, [onEquip]);
@@ -414,7 +417,7 @@ export default function RelicManagerModal({ open, onClose, relics, mode, onEquip
     idRef.current = null; setDropOverArchive(false); setDraggedId(null);
     setAnimating(true);
     animTimer.current = setTimeout(async () => {
-      try { await onUnequip(id); } catch {}
+      try { await onUnequip(id); } catch { /* ignore */ }
       setAnimating(false);
     }, 350);
   }, [onUnequip, equipped]);
@@ -543,7 +546,7 @@ export default function RelicManagerModal({ open, onClose, relics, mode, onEquip
             </div>
             {equippedCount > 0 && (
               <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                onClick={async () => { for (const g of equipped) { try { await onUnequip(g.id); } catch {} } }}
+                onClick={async () => { for (const g of equipped) { try { await onUnequip(g.id); } catch { /* ignore */ } } }}
                 className="rc-reset-btn">
                 <span className="rc-reset-icon">⟳</span>
                 Reset

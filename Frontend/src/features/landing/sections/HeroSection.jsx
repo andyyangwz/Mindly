@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Brain, ChevronDown } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 export default function HeroSection() {
   const { t } = useTranslation()
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const [mounted] = useState(() => true)
 
   const anim = (delay) => ({
     initial: { opacity: 0, y: 20 },

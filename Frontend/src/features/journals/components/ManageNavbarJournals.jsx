@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { X, GripVertical } from "lucide-react"
 import { Portal } from "../../../utils/portal"
 import { journalService } from "../../../services/journalService"
-import { refreshPinnedJournals } from "../../../hooks/usePinnedJournals"
+import { refreshPinnedJournals } from "../../../hooks/journals/usePinnedJournals"
 import { useToast } from "../../../components/ui/Toast"
 import "../../../styles/journals/index.css"
 
@@ -10,43 +10,44 @@ const MAX_SIDEBAR = 3
 const GAP = 6
 
 export default function ManageNavbarJournals({ open, onClose }) {
+  if (!open) return null
+  return <ManageNavbarJournalsContent key={open} open={open} onClose={onClose} />
+}
+
+function ManageNavbarJournalsContent({ onClose }) {
   const [orderedList, setOrderedList] = useState([])
   const [dragOverIndex, setDragOverIndex] = useState(null)
   const [dragging, setDragging] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [slotHeight, setSlotHeight] = useState(46)
   const [justDropped, setJustDropped] = useState(false)
   const listRef = useRef(null)
-  const dragStartRef = useRef(null)
-  const hasDraggedRef = useRef(false)
+  const [dragStartIndex, setDragStartIndex] = useState(null)
+  const [hasDragged, setHasDragged] = useState(false)
 
   const toast = useToast()
 
-  const loadData = useCallback(async () => {
-    setLoading(true)
-    hasDraggedRef.current = false
-    try {
-      const result = await journalService.getAll({ pinned: true, per_page: 100 })
-      const pinned = result.journals || []
-      const sorted = pinned
-        .filter(j => j.navbarOrder != null)
-        .sort((a, b) => a.navbarOrder - b.navbarOrder)
-      const withOrder = sorted.map((j, i) => ({ ...j, _order: i }))
-      const unpinned = pinned
-        .filter(j => j.navbarOrder == null)
-        .map((j, i) => ({ ...j, _order: sorted.length + i }))
-      setOrderedList([...withOrder, ...unpinned])
-    } catch (err) {
-      console.error("Failed to load pinned journals:", err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
   useEffect(() => {
-    if (open) loadData()
-  }, [open, loadData])
+    ;(async () => {
+      try {
+        const result = await journalService.getAll({ pinned: true, per_page: 100 })
+        const pinned = result.journals || []
+        const sorted = pinned
+          .filter(j => j.navbarOrder != null)
+          .sort((a, b) => a.navbarOrder - b.navbarOrder)
+        const withOrder = sorted.map((j, i) => ({ ...j, _order: i }))
+        const unpinned = pinned
+          .filter(j => j.navbarOrder == null)
+          .map((j, i) => ({ ...j, _order: sorted.length + i }))
+        setOrderedList([...withOrder, ...unpinned])
+      } catch (err) {
+        console.error("Failed to load pinned journals:", err)
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [])
 
   useEffect(() => {
     if (listRef.current) {
@@ -55,7 +56,7 @@ export default function ManageNavbarJournals({ open, onClose }) {
         setSlotHeight(first.getBoundingClientRect().height + GAP)
       }
     }
-  }, [orderedList, open])
+  }, [orderedList])
 
   useEffect(() => {
     if (justDropped) {
@@ -73,14 +74,32 @@ export default function ManageNavbarJournals({ open, onClose }) {
     } catch (err) {
       console.error("Failed to save journal order:", err)
       toast.error("Couldn't save journal order. Please try again.")
-      await loadData()
+      setLoading(true)
+      ;(async () => {
+        try {
+          const result = await journalService.getAll({ pinned: true, per_page: 100 })
+          const pinned = result.journals || []
+          const sorted = pinned
+            .filter(j => j.navbarOrder != null)
+            .sort((a, b) => a.navbarOrder - b.navbarOrder)
+          const withOrder = sorted.map((j, i) => ({ ...j, _order: i }))
+          const unpinned = pinned
+            .filter(j => j.navbarOrder == null)
+            .map((j, i) => ({ ...j, _order: sorted.length + i }))
+          setOrderedList([...withOrder, ...unpinned])
+        } catch (err) {
+          console.error("Failed to load pinned journals:", err)
+        } finally {
+          setLoading(false)
+        }
+      })()
     } finally {
       setSaving(false)
     }
-  }, [loadData, toast])
+  }, [toast])
 
   const getDragTransform = useCallback((itemIndex) => {
-    const start = dragStartRef.current
+    const start = dragStartIndex
     if (start == null || dragOverIndex == null) return "none"
     if (itemIndex === start) return "none"
 
@@ -96,11 +115,11 @@ export default function ManageNavbarJournals({ open, onClose }) {
       }
     }
     return "none"
-  }, [dragOverIndex, slotHeight])
+  }, [dragOverIndex, slotHeight, dragStartIndex])
 
   const handleDragStart = useCallback((e, index) => {
-    dragStartRef.current = index
-    hasDraggedRef.current = true
+    setDragStartIndex(index)
+    setHasDragged(true)
     setDragOverIndex(index)
     setDragging(true)
     e.dataTransfer.effectAllowed = "move"
@@ -122,8 +141,8 @@ export default function ManageNavbarJournals({ open, onClose }) {
 
   const handleDrop = useCallback((e) => {
     e.preventDefault()
-    const startIndex = dragStartRef.current
-    dragStartRef.current = null
+    const startIndex = dragStartIndex
+    setDragStartIndex(null)
     setDragOverIndex(null)
     setDragging(false)
     if (startIndex == null || !listRef.current) return
@@ -157,9 +176,7 @@ export default function ManageNavbarJournals({ open, onClose }) {
       persistOrder(result)
       return result
     })
-  }, [persistOrder])
-
-  if (!open) return null
+  }, [persistOrder, dragStartIndex])
 
   return (
     <Portal>
@@ -196,8 +213,8 @@ export default function ManageNavbarJournals({ open, onClose }) {
             >
               {orderedList.map((journal, index) => {
                 const isTopThree = index < MAX_SIDEBAR
-                const isDragging = dragging && dragStartRef.current === index
-                const isDragOver = dragOverIndex === index && !(dragging && dragStartRef.current === index)
+                const isDragging = dragging && dragStartIndex === index
+                const isDragOver = dragOverIndex === index && !(dragging && dragStartIndex === index)
                 const transform = getDragTransform(index)
 
                 let itemClass = "nbar-item"
@@ -219,7 +236,7 @@ export default function ManageNavbarJournals({ open, onClose }) {
                       transition: justDropped ? "none" : dragging ? "border 0.15s ease, background 0.15s ease, box-shadow 0.15s ease" : undefined,
                       transform,
                       opacity: isDragging ? 0.05 : 1,
-                      animation: !dragging && !hasDraggedRef.current ? `nbar-list-in 0.25s ease ${index * 40}ms both` : "none",
+                      animation: !dragging && !hasDragged ? `nbar-list-in 0.25s ease ${index * 40}ms both` : "none",
                       zIndex: isDragging ? 10 : 1,
                     }}
                   >
