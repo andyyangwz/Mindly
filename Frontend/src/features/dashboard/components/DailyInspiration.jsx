@@ -20,7 +20,9 @@ export default function DailyInspiration() {
       <div className="daily-inspiration-bubble">
         <div className="daily-inspiration-tail" />
         <span className="daily-inspiration-label">{t("dashboard.dailyInspiration.title")}</span>
-        <p className="daily-inspiration-quote">&ldquo;{quote.text}&rdquo;</p>
+        {quote && (
+          <p className="daily-inspiration-quote">&ldquo;{quote.text}&rdquo;</p>
+        )}
       </div>
     </div>
   )

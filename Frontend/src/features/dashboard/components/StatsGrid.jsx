@@ -1,10 +1,37 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useInView } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { TrendingUp, Target, Clock } from "lucide-react"
 import { statsService } from "../services/statsService";
 import { EVENT_TASKS_UPDATED } from "../../../utils/events";
 import { formatMinutes } from "../../../utils/formatters";
 import "../../../styles/dashboard/index.css"
+
+function AnimatedValue({ target, suffix = "", duration = 1000 }) {
+  const [value, setValue] = useState(typeof target === "number" ? 0 : target)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-40px" })
+
+  useEffect(() => {
+    if (!inView || typeof target !== "number") {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect */
+      setValue(target)
+      return
+    }
+    const startTime = performance.now()
+    let raf
+    const tick = (now) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      setValue(Math.round(progress * target))
+      if (progress < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [inView, target, duration])
+
+  return <span ref={ref}>{value}{suffix}</span>
+}
 
 export default function StatsGrid() {
   const { t } = useTranslation()
@@ -68,7 +95,13 @@ export default function StatsGrid() {
               <s.icon size={17} color={s.iconBg} />
             </div>
             <div className="stats-grid-content">
-              <p className="stats-grid-value">{s.value}</p>
+              <p className="stats-grid-value">
+                {i === 0 && s.value.endsWith("%")
+                  ? <><AnimatedValue target={parseInt(s.value)} />%</>
+                  : i === 1
+                    ? <AnimatedValue target={parseInt(s.value) || 0} />
+                    : s.value}
+              </p>
               <p className="stats-grid-label">{s.label}</p>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
+import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { X, Bell } from "lucide-react"
 import { Portal } from "../../../utils/portal"
@@ -208,13 +209,24 @@ export default function AddReminderModal({ open, onClose, onSave, editingReminde
 
   return (
     <Portal>
-      <div className="arm-overlay" onClick={onClose}>
-        <div
+      <motion.div
+        className="arm-overlay"
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+      >
+        <motion.div
           role="dialog"
           aria-modal="true"
           aria-label={isEdit ? "Edit Reminder" : "New Reminder"}
           onClick={(e) => e.stopPropagation()}
           className="arm-dialog"
+          initial={{ opacity: 0, scale: 0.97, y: 4 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.97, y: 4 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
         >
           <div className="arm-header">
             <div className="arm-header-left">
@@ -389,8 +401,8 @@ export default function AddReminderModal({ open, onClose, onSave, editingReminde
             onCancel={onClose}
             onSubmit={handleSubmit}
           />
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </Portal>
   )
 }

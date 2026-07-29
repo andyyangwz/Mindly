@@ -46,7 +46,7 @@ function formatCompletionTime(dateStr) {
 
 const RESIZE_ZONE_HEIGHT = 8
 
-const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMenu, onViewDetails, isInlineEditing, onInlineSave, onInlineCancel, onStatusChange, interactionMode, isSyncing, tutorialTarget }) {
+const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMenu, onViewDetails, isInlineEditing, onInlineSave, onInlineCancel, onStatusChange, interactionMode, isSyncing, tutorialTarget, isDragging, isResizing }) {
   const [statusUpdated, setStatusUpdated] = useState(false)
   const { t } = useTranslation()
   const { startTime, endTime, segmentStart, segmentEnd, status, hasDeadline } = activity
@@ -174,7 +174,7 @@ const ActivityBlock = memo(function ActivityBlock({ activity, style, onContextMe
         onDoubleClick={(e) => e.stopPropagation()}
         onContextMenu={handleCtxMenu}
         title={displayTitle(activity)}
-        className={`ab-block ${isDone ? "ab-block-done" : ""}`}
+        className={`ab-block ${isDone ? "ab-block-done" : ""} ${isDragging ? "ab-dragging" : ""} ${isResizing ? "ab-resizing" : ""}`}
         style={{
           top,
           left: displayLeft,

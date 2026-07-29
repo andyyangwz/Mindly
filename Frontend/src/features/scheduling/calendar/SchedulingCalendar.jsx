@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, forwardRef, useImperativeHandle } from "react"
+import { motion } from "framer-motion"
 import { useSearchParams } from "react-router-dom"
 
 import "../../../styles/scheduling/index.css"
@@ -251,9 +252,12 @@ const SchedulingCalendar = forwardRef(function SchedulingCalendar({ onActivityUp
   }, [voice.voiceReviewActivities, voice.voiceSelectedActivity, voice.voiceSavedIds, voice.voiceDrafts])
 
   return (
-    <div
+    <motion.div
       ref={calendarRef}
       className="pc-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <CalendarHeader
         currentDate={currentDate}
@@ -379,7 +383,7 @@ const SchedulingCalendar = forwardRef(function SchedulingCalendar({ onActivityUp
         onEdit={reminders.handleReminderEdit}
         onDelete={reminders.handleReminderDelete}
       />
-    </div>
+    </motion.div>
   )
 })
 

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react"
+import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { Edit3, Trash2, Bell, Clock, X } from "lucide-react"
 import { Portal } from "../../../utils/portal"
@@ -27,16 +28,24 @@ export default function ReminderDetailModal({ reminder, open, onClose, onEdit, o
 
   return (
     <Portal>
-      <div
+      <motion.div
         onClick={handleClose}
         className="rdm-overlay"
         style={{ zIndex: elevated ? 903 : 900 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
       >
-        <div
+        <motion.div
           role="dialog"
           aria-modal="true"
           onClick={(e) => e.stopPropagation()}
           className="rdm-dialog"
+          initial={{ opacity: 0, scale: 0.97, y: 4 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.97, y: 4 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
         >
           <div className="rdm-header">
             <div className="rdm-header-left">
@@ -116,8 +125,8 @@ export default function ReminderDetailModal({ reminder, open, onClose, onEdit, o
               </button>
             </div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </Portal>
   )
 }

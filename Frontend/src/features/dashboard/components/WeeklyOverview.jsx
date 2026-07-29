@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, useInView } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import { theme } from "../../../theme"
@@ -30,6 +31,8 @@ export default function WeeklyOverview() {
   const [data, setData] = useState(null)
   const [hoveredDay, setHoveredDay] = useState(null)
   const fetchId = useRef(0)
+  const chartRef = useRef(null)
+  const chartInView = useInView(chartRef, { once: true, margin: "-40px" })
 
   const goBack = useCallback(() => {
     setWeekStart((prev) => {
@@ -116,7 +119,7 @@ export default function WeeklyOverview() {
       )}
 
       <div className="weekly-overview-chart-area">
-        <div data-tutorial-target="weekly-overview-chart" className="weekly-overview-chart">
+        <div ref={chartRef} data-tutorial-target="weekly-overview-chart" className="weekly-overview-chart">
           {Array.from({ length: 7 }).map((_, i) => {
             if (loading || !apiDays) {
               return (
@@ -153,23 +156,29 @@ export default function WeeklyOverview() {
                 onMouseEnter={() => setHoveredDay(i)}
                 onMouseLeave={() => setHoveredDay(null)}
               >
-                <div className="weekly-overview-bar" style={{
-                  height: barHeight,
-                  filter: isHovered ? "brightness(1.15)" : "none",
-                  cursor: day.isFuture ? "default" : "pointer",
-                  boxShadow: day.isToday ? `0 0 14px color-mix(in srgb, ${theme.primary} 66%, transparent)` : "none",
-                }}>
+                <motion.div
+                  className="weekly-overview-bar"
+                  initial={{ scaleY: 0 }}
+                  animate={chartInView ? { scaleY: 1 } : { scaleY: 0 }}
+                  transition={{ duration: 0.5, delay: i * 0.06, ease: "easeOut" }}
+                  style={{ transformOrigin: "bottom", height: barHeight, filter: isHovered ? "brightness(1.15)" : "none", cursor: day.isFuture ? "default" : "pointer", boxShadow: day.isToday ? `0 0 14px color-mix(in srgb, ${theme.primary} 66%, transparent)` : "none" }}
+                >
                   <div className="weekly-overview-bar-tracked" style={{ background: trackedColor }} />
                   <div className="weekly-overview-bar-productive" style={{ height: productiveHeight }} />
-                </div>
+                </motion.div>
                 {day.isToday ? (
                   <div className="weekly-overview-today-badge" style={{
                     boxShadow: `0 0 10px color-mix(in srgb, ${theme.primary} 66%, transparent)`,
+                    opacity: chartInView ? 1 : 0,
+                    transition: `opacity 0.3s ease ${i * 0.06 + 0.4}s`,
                   }}>
                     <span>{day.month} {day.dayOfMonth}</span>
                   </div>
                 ) : (
-                  <span className="weekly-overview-day-label">{day.label}</span>
+                  <span className="weekly-overview-day-label" style={{
+                    opacity: chartInView ? 1 : 0,
+                    transition: `opacity 0.3s ease ${i * 0.06 + 0.4}s`,
+                  }}>{day.label}</span>
                 )}
                 {!day.isFuture && (
                   <div className="weekly-overview-day-stats">

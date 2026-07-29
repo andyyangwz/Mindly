@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../../../context/AuthContext"
 import "../../../styles/dashboard/index.css"
@@ -17,7 +18,13 @@ export default function HeroTitle() {
   }, [])
 
   return (
-    <div className="dashboard-hero-title" style={{ position: "relative", minHeight: 80 }}>
+    <motion.div
+      className="dashboard-hero-title"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      style={{ position: "relative", minHeight: 80 }}
+    >
       <div
         style={{
           opacity: showGreeting ? 1 : 0,
@@ -42,6 +49,6 @@ export default function HeroTitle() {
         <h1 style={{ margin: 0 }}>Dashboard</h1>
       </div>
       <p style={{ margin: "6px 0 0" }}>{dateStr}</p>
-    </div>
+    </motion.div>
   )
 }

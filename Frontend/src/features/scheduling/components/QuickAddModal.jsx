@@ -120,7 +120,7 @@ export default function QuickAddModal({ open, onClose }) {
                               className="qam-date-input"
                             />
                           </div>
-                          <button
+                          <motion.button
                             onClick={() => {
                               toast.show(t("scheduling.quickAdd.added", { title: template.title, date: formatDateDisplay(selectedDate) }))
                               setExpandedId(null)
@@ -129,10 +129,11 @@ export default function QuickAddModal({ open, onClose }) {
                             style={{
                               background: `linear-gradient(135deg, ${template.color}, ${template.color}dd)`,
                             }}
+                            whileTap={{ scale: 0.95 }}
                           >
                             <Plus size={12} />
                             {t("scheduling.quickAdd.addActivity")}
-                          </button>
+                          </motion.button>
                         </div>
                       </div>
                     </div>

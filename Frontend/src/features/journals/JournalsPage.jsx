@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useTranslation } from "react-i18next"
+import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate, useLocation } from "react-router-dom"
 import { X } from "lucide-react"
 import { useJournals } from "../../hooks/journals/useJournals"
@@ -240,23 +241,36 @@ export default function JournalsPage() {
   }
 
   return (
-    <>
-      {activeFolder && (
-        <div className="journals-folder-banner">
-          <div className="journals-folder-info">
-            <span className="journals-folder-emoji">{activeFolder.emoji}</span>
-            <div>
-              <p className="journals-folder-name">{activeFolder.name}</p>
-              <p className="journals-folder-count">
-                {journals.length} {journals.length === 1 ? "journal" : "journals"}
-              </p>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+    >
+      <AnimatePresence>
+        {activeFolder && (
+          <motion.div
+            className="journals-folder-banner"
+            key="folder-banner"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <div className="journals-folder-info">
+              <span className="journals-folder-emoji">{activeFolder.emoji}</span>
+              <div>
+                <p className="journals-folder-name">{activeFolder.name}</p>
+                <p className="journals-folder-count">
+                  {journals.length} {journals.length === 1 ? "journal" : "journals"}
+                </p>
+              </div>
             </div>
-          </div>
-          <button onClick={handleCloseFolder} className="journals-back-btn">
-            <X size={14} /> Back to All Journals
-          </button>
-        </div>
-      )}
+            <button onClick={handleCloseFolder} className="journals-back-btn">
+              <X size={14} /> Back to All Journals
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <JournalList
         journals={journals}
@@ -290,6 +304,6 @@ export default function JournalsPage() {
         onUpdateFolder={updateFolder}
         onDeleteFolder={deleteFolder}
       />
-    </>
+    </motion.div>
   )
 }

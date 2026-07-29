@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
+import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { X, Waves } from "lucide-react"
 import { Portal } from "../../../utils/portal"
@@ -273,13 +274,24 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
 
   return (
     <Portal>
-      <div className="aam-overlay" onClick={onClose}>
-        <div
+      <motion.div
+        className="aam-overlay"
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+      >
+        <motion.div
           role="dialog"
           aria-modal="true"
           aria-label={isEdit ? "Edit Activity" : "New Activity"}
           onClick={(e) => e.stopPropagation()}
           className="aam-dialog"
+          initial={{ opacity: 0, scale: 0.97, y: 4 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.97, y: 4 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
         >
           <div className="aam-header">
             <div className="aam-header-left">
@@ -570,8 +582,8 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
               onSubmit={handleSubmit}
             />
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </Portal>
   )
 }

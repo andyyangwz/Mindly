@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react"
+import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { Edit3, Trash2, Clock, Flag, Play, X } from "lucide-react"
 import { Portal } from "../../../utils/portal"
@@ -44,15 +45,23 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
 
   return (
     <Portal>
-      <div
+      <motion.div
         onClick={handleClose}
         className={`adm-overlay${elevated ? " adm-overlay--elevated" : ""}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
       >
-        <div
+        <motion.div
           role="dialog"
           aria-modal="true"
           onClick={(e) => e.stopPropagation()}
           className="adm-card"
+          initial={{ opacity: 0, scale: 0.97, y: 4 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.97, y: 4 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
         >
           {/* Header row */}
           <div className="adm-header">
@@ -251,8 +260,8 @@ export default function ActivityDetailModal({ activity, open, onClose, onStatusC
               </button>
             </div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </Portal>
   )
 }

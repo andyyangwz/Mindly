@@ -1,4 +1,5 @@
 import { useRef, useEffect, useMemo, useCallback, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import ActivityBlock from "./ActivityBlock"
 import { TIME_COL_WIDTH, HOUR_HEIGHT, formatHour, isSameDay, layoutEvents } from "../utils/calendarConstants"
 import "../../../styles/scheduling/index.css"
@@ -51,6 +52,8 @@ function snapMinutes(mins) {
 export default function CalendarGrid({ activities, currentDate, dragOverrides, inlineDraftId, onViewDetails, onActivityContextMenu, onActivityResize, onDragUpdate, onDragEnd, onInlineCreate, onInlineSave, onInlineCancel, onStatusChange, interactionMode, isSyncing }) {
   const gridRef = useRef(null)
   const [canvasWidth, setCanvasWidth] = useState(0)
+  const [draggingId, setDraggingId] = useState(null)
+  const [resizingId, setResizingId] = useState(null)
 
   // Interaction state (ref-based, survives rerenders)
   const ixRef = useRef(null)
@@ -100,11 +103,21 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
   const today = new Date()
   const isTodayView = isSameDay(currentDate, today)
   const currentHour = new Date().getHours()
+  const [nowPosition, setNowPosition] = useState(null)
 
-  const nowPosition = useMemo(() => {
-    if (!isTodayView) return null
-    const now = new Date()
-    return (now.getHours() + now.getMinutes() / 60) * HOUR_HEIGHT
+  useEffect(() => {
+    if (!isTodayView) return
+    let raf
+    const tick = () => {
+      const now = new Date()
+      setNowPosition((now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600) * HOUR_HEIGHT)
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => {
+      cancelAnimationFrame(raf)
+      setNowPosition(null)
+    }
   }, [isTodayView])
 
   const isOnBlock = useCallback((e) => {
@@ -176,6 +189,9 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
       // Drag threshold: ignore micro-movements
       if (Math.abs(deltaY) < DRAG_THRESHOLD_PX) return
 
+      if (ix.type === "dragging") setDraggingId(ix.activityId)
+      else setResizingId(ix.activityId)
+
       let newStartMin, newEndMin
 
       if (ix.type === "dragging") {
@@ -205,6 +221,8 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
     const handleUp = (ue) => {
       const ix = ixRef.current
       cleanupPointer()
+      setDraggingId(null)
+      setResizingId(null)
 
       if (!ix) return
 
@@ -349,15 +367,23 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
           {/* Current time indicator */}
           {nowPosition !== null && (
             <div className="cg-time-indicator" style={{ top: nowPosition }}>
-              <div className="cg-time-dot" />
+              <div className="cg-time-dot cg-time-dot-pulse" />
               <div className="cg-time-line" />
             </div>
           )}
 
           {/* Activity blocks */}
-          {laidOut.map(({ event: activity, style }) => (
-            <ActivityBlock
+          <AnimatePresence mode="popLayout">
+          {laidOut.map(({ event: activity, style }, i) => (
+            <motion.div
               key={activity.id}
+              initial={{ opacity: 0, y: 8, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.93, transition: { duration: 0.15, ease: "easeIn" } }}
+              transition={{ duration: 0.25, delay: i * 0.015, ease: "easeOut" }}
+              layout
+            >
+            <ActivityBlock
               activity={activity}
               style={style}
               onViewDetails={onViewDetails}
@@ -368,9 +394,13 @@ export default function CalendarGrid({ activities, currentDate, dragOverrides, i
               onInlineCancel={onInlineCancel}
               interactionMode={interactionMode}
               isSyncing={isSyncing}
+              isDragging={draggingId === activity.id}
+              isResizing={resizingId === activity.id}
               tutorialTarget={activity.id === "tutorial-demo" ? "demo-activity-block" : undefined}
             />
+            </motion.div>
           ))}
+          </AnimatePresence>
 
           {/* Sync sweep overlay */}
           {isSyncing && (

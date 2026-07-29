@@ -87,6 +87,7 @@
   flex-direction: column;
   position: sticky;
   top: 0;
+  z-index: 50;
 }
 
 .sidebar-logo-section {

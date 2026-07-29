@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { reminderService } from "../../../services/reminderService";
 import { EVENT_TASKS_UPDATED } from "../../../utils/events";
@@ -108,40 +109,64 @@ export default function RemindersSection() {
         <h2 className="rs-title">Reminders</h2>
       </div>
 
-      {loading ? (
-        <div className="rs-loading">Loading...</div>
-      ) : sortedReminders.length === 0 ? (
-        <div className="rs-empty">
-          <Bell size={28} color="var(--color-border)" style={{ marginBottom: 8 }} />
-          <p className="rs-empty-title">No reminders yet.</p>
-          <p className="rs-empty-sub">Create a reminder to stay on top of important moments.</p>
-        </div>
-      ) : (
-        <>
-          {visibleReminders.map(reminder => (
-            <ReminderItem key={reminder.id} reminder={reminder} />
-          ))}
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <div className="skeleton-card skeleton-shimmer" />
+            <div className="skeleton-card skeleton-shimmer" />
+          </motion.div>
+        ) : sortedReminders.length === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="rs-empty">
+              <Bell size={28} color="var(--color-border)" style={{ marginBottom: 8 }} />
+              <p className="rs-empty-title">No reminders yet.</p>
+              <p className="rs-empty-sub">Create a reminder to stay on top of important moments.</p>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+            {visibleReminders.map((reminder, index) => (
+              <motion.div
+                key={reminder.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.04 * index, ease: "easeOut" }}
+              >
+                <ReminderItem reminder={reminder} />
+              </motion.div>
+            ))}
 
-          {showExpand && (
-            <button
-              onClick={() => setExpanded(v => !v)}
-              className="rs-show-more"
-            >
-              {expanded ? (
-                <>
-                  <ChevronUp size={14} />
-                  View Less
-                </>
-              ) : (
-                <>
-                  <ChevronDown size={14} />
-                  View More ({sortedReminders.length - MAX_VISIBLE} more)
-                </>
-              )}
-            </button>
-          )}
-        </>
-      )}
+            {showExpand && (
+              <button
+                onClick={() => setExpanded(v => !v)}
+                className="rs-show-more"
+              >
+                {expanded ? (
+                  <>
+                    <ChevronUp size={14} />
+                    View Less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown size={14} />
+                    View More ({sortedReminders.length - MAX_VISIBLE} more)
+                  </>
+                )}
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

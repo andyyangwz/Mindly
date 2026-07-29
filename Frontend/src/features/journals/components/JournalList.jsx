@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
+import { motion, AnimatePresence } from "framer-motion"
 import { Search, X, Plus, Star, Pin, CalendarDays, List, FolderOpen } from "lucide-react"
 import "../../../styles/journals/index.css"
 import { formatDate } from "../../../utils/formatters"
@@ -70,6 +71,8 @@ export default function JournalList({
   const [hoveredId, setHoveredId] = useState(null)
   const [pressedId, setPressedId] = useState(null)
   const [displayCount, setDisplayCount] = useState(8)
+  const [pageLoaded, setPageLoaded] = useState(false)
+  const initialLoadStarted = useRef(false)
   const sentinelRef = useRef(null)
   const contextAutoOpened = useRef(false)
 
@@ -207,6 +210,19 @@ export default function JournalList({
     return () => observer.disconnect()
   }, [displayJournals.length])
 
+  useEffect(() => {
+    if (!initialLoadStarted.current && !pageLoaded && displayJournals.length > 0) {
+      initialLoadStarted.current = true
+      const timer = setTimeout(() => setPageLoaded(true), 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [pageLoaded, displayJournals.length])
+
+  function getEntranceRotation(id) {
+    const seed = (id.charCodeAt(0) || 0) * 17 + (id.charCodeAt(1) || 0) * 31 + (id.charCodeAt(2) || 0) * 7 + id.length * 5
+    return ((seed % 41) - 20) * 0.17
+  }
+
   const handleDragStart = useCallback((e, journalId) => {
     e.dataTransfer.setData("text/journal-id", journalId)
     e.dataTransfer.effectAllowed = "move"
@@ -259,9 +275,26 @@ export default function JournalList({
     setShowDatePopover(false)
   }, [draftFrom, draftTo, onDateFromChange, onDateToChange])
 
+  const pageItem = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0 },
+  }
+
   return (
-    <div data-tutorial-target="journal-page" className="jl-container">
-      <div className="jl-header">
+    <motion.div
+      data-tutorial-target="journal-page"
+      className="jl-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25 }}
+    >
+      <motion.div
+        className="jl-header"
+        variants={pageItem}
+        initial="hidden"
+        animate="show"
+        transition={{ duration: 0.25, delay: 0.03, ease: "easeOut" }}
+      >
         <h1 className="jl-title">
           {t("journal.list.title")}
           <InfoButton tutorialId="journal-page" />
@@ -273,9 +306,16 @@ export default function JournalList({
         >
           <Plus size={16} strokeWidth={2.5} /> {t("journal.list.addJournal")}
         </button>
-      </div>
+      </motion.div>
 
-      <div data-tutorial-target="journal-search-input" className="jl-search">
+      <motion.div
+        data-tutorial-target="journal-search-input"
+        className="jl-search"
+        variants={pageItem}
+        initial="hidden"
+        animate="show"
+        transition={{ duration: 0.25, delay: 0.06, ease: "easeOut" }}
+      >
         <Search size={16} color="var(--color-muted)" />
         <input
           value={search}
@@ -288,18 +328,26 @@ export default function JournalList({
             <X size={14} color="var(--color-muted)" />
           </button>
         )}
-      </div>
+      </motion.div>
 
-      <div className="jl-filter-bar">
+      <motion.div
+        className="jl-filter-bar"
+        variants={pageItem}
+        initial="hidden"
+        animate="show"
+        transition={{ duration: 0.25, delay: 0.09, ease: "easeOut" }}
+      >
         <div data-tutorial-target="journal-pin-fav-filter" className="jl-filter-group">
           {FILTERS.map(({ key, icon: Icon }) => {
             const isActive = filter === key
             const count = counts?.[key] ?? 0
             return (
-              <button
+              <motion.button
                 key={key}
                 onClick={() => onFilterChange(key)}
                 className={`jl-filter-btn ${isActive ? "jl-filter-btn--active" : ""}`}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.12 }}
               >
                 <Icon size={13} />
                 {t(`journal.filter.${key}`)}
@@ -308,7 +356,7 @@ export default function JournalList({
                     {count}
                   </span>
                 )}
-              </button>
+              </motion.button>
             )
           })}
         </div>
@@ -381,37 +429,53 @@ export default function JournalList({
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
-      {!loading && displayJournals.length === 0 ? (
-      <div className="jl-empty">
-          <p className="jl-empty-emoji">
-            {search ? "🔍" : "📝"}
-          </p>
-          <p className="jl-empty-title">
-            {search
-              ? t("journal.list.noMatch")
-              : filter !== "all"
-                ? t("journal.list.noFilter", { filter })
-                : t("journal.list.noJournals")}
-          </p>
-          <p className="jl-empty-subtitle">
-            {search
-              ? t("journal.list.emptySearch")
-              : filter !== "all"
-                ? t("journal.list.emptyPinned")
-                : t("journal.list.emptyCTA")}
-          </p>
-          {!search && filter === "all" && (
-            <button onClick={onStartCreate} className="jl-empty-btn">
-              {t("journal.list.createFirst")}
-            </button>
-          )}
-        </div>
-      ) : (
-        <>
-        <div data-tutorial-target="journal-list-container" className="jl-grid">
-          {displayJournals.slice(0, displayCount).map((j) => {
+      <AnimatePresence mode="wait">
+        {!loading && displayJournals.length === 0 ? (
+        <motion.div
+          key="empty"
+          className="jl-empty"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+            <p className="jl-empty-emoji">
+              {search ? "🔍" : "📝"}
+            </p>
+            <p className="jl-empty-title">
+              {search
+                ? t("journal.list.noMatch")
+                : filter !== "all"
+                  ? t("journal.list.noFilter", { filter })
+                  : t("journal.list.noJournals")}
+            </p>
+            <p className="jl-empty-subtitle">
+              {search
+                ? t("journal.list.emptySearch")
+                : filter !== "all"
+                  ? t("journal.list.emptyPinned")
+                  : t("journal.list.emptyCTA")}
+            </p>
+            {!search && filter === "all" && (
+              <button onClick={onStartCreate} className="jl-empty-btn">
+                {t("journal.list.createFirst")}
+              </button>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="grid"
+            data-tutorial-target="journal-list-container"
+            className="jl-grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <AnimatePresence mode="popLayout">
+          {displayJournals.slice(0, displayCount).map((j, i) => {
             const isTutorial = j.id === "tutorial-journal"
             const isHovered = hoveredId === j.id
             const isPinned = j.isPinned
@@ -430,9 +494,24 @@ export default function JournalList({
             ]
             const rot = rotationPairs[j.id.charCodeAt(0) % rotationPairs.length]
 
+            const entranceRot = getEntranceRotation(j.id)
+
             return (
-              <div
+              <motion.div
                 key={j.id}
+                layout
+                initial={!pageLoaded ? { opacity: 0, y: 35, scale: 0.92, rotate: entranceRot } : { opacity: 0 }}
+                animate={!pageLoaded ? {
+                  opacity: 1,
+                  y: [35, 0, -2.5, 0],
+                  scale: [0.92, 1, 1, 1],
+                  rotate: [entranceRot, 0, 0, 0],
+                } : { opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                transition={!pageLoaded ? {
+                  y: { duration: 0.55, times: [0, 0.6, 0.82, 1], ease: "easeOut", delay: i * 0.07 },
+                  default: { duration: 0.4, ease: "easeOut", delay: i * 0.07 },
+                } : { duration: 0.15, ease: "easeOut" }}
                 {...(isTutorial ? { "data-tutorial-target": "journal-tutorial-card", "data-tutorial-journal": "true" } : {})}
                 draggable={!isTutorial}
                 onDragStart={(e) => !isTutorial && handleDragStart(e, j.id)}
@@ -527,15 +606,16 @@ export default function JournalList({
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )
           })}
+          </AnimatePresence>
           {displayCount < filtered.length && (
             <div ref={sentinelRef} className="jl-sentinel" />
           )}
-        </div>
-        </>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       <FolderAssignMenu
         open={contextMenu.open}
@@ -546,6 +626,6 @@ export default function JournalList({
         onSave={handleContextSave}
         onClose={handleCloseContextMenu}
       />
-    </div>
+    </motion.div>
   )
 }

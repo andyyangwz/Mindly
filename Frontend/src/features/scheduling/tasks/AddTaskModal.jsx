@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
+import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { X, Target } from "lucide-react"
 import { Portal } from "../../../utils/portal"
@@ -286,13 +287,24 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
 
   return (
     <Portal>
-      <div className="atm-overlay" onClick={onClose}>
-        <div
+      <motion.div
+        className="atm-overlay"
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+      >
+        <motion.div
           role="dialog"
           aria-modal="true"
           aria-label={isEdit ? "Edit Task" : "New Task"}
           onClick={(e) => e.stopPropagation()}
           className="atm-dialog"
+          initial={{ opacity: 0, scale: 0.97, y: 4 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.97, y: 4 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
         >
           <div className="atm-header">
             <div className="atm-header-left">
@@ -579,8 +591,8 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
               onSubmit={handleSubmit}
             />
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </Portal>
   )
 }

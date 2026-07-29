@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react"
+import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { Plus, ChevronLeft, ChevronRight, Undo, Redo, Waves, Target, Bell, Mic, Lock, Move, RefreshCw, Zap, PanelRightOpen } from "lucide-react"
 import InfoButton from "../../../components/tutorial/InfoButton"
@@ -132,7 +133,13 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
   ]
 
   return (
-    <div data-tutorial-target="scheduling-calendar" className="ch-header">
+    <motion.div
+      data-tutorial-target="scheduling-calendar"
+      className="ch-header"
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
       <div className="ch-top-row">
         <div className="ch-top-left">
           <button type="button" onClick={goBack} aria-label={t("scheduling.calendar.previousWeek")} className="ch-icon-btn">
@@ -289,29 +296,39 @@ export default function CalendarHeader({ currentDate, onDateChange, onUndo, onRe
           const dayIsToday = isSameDay(day, today)
           const isActiveMonth = day.getMonth() === currentDate.getMonth()
           return (
-            <button
+            <motion.button
               key={toDateStr(day)}
               type="button"
               onClick={() => onDateChange(day)}
+              layout
               className={`ch-day-btn ${active ? "ch-day-btn-active" : ""} ${!isActiveMonth ? "ch-day-btn-inactive-month" : ""}`}
+              whileTap={active ? {} : { scale: 0.93 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
             >
-              <span className="ch-day-name" style={{
-                color: active ? "var(--color-primary)" : dayIsToday ? "var(--color-dark)" : "var(--color-muted)",
-              }}>
+              <motion.span
+                className="ch-day-name"
+                animate={{ color: active ? "var(--color-primary)" : dayIsToday ? "var(--color-dark)" : "var(--color-muted)" }}
+                transition={{ duration: 0.25 }}
+              >
                 {DAY_ABBR[i]}
-              </span>
-              <span className="ch-day-num" style={{
-                color: active ? "white" : dayIsToday ? "var(--color-primary)" : isActiveMonth ? "var(--color-dark)" : "var(--color-muted)",
-                background: active ? "var(--color-primary)" : dayIsToday ? "color-mix(in srgb, var(--color-primary) 12%, transparent)" : "transparent",
-              }}>
+              </motion.span>
+              <motion.span
+                className="ch-day-num"
+                animate={{
+                  color: active ? "white" : dayIsToday ? "var(--color-primary)" : isActiveMonth ? "var(--color-dark)" : "var(--color-muted)",
+                  background: active ? "var(--color-primary)" : dayIsToday ? "color-mix(in srgb, var(--color-primary) 12%, transparent)" : "transparent",
+                  scale: active ? 1 : 1,
+                }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+              >
                 {day.getDate()}
-              </span>
-            </button>
+              </motion.span>
+            </motion.button>
           )
         })}
       </div>
 
-    </div>
+    </motion.div>
   )
 }
 

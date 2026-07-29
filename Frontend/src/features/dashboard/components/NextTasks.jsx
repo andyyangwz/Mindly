@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Clock3, ClipboardList, ListChecks, ChevronDown, ChevronUp } from "lucide-react";
 import { schedulingService } from "../../../services/schedulingService";
 import { STATUS_META } from "../../scheduling/utils/calendarConstants";
@@ -164,48 +165,80 @@ export default function NextTasks() {
         <h2 className="nt-title">Next Tasks</h2>
       </div>
 
-      {loading ? (
-        <div className="nt-loading">Loading...</div>
-      ) : nextTasks.length === 0 ? (
-        <div className="nt-empty">
-          <ClipboardList size={28} color="var(--color-border)" style={{ marginBottom: 8 }} />
-          <p className="nt-empty-title">No upcoming tasks.</p>
-          <p className="nt-empty-sub">Enjoy the break, or create a new task to get started.</p>
-        </div>
-      ) : (
-        <>
-          {expanded ? (
-            <div className="nt-expanded">
-              {nextTasks.map(task => (
-                <TaskItem key={task.id} task={task} onClick={setDetailEvent} />
-              ))}
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <div className="skeleton-card skeleton-shimmer" />
+            <div className="skeleton-card skeleton-shimmer" />
+            <div className="skeleton-card skeleton-shimmer" />
+          </motion.div>
+        ) : nextTasks.length === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="nt-empty">
+              <ClipboardList size={28} color="var(--color-border)" style={{ marginBottom: 8 }} />
+              <p className="nt-empty-title">No upcoming tasks.</p>
+              <p className="nt-empty-sub">Enjoy the break, or create a new task to get started.</p>
             </div>
-          ) : (
-            visibleTasks.map(task => (
-              <TaskItem key={task.id} task={task} onClick={setDetailEvent} />
-            ))
-          )}
+          </motion.div>
+        ) : (
+          <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+            {expanded ? (
+              <div className="nt-expanded">
+                {nextTasks.map((task, index) => (
+                  <motion.div
+                    key={task.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.04 * index, ease: "easeOut" }}
+                  >
+                    <TaskItem task={task} onClick={setDetailEvent} />
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              visibleTasks.map((task, index) => (
+                <motion.div
+                  key={task.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.04 * index, ease: "easeOut" }}
+                >
+                  <TaskItem task={task} onClick={setDetailEvent} />
+                </motion.div>
+              ))
+            )}
 
-          {showExpand && (
-            <button
-              onClick={() => expanded ? collapse() : setExpanded(true)}
-              className="nt-show-more"
-            >
-              {expanded ? (
-                <>
-                  <ChevronUp size={14} />
-                  View Less
-                </>
-              ) : (
-                <>
-                  <ChevronDown size={14} />
-                  View More ({nextTasks.length - MAX_VISIBLE} more)
-                </>
-              )}
-            </button>
-          )}
-        </>
-      )}
+            {showExpand && (
+              <button
+                onClick={() => expanded ? collapse() : setExpanded(true)}
+                className="nt-show-more"
+              >
+                {expanded ? (
+                  <>
+                    <ChevronUp size={14} />
+                    View Less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown size={14} />
+                    View More ({nextTasks.length - MAX_VISIBLE} more)
+                  </>
+                )}
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <ActivityDetailModal
         activity={detailEvent}

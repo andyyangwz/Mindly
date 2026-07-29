@@ -63,6 +63,19 @@
   background: transparent;
 }
 
+.jl-search-input::placeholder {
+  transition: opacity 0.2s ease;
+}
+
+.jl-search-input:focus::placeholder {
+  opacity: 0.4;
+}
+
+.jl-search:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
 .jl-search-clear {
   background: none;
   border: none;
@@ -106,6 +119,11 @@
 .jl-filter-btn:hover {
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   color: var(--color-dark);
+  transform: translateY(-1px);
+}
+
+.jl-filter-btn:active {
+  transform: translateY(0);
 }
 .jl-filter-btn--active {
   background: var(--color-primary);

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { AlertTriangle, X } from "lucide-react"
 import { Portal } from "../../utils/portal"
 import "../../styles/shared/index.css"
@@ -31,48 +32,62 @@ export default function ConfirmDialog({
     return () => document.removeEventListener("keydown", handler)
   }, [open, onCancel])
 
-  if (!open) return null
-
   return (
-    <Portal>
-      <div role="presentation" onClick={onCancel} className="cd-overlay">
-        <div
-          role="alertdialog"
-          aria-modal="true"
-          aria-label={title}
-          onClick={(e) => e.stopPropagation()}
-          className="cd-dialog"
-        >
-          <div className="cd-header">
-            <div className={`cd-icon-box cd-icon-box--${variant}`}>
-              <AlertTriangle size={20} />
-            </div>
-            <div className="cd-body">
-              <h2 className="cd-title">{title}</h2>
-              {message && <p className="cd-message">{message}</p>}
-            </div>
-            <button type="button" onClick={onCancel} aria-label="Close" className="cd-close-btn">
-              <X size={16} />
-            </button>
-          </div>
-
-          <div className="cd-actions">
-            <button type="button" onClick={onCancel} disabled={loading} className="cd-cancel-btn">
-              {cancelLabel}
-            </button>
-            <button
-              ref={confirmRef}
-              type="button"
-              onClick={onConfirm}
-              disabled={loading}
-              className="cd-confirm-btn"
-              data-variant={variant}
+    <AnimatePresence>
+      {open && (
+        <Portal>
+          <motion.div
+            role="presentation"
+            onClick={onCancel}
+            className="cd-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <motion.div
+              role="alertdialog"
+              aria-modal="true"
+              aria-label={title}
+              onClick={(e) => e.stopPropagation()}
+              className="cd-dialog"
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
             >
-              {loading ? `${confirmLabel}...` : confirmLabel}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Portal>
+              <div className="cd-header">
+                <div className={`cd-icon-box cd-icon-box--${variant}`}>
+                  <AlertTriangle size={20} />
+                </div>
+                <div className="cd-body">
+                  <h2 className="cd-title">{title}</h2>
+                  {message && <p className="cd-message">{message}</p>}
+                </div>
+                <button type="button" onClick={onCancel} aria-label="Close" className="cd-close-btn">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="cd-actions">
+                <button type="button" onClick={onCancel} disabled={loading} className="cd-cancel-btn">
+                  {cancelLabel}
+                </button>
+                <button
+                  ref={confirmRef}
+                  type="button"
+                  onClick={onConfirm}
+                  disabled={loading}
+                  className="cd-confirm-btn"
+                  data-variant={variant}
+                >
+                  {loading ? `${confirmLabel}...` : confirmLabel}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        </Portal>
+      )}
+    </AnimatePresence>
   )
 }

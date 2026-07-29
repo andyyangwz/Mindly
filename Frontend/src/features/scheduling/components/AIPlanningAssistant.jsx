@@ -19,15 +19,20 @@ export default function AIPlanningAssistant() {
   }, [expanded])
 
   return (
-    <div
+    <motion.div
       className="apa-container"
       style={{ cursor: expanded ? "default" : "pointer" }}
       onClick={() => !expanded && setExpanded(true)}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: 0.15, ease: "easeOut" }}
     >
-      <div
+      <motion.div
         className="apa-header"
         style={{ cursor: expanded ? "pointer" : "default" }}
         onClick={() => expanded && setExpanded(false)}
+        whileHover={{ y: -1 }}
+        transition={{ duration: 0.15 }}
       >
         <div className="apa-icon-box" style={{ background: "color-mix(in srgb, var(--color-primary) 22%, transparent)" }}>
           <Sparkles size={16} color="var(--color-primary-text)" />
@@ -46,7 +51,7 @@ export default function AIPlanningAssistant() {
         >
           <ChevronDown size={14} color="var(--color-muted)" />
         </motion.div>
-      </div>
+      </motion.div>
 
       <motion.div
         animate={{ height: expanded ? contentHeight : 0 }}
@@ -55,7 +60,11 @@ export default function AIPlanningAssistant() {
       >
         <div ref={contentRef}>
           <div className="apa-content-grid">
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={expanded ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.25, delay: 0.05 }}
+            >
               <div className="apa-section-header">
                 <Lightbulb size={13} color="var(--color-primary-text)" />
                 <p className="apa-section-title">{t("scheduling.aiPlanningAssistant.smartSuggestions")}</p>
@@ -66,9 +75,13 @@ export default function AIPlanningAssistant() {
                   <p className="apa-suggestion-text">{s}</p>
                 </div>
               ))}
-            </div>
+            </motion.div>
 
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={expanded ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.25, delay: 0.1 }}
+            >
               <div className="apa-section-header">
                 <Bot size={13} color="var(--color-primary-text)" />
                 <p className="apa-section-title">{t("scheduling.aiPlanningAssistant.aiScheduler")}</p>
@@ -80,13 +93,15 @@ export default function AIPlanningAssistant() {
                   className="apa-textarea"
                 />
                 <div className="apa-scheduler-footer">
-                  <button
+                  <motion.button
                     className="apa-send-btn"
                     style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))" }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
                   >
                     <Send size={12} />
                     {t("scheduling.aiPlanningAssistant.generateSchedule")}
-                  </button>
+                  </motion.button>
                 </div>
                 <motion.img
                   src={mascotSrc}
@@ -96,10 +111,10 @@ export default function AIPlanningAssistant() {
                   className="apa-mascot"
                 />
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   )
 }
