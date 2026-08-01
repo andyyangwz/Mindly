@@ -78,6 +78,7 @@ export default function AppLayout() {
     dashboard: t("nav.dashboard"),
     journals: t("nav.journals"),
     scheduling: t("nav.scheduling"),
+    "ai-planning": t("nav.aiPlanningAssistant"),
     insight: t("nav.insight"),
     spill: "Spill AI",
   }[section] || "Mindly"

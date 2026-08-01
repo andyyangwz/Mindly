@@ -138,6 +138,7 @@ export function layoutEvents(events, canvasWidth, hourHeight = 60) {
 
 export const ACTIVITY_COLORS = [
   { label: "Purple", value: "#7C3AED" },
+  { label: "Dark Blue", value: "#1D4ED8" },
   { label: "Blue", value: "#3B82F6" },
   { label: "Green", value: "#10B981" },
   { label: "Yellow", value: "#F59E0B" },
@@ -149,13 +150,24 @@ export const ACTIVITY_COLORS = [
 
 export const COLOR_NAME_MAP = {
   purple: "#7C3AED",
+  "dark blue": "#1D4ED8",
   blue: "#3B82F6",
   green: "#10B981",
   yellow: "#F59E0B",
   orange: "#F97316",
   red: "#EF4444",
-  pink: "#EC4899",
+  pink: "#EC4898",
   teal: "#14B8A6",
+}
+
+export function colorToHex(raw, fallback = "#7C3AED") {
+  if (!raw) return fallback
+  const name = String(raw).trim().toLowerCase()
+  if (COLOR_NAME_MAP[name]) return COLOR_NAME_MAP[name]
+  if (/^#?[0-9a-f]{6}$/i.test(name)) {
+    return name.startsWith("#") ? name.toUpperCase() : `#${name.toUpperCase()}`
+  }
+  return fallback
 }
 
 export const PRIORITY_LABELS = {

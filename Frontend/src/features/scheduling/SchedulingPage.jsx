@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, Clock3, Check, Bell, Filter } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Clock3, Bell, Filter, Sparkles } from "lucide-react";
 import { schedulingService } from "../../services/schedulingService";
 import { reminderService } from "../../services/reminderService";
 import { STATUS_META } from "./utils/calendarConstants";
 import SchedulingCalendar from "./calendar/SchedulingCalendar";
-import AIPlanningAssistant from "./components/AIPlanningAssistant";
 import QuickAddModal from "./components/QuickAddModal";
 import RightDrawer from "./components/RightDrawer";
 import ActivityDetailModal from "./modals/ActivityDetailModal";
@@ -34,6 +34,7 @@ function formatDateRange(startDateStr, endDateStr) {
 
 export default function SchedulingPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [allTasks, setAllTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [detailEvent, setDetailEvent] = useState(null);
@@ -44,57 +45,17 @@ export default function SchedulingPage() {
   const calScrollRef = useRef(null);
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [selectedPlanDate, setSelectedPlanDate] = useState(() => new Date());
-  const datePickerRef = useRef(null);
-  const [isCompact, setIsCompact] = useState(() => window.matchMedia("(max-width: 1000px)").matches);
   const [priorityFilter, setPriorityFilter] = useState("all");
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerTab, setDrawerTab] = useState("plan");
+  const [drawerOpen, setDrawerOpen] = useState(() => window.matchMedia("(min-width: 1100px)").matches);
+  const [drawerTab, setDrawerTab] = useState("reminders");
   const [allReminders, setAllReminders] = useState([]);
   const [remindersLoading, setRemindersLoading] = useState(true);
   const [viewingReminder, setViewingReminder] = useState(null);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia("(max-width: 1024px)").matches);
   const [isWideScreen, setIsWideScreen] = useState(() => window.matchMedia("(min-width: 1100px)").matches);
-  const [taskStatusFilter, setTaskStatusFilter] = useState("all");
+  const [taskStatusFilter, setTaskStatusFilter] = useState("In Progress");
   const [showFilterPopover, setShowFilterPopover] = useState(false);
   const filterBtnRef = useRef(null);
-
-  function toDateStr(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
-  function isSameDay(a, b) {
-    return toDateStr(a) === toDateStr(b);
-  }
-
-  function getNoPlanMessage(date) {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (isSameDay(date, today)) return "No plan for today.";
-    if (isSameDay(date, tomorrow)) return "No plan for tomorrow.";
-    if (isSameDay(date, yesterday)) return "No plan for yesterday.";
-    return `No plan for ${date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}.`;
-  }
-
-  function getPlanTitle(date) {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (isSameDay(date, today)) return t("scheduling.page.todaysPlan");
-    if (isSameDay(date, tomorrow)) return t("scheduling.page.tomorrowsPlan");
-    if (isSameDay(date, yesterday)) return t("scheduling.page.yesterdaysPlan");
-    return date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" }) + "'s Plan";
-  }
 
   const DONE_PAGE_SIZE = 10;
 
@@ -235,13 +196,6 @@ export default function SchedulingPage() {
   }, [taskStatusFilter, allTasks.length]);
 
   useEffect(() => {
-    const mql = window.matchMedia("(max-width: 1000px)")
-    const handler = (e) => setIsCompact(e.matches)
-    mql.addEventListener("change", handler)
-    return () => mql.removeEventListener("change", handler)
-  }, [])
-
-  useEffect(() => {
     const mql = window.matchMedia("(max-width: 1024px)")
     const handler = (e) => setIsMobile(e.matches)
     mql.addEventListener("change", handler)
@@ -281,21 +235,6 @@ export default function SchedulingPage() {
     }
   }, [doneLoading, taskStatusFilter, donePage, allTasks]);
 
-  const handlePlanCircleToggle = useCallback(async (e, item) => {
-    e.stopPropagation();
-    const nextStatus = item.status === "Done" ? "In Progress" : "Done";
-    try {
-      await schedulingService.update(item.id, { status: nextStatus });
-      setAllTasks(prev =>
-        prev.map(t => (t.id === item.id ? { ...t, status: nextStatus } : t))
-      );
-      setCalendarRefreshKey(k => k + 1);
-      notifyTasksUpdated();
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
   const filteredTasks = allTasks
     .filter(t => {
       if (t.hasDeadline !== true) return false;
@@ -320,22 +259,13 @@ export default function SchedulingPage() {
     ? filteredTasks.slice(0, donePage * DONE_PAGE_SIZE)
     : filteredTasks;
 
-  const planItems = useMemo(() => {
-    const dateStr = toDateStr(selectedPlanDate);
-    return allTasks
-      .filter(e => (e.startDatetime ? e.startDatetime.slice(0, 10) : "") === dateStr && !e.hasDeadline)
-      .sort((a, b) => {
-        if (!a.startTime) return 1;
-        if (!b.startTime) return -1;
-        return a.startTime.localeCompare(b.startTime);
-      });
-  }, [allTasks, selectedPlanDate]);
-
-  const planLoading = tasksLoading;
-
   const isDrawerDetailOpen = !!detailEvent || !!viewingReminder;
 
   const isDrawerInline = isWideScreen
+
+  const statusLabel = taskStatusFilter === "all" ? "All Statuses" : tStatus(taskStatusFilter);
+  const priorityLabel = priorityFilter === "all" ? "All Priorities" : "High Priority";
+  const filterDescription = `${statusLabel} · ${priorityLabel}`;
 
   return (
     <div className="pp-container" style={{ left: isMobile ? 0 : 260, top: isMobile ? 56 : 0 }}>
@@ -366,9 +296,8 @@ export default function SchedulingPage() {
           variant={isDrawerInline ? "inline" : "overlay"}
           header={
           <div className="pp-drawer-header">
-            <div className="pp-tab-bar" style={{ marginBottom: drawerTab === "plan" ? 14 : 12 }}>
+            <div className="pp-tab-bar" style={{ marginBottom: 12 }}>
               {[
-                { key: "plan", label: t("scheduling.page.todaysPlan") },
                 { key: "tasks", label: t("scheduling.page.yourTasks") },
                 { key: "reminders", label: "Reminders" },
               ].map(({ key, label }) => (
@@ -382,138 +311,78 @@ export default function SchedulingPage() {
               ))}
             </div>
 
-            {drawerTab === "plan" && (
-              <div className="pp-plan-header">
-                <h3 className="pp-plan-title">{getPlanTitle(selectedPlanDate)}</h3>
-                <div className="pp-plan-nav">
-                  <button
-                    onClick={() => { const prev = new Date(selectedPlanDate); prev.setDate(prev.getDate() - 1); setSelectedPlanDate(prev); }}
-                    className="pp-nav-btn"
-                    aria-label="Previous day"
-                  >
-                    <ChevronLeft size={14} />
-                  </button>
-                  <div className="pp-date-picker-wrapper">
-                    <button
-                      onClick={() => datePickerRef.current?.click()}
-                      className="pp-date-picker-btn"
-                    >
-                      {selectedPlanDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </button>
-                    <input
-                      ref={datePickerRef}
-                      type="date"
-                      value={toDateStr(selectedPlanDate)}
-                      onChange={(e) => { if (e.target.value) { const parts = e.target.value.split("-"); setSelectedPlanDate(new Date(+parts[0], +parts[1] - 1, +parts[2])); } }}
-                      className="pp-hidden-date-input"
-                    />
-                  </div>
-                  <button
-                    onClick={() => { const next = new Date(selectedPlanDate); next.setDate(next.getDate() + 1); setSelectedPlanDate(next); }}
-                    className="pp-nav-btn"
-                    aria-label="Next day"
-                  >
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
+            <div className="pp-drawer-nav">
+              <button
+                onClick={() => navigate("/app/ai-planning")}
+                className="pp-drawer-nav-btn"
+              >
+                <Sparkles size={13} color="var(--color-primary-text)" />
+                <span className="pp-drawer-nav-label">{t("nav.aiPlanningAssistant")}</span>
+                <ChevronRight size={14} className="pp-drawer-nav-arrow" />
+              </button>
+            </div>
 
             {drawerTab === "tasks" && (
-              <div className="pp-tasks-header">
-                <h3 className="pp-tasks-title">
-                  {t("scheduling.page.yourTasks")}
-                  {tasksLoading && <span className="pp-loading-hint">{t("scheduling.page.loading")}</span>}
-                </h3>
-                <div ref={filterBtnRef} className="pp-filter-wrapper">
-                  <button
-                    onClick={() => setShowFilterPopover(v => !v)}
-                    className={`pp-filter-btn ${(taskStatusFilter !== "all" || priorityFilter !== "all") ? "pp-filter-btn-active" : "pp-filter-btn-inactive"}`}
-                  >
-                    <Filter size={12} />
-                  </button>
+              <>
+                <div className="pp-tasks-header">
+                  <h3 className="pp-tasks-title">
+                    {t("scheduling.page.yourTasks")}
+                    {tasksLoading && <span className="pp-loading-hint">{t("scheduling.page.loading")}</span>}
+                  </h3>
+                  <div ref={filterBtnRef} className="pp-filter-wrapper">
+                    <button
+                      onClick={() => setShowFilterPopover(v => !v)}
+                      className={`pp-filter-btn ${(taskStatusFilter !== "all" || priorityFilter !== "all") ? "pp-filter-btn-active" : "pp-filter-btn-inactive"}`}
+                    >
+                      <Filter size={12} />
+                    </button>
 
-                  {showFilterPopover && (
-                    <div className="pp-filter-popover">
-                      <p className="pp-filter-section-title">Status</p>
-                      <div className="pp-filter-options pp-filter-options--mb">
-                        {[{ key: "all", label: "All" }, { key: "To Do", label: tStatus("To Do") }, { key: "In Progress", label: tStatus("In Progress") }, { key: "Done", label: tStatus("Done") }].map(({ key, label }) => (
-                          <button
-                            key={key}
-                            onClick={() => setTaskStatusFilter(key)}
-                            className="pp-filter-option"
-                            style={{
-                              background: taskStatusFilter === key ? `color-mix(in srgb, var(--color-primary) 10%, transparent)` : "transparent",
-                              color: taskStatusFilter === key ? "var(--color-primary)" : "var(--color-dark)",
-                            }}
-                          >
-                            {label}
-                          </button>
-                        ))}
+                    {showFilterPopover && (
+                      <div className="pp-filter-popover">
+                        <p className="pp-filter-section-title">Status</p>
+                        <div className="pp-filter-options pp-filter-options--mb">
+                          {[{ key: "all", label: "All" }, { key: "To Do", label: tStatus("To Do") }, { key: "In Progress", label: tStatus("In Progress") }, { key: "Done", label: tStatus("Done") }].map(({ key, label }) => (
+                            <button
+                              key={key}
+                              onClick={() => setTaskStatusFilter(key)}
+                              className="pp-filter-option"
+                              style={{
+                                background: taskStatusFilter === key ? `color-mix(in srgb, var(--color-primary) 10%, transparent)` : "transparent",
+                                color: taskStatusFilter === key ? "var(--color-primary)" : "var(--color-dark)",
+                              }}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="pp-filter-separator" />
+                        <p className="pp-filter-section-title">Priority</p>
+                        <div className="pp-filter-options">
+                          {[{ key: "all", label: "All" }, { key: "high", label: `${t("scheduling.eventForm.priority_high")}` }].map(({ key, label }) => (
+                            <button
+                              key={key}
+                              onClick={() => setPriorityFilter(key)}
+                              className="pp-filter-option"
+                              style={{
+                                background: priorityFilter === key ? `color-mix(in srgb, var(--color-primary) 10%, transparent)` : "transparent",
+                                color: priorityFilter === key ? "var(--color-primary)" : "var(--color-dark)",
+                              }}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <div className="pp-filter-separator" />
-                      <p className="pp-filter-section-title">Priority</p>
-                      <div className="pp-filter-options">
-                        {[{ key: "all", label: "All" }, { key: "high", label: `${t("scheduling.eventForm.priority_high")}` }].map(({ key, label }) => (
-                          <button
-                            key={key}
-                            onClick={() => setPriorityFilter(key)}
-                            className="pp-filter-option"
-                            style={{
-                              background: priorityFilter === key ? `color-mix(in srgb, var(--color-primary) 10%, transparent)` : "transparent",
-                              color: priorityFilter === key ? "var(--color-primary)" : "var(--color-dark)",
-                            }}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+                <p className="pp-tasks-filter-desc">Showing: {filterDescription}</p>
+              </>
             )}
           </div>
         }
       >
         {/* Scrollable content */}
-        {drawerTab === "plan" && (
-          <div>
-            {planLoading && <p className="pp-empty-state">{t("scheduling.page.loading")}</p>}
-            {!planLoading && planItems.length === 0 && (
-              <p className="pp-empty-state">{getNoPlanMessage(selectedPlanDate)}</p>
-            )}
-            {planItems.map((item) => {
-              const sm = STATUS_META[item.status] || null;
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => setDetailEvent(item)}
-                  className={`pp-list-item${item.status === "Done" ? " pp-list-item-done" : ""}`}
-                >
-                  <div className="pp-color-bar" style={{ background: item.color || "var(--color-primary)" }} />
-                  <div className="pp-item-body">
-                    <p className={`pp-item-title${item.status === "Done" ? " pp-item-title-done" : ""}`}>{item.title}</p>
-                    {item.startTime && <p className="pp-item-time">{item.startTime}</p>}
-                  </div>
-                  {sm && (
-                    <span className="pp-status-badge" style={{ background: sm.bg, color: sm.color, border: `1px solid ${sm.border}` }}>
-                      {tStatus(item.status)}
-                    </span>
-                  )}
-                  <div
-                    onClick={(e) => handlePlanCircleToggle(e, item)}
-                    className="pp-check-circle"
-                    style={{ border: `2px solid ${priorityColor[item.priority] || "var(--color-border)"}` }}
-                  >
-                    {item.status === "Done" && <Check size={11} strokeWidth={3} color={priorityColor[item.priority] || "var(--color-border)"} />}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         {drawerTab === "tasks" && (
           <div ref={doneScrollRef} onScroll={handleDoneScroll}>
             {filteredTasks.length === 0 && !tasksLoading && (
@@ -575,10 +444,6 @@ export default function SchedulingPage() {
           </div>
         )}
       </RightDrawer>
-      </div>
-
-      <div className="pp-ai-bar" style={{ padding: isCompact ? "12px 16px" : "16px 32px" }}>
-        <AIPlanningAssistant />
       </div>
 
       <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />

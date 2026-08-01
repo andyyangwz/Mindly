@@ -556,13 +556,13 @@ export default function JournalList({
                       transform: showActions ? "translateY(0)" : "translateY(3px)",
                     }}>
                       <button
-                        onClick={(ev) => { ev.stopPropagation(); togglePinned?.(j.id) }}
+                        onClick={(ev) => { ev.stopPropagation(); togglePinned(j.id, isPinned) }}
                         className={`jl-card-action-btn ${isPinned ? "jl-card-action-btn--pinned" : ""}`}
                       >
                         <Pin size={14} color="currentColor" fill={isPinned ? "currentColor" : "none"} />
                       </button>
                       <button
-                        onClick={(ev) => { ev.stopPropagation(); toggleFavorite(j.id) }}
+                        onClick={(ev) => { ev.stopPropagation(); toggleFavorite(j.id, isFav) }}
                         className={`jl-card-action-btn ${isFav ? "jl-card-action-btn--fav" : ""}`}
                       >
                         <Star size={14} color="currentColor" fill={isFav ? "currentColor" : "none"} />

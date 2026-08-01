@@ -7,6 +7,7 @@
     "dashboard": "Dashboard",
     "journals": "Journals",
     "scheduling": "Schedule",
+    "aiPlanningAssistant": "AI Planning Assistant",
     "insight": "Insights",
     "recentChats": "Recent Chats",
     "noChats": "No chats yet",
@@ -253,18 +254,10 @@
   },
   "scheduling": {
     "page": {
-      "title": "Today's Plan & Tasks",
-      "smartSuggestions": "Smart Suggestions",
-      "optimize": "Optimize My Plan →",
-      "todaysPlan": "Today's Plan",
-      "tomorrowsPlan": "Tomorrow's Plan",
-      "yesterdaysPlan": "Yesterday's Plan",
       "yourTasks": "Your Tasks",
       "loading": "Loading...",
-      "noPlan": "No plan for today",
       "noTasks": "No tasks",
       "focus": "Focus",
-      "viewPlanAndTasks": "View Today's Plan and My Tasks",
       "finishOn": "Finish on:"
     },
     "aiPlanningAssistant": {

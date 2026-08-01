@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react"
 import { X, Check, Clock, Sparkles, AlertTriangle, FileText, Zap } from "lucide-react"
 import { Portal } from "../../../utils/portal"
-import { PRODUCTIVITY_LEVEL_COLORS, COLOR_NAME_MAP } from "../utils/calendarConstants"
+import { PRODUCTIVITY_LEVEL_COLORS, colorToHex } from "../utils/calendarConstants"
 import "../../../styles/scheduling/index.css"
 
 const ACCENT = "#7C3AED"
@@ -42,8 +42,7 @@ function luminance({ r, g, b }) {
 }
 
 function normalizeColor(raw) {
-  if (!raw) return "#7C3AED"
-  return COLOR_NAME_MAP[raw.toLowerCase()] || raw
+  return colorToHex(raw)
 }
 
 function ActivityCard({ activity, draft, status, onSelect, animDelay }) {
@@ -149,6 +148,7 @@ function ActivityCard({ activity, draft, status, onSelect, animDelay }) {
               border: `1px solid ${prodColor}25`,
               flexShrink: 0,
               textTransform: "capitalize",
+              display: display.type === "reminder" ? "none" : "inline-block",
             }}
           >
             {productivityLevel}

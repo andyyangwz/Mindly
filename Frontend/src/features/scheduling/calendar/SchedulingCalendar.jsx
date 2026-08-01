@@ -192,6 +192,11 @@ const SchedulingCalendar = forwardRef(function SchedulingCalendar({ onActivityUp
     }
   }, [closeModals, voice])
 
+  const handleReminderModalSave = useCallback(async (data) => {
+    await reminders.handleReminderSave(data)
+    voice.markVoiceItemSaved(data)
+  }, [reminders, voice])
+
   const handleReminderModalClose = useCallback(() => {
     closeModals()
     voice.setVoiceAutofill(null)
@@ -326,7 +331,7 @@ const SchedulingCalendar = forwardRef(function SchedulingCalendar({ onActivityUp
       <AddReminderModal
         open={reminders.reminderFormOpen}
         onClose={handleReminderModalClose}
-        onSave={reminders.handleReminderSave}
+        onSave={handleReminderModalSave}
         editingReminder={reminders.editingReminder}
         selectedSlot={!reminders.editingReminder ? crud.selectedSlot : null}
         voiceAutofill={voice.voiceAutofill?.type === "reminder" ? voice.voiceAutofill : null}

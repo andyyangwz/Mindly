@@ -34,24 +34,48 @@ NEVER return a bare JSON object without the "activities" wrapper.
 NEVER return two separate JSON objects on separate lines.
 ALWAYS wrap every item inside the "activities" array.
 
+HARD RULE — STANDALONE SPOKEN NUMBERS ARE ALWAYS TIMES, NEVER YEARS. READ THIS FIRST.
+- You are building a SCHEDULE. Any standalone spoken number ("nineteen fifty", "twenty twenty", "zero eight thirty", "six fifteen", "2020", "1950") ALWAYS means a TIME in 24h HH:MM. NEVER a year.
+- A year alone has no month and no day, so it CANNOT be scheduled. A time alone CAN be scheduled (attached to today's date or another inferred date). Therefore a time is always the correct interpretation of a standalone number.
+- NEVER put a year-derived value into start_date or end_date based on a standalone number.
+- A year may ONLY appear when the user explicitly states a COMPLETE calendar date (day, month, and year together), such as:
+  - "1 January 2020" → 2020-01-01
+  - "January 1st, 2020" → 2020-01-01
+  - "2020-01-01" → 2020-01-01
+  - "on January 1st, 2020" → 2020-01-01
+  - "in the year 2020" (only when a month and day are also stated or clearly known)
+- "in the year 2020" WITHOUT a month and day is not a schedulable date; do NOT invent a date from it.
+- If a number could be a time or a year, it is a TIME. Always. This is a hard parsing rule, not a preference or heuristic. Violating it is a parsing error.
+- Apply this BEFORE classifying the item's "type" and to every field: start_date, end_date, start_time, end_time.
+
 SCHEMA — each item inside "activities" is an object with these fields:
-- "type": "activity" | "task"
-  - "activity" = time-block event (gym, meeting, study, dinner, work session)
-  - "task" = deadline-oriented goal (assignment due, submit report)
+- "type": "activity" | "task" | "reminder"
+  - "reminder" = an item that does NOT have BOTH a start time and an end time (a single point in time, or no time at all).
+  - "activity" = an item with BOTH a start time and an end time on the SAME day.
+  - "task" = an item with BOTH a start time and an end time on DIFFERENT days.
 - "title": string (required)
 - "description": string or null
 - "start_date": "YYYY-MM-DD" or null
 - "start_time": "HH:MM" (24h) or null
-- "end_date": "YYYY-MM-DD" or null — only set when end_time crosses midnight
+- "end_date": "YYYY-MM-DD" or null
 - "end_time": "HH:MM" (24h) or null
-- "color": "purple"|"blue"|"green"|"yellow"|"orange"|"red"|"pink"|"teal" or null
+- "color": "purple"|"dark blue"|"blue"|"green"|"yellow"|"orange"|"red"|"pink"|"teal" or null
 - "productivity_level": "productive"|"neutral"|"unproductive" or null
+
+TYPE CLASSIFICATION RULES — determine "type" STRICTLY from the temporal fields ONLY. Do NOT infer the type from the meaning of the sentence, and do NOT use keywords such as "meeting", "assignment", "study", "remind", "workout", "gym", "lunch", "dinner" to decide it. The type depends EXCLUSIVELY on which time fields are present and whether the dates span multiple days. Follow these rules IN ORDER:
+1. If BOTH start_time and end_time are present:
+   - If start_date == end_date → "activity".
+   - If start_date != end_date → "task".
+2. Otherwise (start_time missing, end_time missing, or both missing) → "reminder".
+   - Put the single point in time in start_date + start_time. Leave end_date and end_time null.
 
 RULES:
 - Return ONLY valid JSON. No explanation, no markdown, no code blocks.
 - For relative dates (tomorrow, tonight, next Monday), resolve against the current date provided.
 - If a field is not mentioned, set it to null. Do NOT use empty strings.
 - Do NOT hallucinate values.
+- Always set the "type" field using the TYPE CLASSIFICATION RULES above.
+- Follow the HARD RULE above: standalone spoken numbers are times, never years.
 
 TEMPORAL REASONING:
 - Use the reference date as the anchor for "today". All dates are relative to this reference.
@@ -71,28 +95,49 @@ MULTI-ACTIVITY RULES:
 EXAMPLES:
 
 Input: "Gym tomorrow at 7 PM"
-Output: {{"activities": [{{"type": "activity", "title": "Gym Session", "description": null, "start_date": "2026-05-25", "start_time": "19:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "productive"}}]}}
+Output: {{"activities": [{{"type": "reminder", "title": "Gym Session", "description": null, "start_date": "2026-05-25", "start_time": "19:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "productive"}}]}}
 
 Input: "Create a blue study session from 8 to 10"
 Output: {{"activities": [{{"type": "activity", "title": "Study Session", "description": null, "start_date": "2026-05-24", "start_time": "08:00", "end_date": null, "end_time": "10:00", "color": "blue", "productivity_level": "productive"}}]}}
 
 Input: "I play Counter Strike from 10:30 until 1 AM"
-Output: {{"activities": [{{"type": "activity", "title": "Counter Strike", "description": null, "start_date": "2026-05-24", "start_time": "22:30", "end_date": "2026-05-25", "end_time": "01:00", "color": null, "productivity_level": null}}]}}
+Output: {{"activities": [{{"type": "task", "title": "Counter Strike", "description": null, "start_date": "2026-05-24", "start_time": "22:30", "end_date": "2026-05-25", "end_time": "01:00", "color": null, "productivity_level": null}}]}}
 
 Input: "Finish database assignment before Friday midnight"
-Output: {{"activities": [{{"type": "task", "title": "Database Assignment", "description": null, "start_date": "2026-05-24", "start_time": null, "end_date": "2026-05-29", "end_time": "23:59", "color": null, "productivity_level": "productive"}}]}}
+Output: {{"activities": [{{"type": "reminder", "title": "Database Assignment", "description": null, "start_date": "2026-05-29", "start_time": "23:59", "end_date": null, "end_time": null, "color": null, "productivity_level": "productive"}}]}}
 
 Input: "Gym at 7 PM then dinner at 8:30"
-Output: {{"activities": [{{"type": "activity", "title": "Gym Session", "description": null, "start_date": "2026-05-24", "start_time": "19:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "productive"}}, {{"type": "activity", "title": "Dinner", "description": null, "start_date": "2026-05-24", "start_time": "20:30", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}]}}
+Output: {{"activities": [{{"type": "reminder", "title": "Gym Session", "description": null, "start_date": "2026-05-24", "start_time": "19:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "productive"}}, {{"type": "reminder", "title": "Dinner", "description": null, "start_date": "2026-05-24", "start_time": "20:30", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}]}}
 
 Input: "Study from 9 to 11 then gym from 11:30 to 1"
 Output: {{"activities": [{{"type": "activity", "title": "Study", "description": null, "start_date": "2026-05-24", "start_time": "09:00", "end_date": null, "end_time": "11:00", "color": null, "productivity_level": "productive"}}, {{"type": "activity", "title": "Gym Session", "description": null, "start_date": "2026-05-24", "start_time": "11:30", "end_date": null, "end_time": "13:00", "color": null, "productivity_level": "productive"}}]}}
 
 Input: "Meeting at 10 AM, lunch at noon, and deep work from 2 to 5"
-Output: {{"activities": [{{"type": "activity", "title": "Meeting", "description": null, "start_date": "2026-05-24", "start_time": "10:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}, {{"type": "activity", "title": "Lunch", "description": null, "start_date": "2026-05-24", "start_time": "12:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}, {{"type": "activity", "title": "Deep Work", "description": null, "start_date": "2026-05-24", "start_time": "14:00", "end_date": null, "end_time": "17:00", "color": null, "productivity_level": "productive"}}]}}
+Output: {{"activities": [{{"type": "reminder", "title": "Meeting", "description": null, "start_date": "2026-05-24", "start_time": "10:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}, {{"type": "reminder", "title": "Lunch", "description": null, "start_date": "2026-05-24", "start_time": "12:00", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}, {{"type": "activity", "title": "Deep Work", "description": null, "start_date": "2026-05-24", "start_time": "14:00", "end_date": null, "end_time": "17:00", "color": null, "productivity_level": "productive"}}]}}
+
+Input: "Study twenty twenty tomorrow"
+Output: {{"activities": [{{"type": "reminder", "title": "Study", "description": null, "start_date": "2026-05-25", "start_time": "20:20", "end_date": null, "end_time": null, "color": null, "productivity_level": "productive"}}]}}
+
+Input: "Team standup nineteen fifty"
+Output: {{"activities": [{{"type": "reminder", "title": "Team Standup", "description": null, "start_date": "2026-05-24", "start_time": "19:50", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}]}}
+
+Input: "Call mom zero eight thirty"
+Output: {{"activities": [{{"type": "reminder", "title": "Call Mom", "description": null, "start_date": "2026-05-24", "start_time": "08:30", "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}]}}
+
+WRONG vs CORRECT — HARD RULE enforcement (do NOT repeat the WRONG output):
+Input: "Study twenty twenty"
+WRONG: {{"activities": [{{"type": "reminder", "title": "Study", "description": null, "start_date": "2020-01-01", "start_time": null, "end_date": null, "end_time": null, "color": null, "productivity_level": null}}]}}
+CORRECT: {{"activities": [{{"type": "reminder", "title": "Study", "description": null, "start_date": "2026-05-24", "start_time": "20:20", "end_date": null, "end_time": null, "color": null, "productivity_level": null}}]}}
+
+Input: "Gym nineteen fifty until twenty twenty"
+WRONG: {{"activities": [{{"type": "task", "title": "Gym", "description": null, "start_date": "1950-01-01", "start_time": null, "end_date": "2020-12-31", "end_time": null, "color": null, "productivity_level": null}}]}}
+CORRECT: {{"activities": [{{"type": "activity", "title": "Gym", "description": null, "start_date": "2026-05-24", "start_time": "19:50", "end_date": "2026-05-24", "end_time": "20:20", "color": null, "productivity_level": null}}]}}
+
+Input: "Book hotel for 1 January 2020"
+Output: {{"activities": [{{"type": "reminder", "title": "Book Hotel", "description": null, "start_date": "2020-01-01", "start_time": null, "end_date": null, "end_time": null, "color": null, "productivity_level": "neutral"}}]}}
 
 Input: "Study later"
-Output: {{"activities": [{{"type": "activity", "title": "Study", "description": null, "start_date": null, "start_time": null, "end_date": null, "end_time": null, "color": null, "productivity_level": null}}]}}
+Output: {{"activities": [{{"type": "reminder", "title": "Study", "description": null, "start_date": null, "start_time": null, "end_date": null, "end_time": null, "color": null, "productivity_level": null}}]}}
 
 FINAL REMINDER: Output ONE JSON object. The top-level key is "activities". Every item goes inside that array. JSON only."""
 
@@ -102,6 +147,85 @@ def _get_provider():
     if not api_key:
         raise ValueError("GROQ_API_KEY is not configured")
     return GroqProvider(api_key, PARSER_MODEL)
+
+
+_MONTH_TOKENS = {
+    "january", "february", "march", "april", "may", "june", "july",
+    "august", "september", "october", "november", "december",
+    "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "oct", "nov", "dec",
+}
+_WEEKDAY_TOKENS = {
+    "monday", "tuesday", "wednesday", "thursday", "friday",
+    "saturday", "sunday", "mon", "tue", "wed", "thu", "fri", "sat", "sun",
+}
+
+
+def _has_explicit_date_context(transcript):
+    """True when the spoken text supplies enough calendar info to justify a year."""
+    import re
+    lowered = transcript.lower()
+    if any(token in lowered for token in _WEEKDAY_TOKENS):
+        return True
+    if any(token in lowered for token in _MONTH_TOKENS):
+        return True
+    if re.search(r"\d{4}-\d{2}(-\d{2})?", lowered):
+        return True
+    for word in ("year", "tomorrow", "today", "tonight", "weekend",
+                 "week", "weeks", "month", "months", "day", "days",
+                 "next", "due", "deadline", "date", "midnight"):
+        if word in lowered:
+            return True
+    return False
+
+
+def _has_standalone_number(transcript):
+    """True when the transcript itself contains a spoken numeric token (digits
+    or word forms like "twenty twenty", "twelve thirty", "seven oh five")."""
+    import re
+    if re.search(r"\b\d{1,2}:\d{2}\b", transcript):
+        return True
+    if re.search(r"\b\d{2,4}\b", transcript):
+        return True
+    tens = r"(?:ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty)"
+    ones = r"(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|oh)"
+    lowered = transcript.lower()
+    if re.search(rf"\b{tens}\s+{ones}\b", lowered):
+        return True
+    if re.search(rf"\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+oh\s+(?:one|two|three|four|five|six|seven|eight|nine)\b", lowered):
+        return True
+    return False
+
+
+def _extract_year(raw):
+    """Pull a 4-digit year out of a date-ish value like '2020' or '2020-01-01'."""
+    import re
+    if not isinstance(raw, str):
+        return None
+    match = re.match(r"^(\d{4})", raw.strip())
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def _time_from_year(year):
+    """Map a misinterpreted year (e.g. 2020) to HH:MM (20:20)."""
+    if not (1900 <= year <= 9999):
+        return None
+    hh, mm = divmod(year, 100)
+    if hh > 23 or mm > 59:
+        return None
+    return f"{hh:02d}:{mm:02d}"
+
+
+def _reclassify_type(item):
+    """Recompute the item type from the enforced time/date fields."""
+    if not item.get("start_time") or not item.get("end_time"):
+        return "reminder"
+    start_date = item.get("start_date")
+    end_date = item.get("end_date")
+    if start_date and end_date and start_date != end_date:
+        return "task"
+    return "activity"
 
 
 @voice_bp.route("/process", methods=["POST"])
@@ -190,8 +314,8 @@ def process_voice(user_id):
             # If it's already the correct format, return it
             if isinstance(result, dict) and "activities" in result:
                 return result
-            # If it's a bare activity/task object, wrap it
-            if isinstance(result, dict) and result.get("type") in ("activity", "task"):
+            # If it's a bare activity/task/reminder object, wrap it
+            if isinstance(result, dict) and result.get("type") in ("activity", "task", "reminder"):
                 logger.info("Wrapped bare object into activities array")
                 return {"activities": [result]}
             # Return as-is (validation will check)
@@ -261,13 +385,13 @@ def process_voice(user_id):
         if len(all_objects) == 1 and "activities" in all_objects[0]:
             return all_objects[0]
 
-        # If we have a single bare activity/task object, wrap it
-        if len(all_objects) == 1 and all_objects[0].get("type") in ("activity", "task"):
+        # If we have a single bare activity/task/reminder object, wrap it
+        if len(all_objects) == 1 and all_objects[0].get("type") in ("activity", "task", "reminder"):
             logger.info("Wrapped single object into activities array")
             return {"activities": all_objects}
 
-        # Multiple objects: filter to activity/task items and merge into activities array
-        activity_items = [o for o in all_objects if o.get("type") in ("activity", "task")]
+        # Multiple objects: filter to activity/task/reminder items and merge into activities array
+        activity_items = [o for o in all_objects if o.get("type") in ("activity", "task", "reminder")]
         if activity_items:
             logger.info("Merged %d separate objects into activities array", len(activity_items))
             return {"activities": activity_items}
@@ -351,9 +475,60 @@ def process_voice(user_id):
                 "step": "validation",
             }), 422
         item_type = item.get("type")
-        if item_type not in ("activity", "task"):
+        if item_type not in ("activity", "task", "reminder"):
             logger.warning("Item missing valid type, defaulting to 'activity': %s", json.dumps(item))
             item["type"] = "activity"
+
+    # Enforce the time-first rule at the code level as a safety net. A standalone
+    # spoken number ("twenty twenty", "nineteen fifty", "2020") is a TIME, never
+    # a year. The model may still invent a full date like "2020-01-01" from it,
+    # so whenever an item carries a date but no time and the user gave no
+    # explicit calendar context, treat the date as a misinterpreted year and
+    # convert its digits to HH:MM (attaching the date to today is left to the
+    # frontend, which already defaults missing dates to today).
+    explicit_date = _has_explicit_date_context(transcript)
+    has_number = _has_standalone_number(transcript)
+    today_str = ref_date_str if ref_date_str else datetime.now().date().isoformat()
+    today_year = int(today_str[:4])
+    for item in activities:
+        converted = False
+        for field, time_field in (("start_date", "start_time"), ("end_date", "end_time")):
+            raw = item.get(field)
+            if item.get(time_field) or not isinstance(raw, str) or not raw:
+                continue
+            year = _extract_year(raw)
+            if year is None:
+                continue
+            time_val = _time_from_year(year)
+            if time_val is None:
+                continue
+            if explicit_date:
+                # The user gave a real calendar date; keep it.
+                continue
+            if year == today_year and not has_number:
+                # Probably a legitimately resolved relative date (e.g. today).
+                continue
+            item[time_field] = time_val
+            item[field] = None
+            converted = True
+            logger.info(
+                "Time-first enforcement: converted year-like date '%s' to %s",
+                raw, time_val,
+            )
+        if converted:
+            item["type"] = _reclassify_type(item)
+
+    # Type is authoritative at the code level too: recompute it from the temporal
+    # fields ONLY (never from keywords or sentence meaning), exactly like the
+    # TYPE CLASSIFICATION RULES in the prompt. Single-point reminders are
+    # normalized onto start_date + start_time.
+    for item in activities:
+        item["type"] = _reclassify_type(item)
+        if item["type"] == "reminder" and not item.get("start_time") and item.get("end_time"):
+            item["start_time"] = item.get("end_time")
+            item["start_date"] = item.get("end_date")
+            item["end_time"] = None
+            item["end_date"] = None
 
     count = len(activities)
     logger.info("=== VOICE PIPELINE: Complete - %d item(s) detected ===", count)

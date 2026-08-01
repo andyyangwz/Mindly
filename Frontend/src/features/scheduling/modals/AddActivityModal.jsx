@@ -5,7 +5,7 @@ import { X, Waves } from "lucide-react"
 import { Portal } from "../../../utils/portal"
 import {
   ACTIVITY_COLORS,
-  COLOR_NAME_MAP,
+  colorToHex,
   PRIORITY_LABELS,
   PRODUCTIVITY_LEVELS,
   PRODUCTIVITY_LEVEL_COLORS,
@@ -81,7 +81,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
         endDate: voiceAutofill.end_date || voiceAutofill.start_date || "",
         startTime: voiceAutofill.start_time || "",
         endTime: voiceAutofill.end_time || "",
-        color: COLOR_NAME_MAP[voiceAutofill.color?.toLowerCase()] || "#7C3AED",
+        color: colorToHex(voiceAutofill.color),
         priority: "medium",
         productivityLevel: voiceAutofill.productivity_level || "neutral",
       }
@@ -175,7 +175,7 @@ export default function AddActivityModal({ open, onClose, onSave, editingActivit
             endDate: ed,
             startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
             endTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
-            color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
+            color: colorToHex(editingActivity.color),
             priority: editingActivity.priority || "medium",
             productivityLevel: editingActivity.productivityLevel || "neutral",
           })

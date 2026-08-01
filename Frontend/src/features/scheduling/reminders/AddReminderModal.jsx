@@ -3,7 +3,7 @@ import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { X, Bell } from "lucide-react"
 import { Portal } from "../../../utils/portal"
-import { ACTIVITY_COLORS, COLOR_NAME_MAP, PRIORITY_LABELS, toDateStr } from "../utils/calendarConstants"
+import { ACTIVITY_COLORS, colorToHex, PRIORITY_LABELS, toDateStr } from "../utils/calendarConstants"
 import { Field, In, Pill, Row, Actions, Error } from "../modals/ActivityFormFields"
 import { randomTime } from "../../../utils/editor"
 import "../../../styles/scheduling/index.css"
@@ -66,7 +66,7 @@ export default function AddReminderModal({ open, onClose, onSave, editingReminde
         description: voiceAutofill.description || "",
         date: dt ? dt.slice(0, 10) : (voiceAutofill.start_date || ""),
         time: dt ? dt.slice(11, 16) : (voiceAutofill.start_time || "09:00"),
-        color: COLOR_NAME_MAP[voiceAutofill.color?.toLowerCase()] || "#7C3AED",
+        color: colorToHex(voiceAutofill.color),
         priority: voiceAutofill.priority || "medium",
       }
       voiceTargetRef.current = target
@@ -144,7 +144,7 @@ export default function AddReminderModal({ open, onClose, onSave, editingReminde
             description: editingReminder.description || "",
             date: editingReminder.date || (editingReminder.datetime ? editingReminder.datetime.slice(0, 10) : ""),
             time: editingReminder.time || (editingReminder.datetime ? editingReminder.datetime.slice(11, 16) : "09:00"),
-            color: editingReminder.color ? (COLOR_NAME_MAP[editingReminder.color.toLowerCase()] || editingReminder.color) : "#7C3AED",
+            color: colorToHex(editingReminder.color),
             priority: editingReminder.priority || "medium",
           })
         } else if (selectedSlot) {

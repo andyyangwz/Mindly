@@ -1,14 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import "../../../styles/dashboard/index.css"
 
 export default function TaskProgressBar({ progress = 0, color = "#6366F1" }) {
   const [animatedProgress, setAnimatedProgress] = useState(0)
-  const hasAnimated = useRef(false)
 
   useEffect(() => {
-    if (hasAnimated.current) return
-    hasAnimated.current = true
-    const timer = setTimeout(() => setAnimatedProgress(progress), 100)
+    const timer = setTimeout(() => setAnimatedProgress(progress), 50)
     return () => clearTimeout(timer)
   }, [progress])
 

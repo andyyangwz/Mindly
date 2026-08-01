@@ -7,6 +7,7 @@
     "dashboard": "Dashboard",
     "journals": "Jurnal Saya",
     "scheduling": "Produktivitas",
+    "aiPlanningAssistant": "Asisten Perencana AI",
     "insight": "Analisa Saya",
     "recentChats": "Obrolan Terbaru",
     "noChats": "Belum ada obrolan",
@@ -251,18 +252,10 @@
   },
   "scheduling": {
     "page": {
-      "title": "Rencana & Tugas Hari Ini",
-      "smartSuggestions": "Saran Cerdas",
-      "optimize": "Optimalkan Rencanaku →",
-      "todaysPlan": "Rencana Hari Ini",
-      "tomorrowsPlan": "Rencana Besok",
-      "yesterdaysPlan": "Rencana Kemarin",
       "yourTasks": "Tugasmu",
       "loading": "Memuat...",
-      "noPlan": "Belum ada rencana hari ini",
       "noTasks": "Tidak ada tugas",
       "focus": "Fokus",
-      "viewPlanAndTasks": "Lihat Rencana & Tugas Hari Ini",
       "finishOn": "Selesai:"
     },
     "aiPlanningAssistant": {

@@ -8,6 +8,7 @@ import AuthPage from "./features/auth/AuthPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import JournalsPage from "./features/journals/JournalsPage";
 import SchedulingPage from "./features/scheduling/SchedulingPage";
+import AIPlanningPage from "./features/scheduling/AIPlanningPage";
 import InsightPage from "./features/insight/InsightPage";
 import SpillAIPage from "./features/spill/SpillAIPage";
 import ProgressTrackerPage from "./features/progressTracker/ProgressTrackerPage";
@@ -33,6 +34,7 @@ export default function MindlyApp() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="journals/*" element={<JournalsPage />} />
           <Route path="scheduling" element={<SchedulingPage />} />
+          <Route path="ai-planning" element={<AIPlanningPage />} />
           <Route path="insight" element={<InsightPage />} />
           <Route path="progress-tracker" element={<ProgressTrackerPage />} />
           <Route path="spill" element={<SpillAIPage />} />

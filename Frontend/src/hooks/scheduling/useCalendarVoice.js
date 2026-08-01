@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react"
 import { reminderService } from "../../services/reminderService"
 import { notifyTasksUpdated } from "../../utils/events"
-import { COLOR_NAME_MAP, toDateStr } from "../../features/scheduling/utils/calendarConstants"
+import { colorToHex, toDateStr } from "../../features/scheduling/utils/calendarConstants"
 
 export function useCalendarVoice({
   currentDate,
@@ -183,8 +183,7 @@ export function useCalendarVoice({
   const handleVoiceCreateAll = useCallback(async () => {
     if (!voiceReviewActivities) return
     const toCreatePayload = (data) => {
-      const color =
-        COLOR_NAME_MAP[data.color?.toLowerCase()] || data.color || "#7C3AED"
+      const color = colorToHex(data.color)
       const startDate = data.start_date || data.startDate || ""
       const endDate = data.end_date || data.endDate || startDate
       const startTime = data.start_time || data.startTime || ""
@@ -219,8 +218,7 @@ export function useCalendarVoice({
             title: (data.title || "").trim(),
             description: (data.description || "").trim(),
             datetime: dt,
-            color:
-              COLOR_NAME_MAP[data.color?.toLowerCase()] || data.color || "#7C3AED",
+            color: colorToHex(data.color),
             priority: data.priority || "medium",
           }
           await reminderService.create(payload)

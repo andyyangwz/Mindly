@@ -5,7 +5,7 @@ import { X, Target } from "lucide-react"
 import { Portal } from "../../../utils/portal"
 import {
   ACTIVITY_COLORS,
-  COLOR_NAME_MAP,
+  colorToHex,
   PRIORITY_LABELS,
   toDateStr,
 } from "../utils/calendarConstants"
@@ -82,7 +82,7 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
         startTime: voiceAutofill.start_time || "00:00",
         deadlineDate: voiceAutofill.end_date || "",
         deadlineTime: voiceAutofill.end_time || "23:59",
-        color: COLOR_NAME_MAP[voiceAutofill.color?.toLowerCase()] || "#7C3AED",
+        color: colorToHex(voiceAutofill.color),
         priority: "medium",
         productivityLevel: voiceAutofill.productivity_level || null,
       }
@@ -176,7 +176,7 @@ export default function AddTaskModal({ open, onClose, onSave, editingActivity, s
             startTime: editingActivity.startTime || (editingActivity.startDatetime ? editingActivity.startDatetime.slice(11, 16) : ""),
             deadlineDate: editingActivity.endDatetime ? editingActivity.endDatetime.slice(0, 10) : "",
             deadlineTime: editingActivity.endTime || (editingActivity.endDatetime ? editingActivity.endDatetime.slice(11, 16) : ""),
-            color: editingActivity.color ? (COLOR_NAME_MAP[editingActivity.color.toLowerCase()] || editingActivity.color) : "#7C3AED",
+            color: colorToHex(editingActivity.color),
             priority: editingActivity.priority || "medium",
             productivityLevel: editingActivity.productivityLevel || null,
             progress: prog,

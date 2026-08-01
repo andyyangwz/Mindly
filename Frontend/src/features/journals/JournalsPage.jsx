@@ -125,16 +125,12 @@ export default function JournalsPage() {
     }
   }
 
-  const handleToggleFavorite = async (id) => {
-    const j = journals.find((x) => x.id === id)
-    if (!j) return
-    await updateJournal(id, { isFavorite: !j.isFavorite })
+  const handleToggleFavorite = async (id, current) => {
+    await updateJournal(id, { isFavorite: !current })
   }
 
-  const handleTogglePinned = async (id) => {
-    const j = journals.find((x) => x.id === id)
-    if (!j) return
-    await updateJournal(id, { isPinned: !j.isPinned })
+  const handleTogglePinned = async (id, current) => {
+    await updateJournal(id, { isPinned: !current })
     refreshPinnedJournals()
   }
 

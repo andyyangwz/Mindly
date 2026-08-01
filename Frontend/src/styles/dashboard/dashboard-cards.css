@@ -223,8 +223,8 @@
   top: 100%;
   transform: translateX(-50%);
   margin-top: 8px;
-  background: var(--color-dark);
-  color: white;
+  background: var(--color-card);
+  color: var(--color-dark);
   border-radius: 8px;
   padding: 8px 14px;
   font-size: 12px;
